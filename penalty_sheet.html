@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Штрафной лист для мастеров</title>
+    <!-- Подключаем Unbounded для кириллицы -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #050505;
+            --text-main: #FFFFFF;
+            --text-muted: #888888;
+            --accent-color: #C6FF00; /* Неон */
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --font-headings: 'Akony', 'Onder', 'Benzin', 'Brigends Expanded', 'Unbounded', sans-serif;
+            --font-body: 'Unbounded', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+            padding: 40px;
+            /* Формат A4 для PDF печати */
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Задний фон или графические элементы стиля "smart digital" */
+        .ambient-glow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 300px;
+            background: radial-gradient(ellipse at top, rgba(198, 255, 0, 0.15) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            font-family: var(--font-headings);
+            font-weight: 700;
+            font-size: 32px;
+            color: var(--text-main);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .logo .neon {
+            color: var(--accent-color);
+        }
+
+        .page-title {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .section {
+            margin-bottom: 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 16px;
+        }
+
+        .section-number {
+            font-family: var(--font-headings);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-right: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .table-wrap {
+            width: 100%;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .row.header-row {
+            padding-top: 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 8px;
+        }
+
+        .col-desc {
+            flex: 1;
+            font-size: 13px;
+            line-height: 1.4;
+            padding-right: 20px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .col-penalty {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--accent-color);
+            white-space: nowrap;
+            text-align: right;
+            transform: scaleY(1.2);
+            transform-origin: center right;
+            display: inline-block;
+        }
+
+        .col-penalty-text {
+            color: #FF4D4D; /* Красный для особых штрафов/увольнений */
+        }
+
+        .notes-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(198, 255, 0, 0.05);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .notes-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .notes-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.6;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    
+    <header>
+        <div class="logo">ГРОМ<span class="neon">.</span></div>
+        <div class="page-title">
+            <span style="color: #fff">Штрафной лист</span><br>
+            внутренний регламент
+        </div>
+    </header>
+
+    <!-- 1. Опоздания -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">01</span>
+            <h2 class="section-title">Опоздания</h2>
+        </div>
+        <div class="table-wrap">
+            <div class="row header-row">
+                <div class="col-desc">Нарушение</div>
+                <div class="col-penalty">Штраф</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Опоздание 10 минут</div>
+                <div class="col-penalty">300 ₽</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Опоздание 20 минут</div>
+                <div class="col-penalty">500 ₽</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Опоздание 30 минут и более</div>
+                <div class="col-penalty" style="color:#FF4D4D;">1000 ₽</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Опоздание второго мастера (вторая смена)</div>
+                <div class="col-penalty">200 / 400 / 900 ₽</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Повторное опоздание в течение недели</div>
+                <div class="col-penalty">×2 <span style="font-size:10px; color:var(--text-muted);">(по любой категории)</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Санитария и рабочее место -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">02</span>
+            <h2 class="section-title">Санитария и рабочее место</h2>
+        </div>
+        <div class="table-wrap">
+            <div class="row header-row">
+                <div class="col-desc">Нарушение</div>
+                <div class="col-penalty">Штраф</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Не обработан инструмент</div>
+                <div class="col-penalty">300 ₽ <span style="font-size:10px; color:var(--text-muted);">(за каждый случай)</span></div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Грязное рабочее место (если нет потока клиентов и мастер отдыхает)</div>
+                <div class="col-penalty">500 ₽</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Работа с клиентом -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">03</span>
+            <h2 class="section-title">Работа с клиентом</h2>
+        </div>
+        <div class="table-wrap">
+            <div class="row header-row">
+                <div class="col-desc">Нарушение</div>
+                <div class="col-penalty">Штраф</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Не показан результат стрижки зеркалом (сзади)</div>
+                <div class="col-penalty">300 ₽</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Отказ принять клиента без уважительной причины</div>
+                <div class="col-penalty" style="color:#FF4D4D;">1000 ₽</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Дисциплина и поведение -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-number">04</span>
+            <h2 class="section-title">Дисциплина и поведение</h2>
+        </div>
+        <div class="table-wrap">
+            <div class="row header-row">
+                <div class="col-desc">Нарушение</div>
+                <div class="col-penalty">Штраф</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Общение между мастерами на национальном языке при русскоговорящем клиенте</div>
+                <div class="col-penalty">500 ₽ <span style="font-size:10px; color:var(--text-muted);">(каждому)</span></div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Еда / напитки на рабочем месте</div>
+                <div class="col-penalty">500 ₽</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Отсутствие на рабочем месте более 10 минут (кроме обеда)</div>
+                <div class="col-penalty">500 ₽ <span style="font-size:10px; color:var(--text-muted);">(за каждый случай)</span></div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Мастер без формы</div>
+                <div class="col-penalty">500 ₽</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5 & 6 & 7 объединим в две колонки или оставим как есть -->
+    <div style="display: flex; gap: 24px;">
+        <div style="flex: 1;">
+            <!-- 5. Музыка -->
+            <div class="section" style="height: 100%;">
+                <div class="section-header">
+                    <span class="section-number">05</span>
+                    <h2 class="section-title">Музыка</h2>
+                </div>
+                <div class="table-wrap">
+                    <div class="row">
+                        <div class="col-desc">Музыка не включена / играет тихо / включена неутвержденная музыка</div>
+                        <div class="col-penalty">500 ₽ <span style="font-size:10px; color:var(--text-muted); display:block;">(с каждого)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 1;">
+            <!-- 6. Касса и терминал -->
+            <div class="section" style="height: 100%;">
+                <div class="section-header">
+                    <span class="section-number">06</span>
+                    <h2 class="section-title">Касса/терминал</h2>
+                </div>
+                <div class="table-wrap">
+                    <div class="row">
+                        <div class="col-desc">Услуга не проведена через терминал</div>
+                        <div class="col-penalty" style="color:#FF4D4D;">5000 ₽</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-desc">Неправильно проведенная услуга</div>
+                        <div class="col-penalty" style="font-size: 11px; white-space: normal; text-align: right;">стоимость<br>недостающей<br>услуги</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Грубые нарушения -->
+    <div class="section" style="margin-top: 24px; border-color: rgba(255, 77, 77, 0.3); background: rgba(255, 77, 77, 0.05);">
+        <div class="section-header">
+            <span class="section-number" style="color: #FF4D4D;">07</span>
+            <h2 class="section-title" style="color: #FF4D4D;">Грубые нарушения</h2>
+        </div>
+        <div class="table-wrap">
+            <div class="row header-row" style="border-bottom-color: rgba(255, 77, 77, 0.2);">
+                <div class="col-desc">Нарушение</div>
+                <div class="col-penalty" style="color: #FF4D4D;">Штраф</div>
+            </div>
+            <div class="row" style="border-bottom-color: rgba(255, 77, 77, 0.2);">
+                <div class="col-desc">Воровство</div>
+                <div class="col-penalty" style="color: #FF4D4D;">5000 ₽ + увольнение</div>
+            </div>
+            <div class="row">
+                <div class="col-desc">Невыход на работу без предупреждения и уважительной причины</div>
+                <div class="col-penalty" style="color: #FF4D4D;">2000 ₽</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Примечания -->
+    <div class="notes-section">
+        <div class="notes-title">Примечания</div>
+        <div class="notes-text">
+            • Обеденный перерыв — 30 минут.<br>
+            • Уходя на обед, мастер обязан написать в рабочую группу.
+        </div>
+    </div>
+
+</body>
+</html>

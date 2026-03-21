@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Премия за чек-лист</title>
+    <!-- Подключаем Unbounded для кириллицы -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #050505;
+            --text-main: #FFFFFF;
+            --text-muted: #888888;
+            --accent-color: #C6FF00; /* Неон */
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --font-headings: 'Akony', 'Onder', 'Benzin', 'Brigends Expanded', 'Unbounded', sans-serif;
+            --font-body: 'Unbounded', sans-serif;
+            --alert-color: #FF4D4D;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+            padding: 40px;
+            /* Формат A4 */
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Задний фон */
+        .ambient-glow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 300px;
+            background: radial-gradient(ellipse at top, rgba(198, 255, 0, 0.15) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            font-family: var(--font-headings);
+            font-weight: 700;
+            font-size: 32px;
+            color: var(--text-main);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .logo .neon {
+            color: var(--accent-color);
+        }
+
+        .page-title {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .highlight-banner {
+            background: linear-gradient(90deg, rgba(198,255,0,0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--accent-color);
+            padding: 24px;
+            border-radius: 0 16px 16px 0;
+            margin-bottom: 30px;
+        }
+
+        .highlight-banner .title {
+            font-family: var(--font-headings);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+        }
+
+        .highlight-banner .desc {
+            font-size: 15px;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .highlight-banner .desc span {
+            display: block;
+            margin-top: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .section-header-main {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .checklist-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .checklist-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .checklist-item:hover {
+            border-color: rgba(198, 255, 0, 0.3);
+        }
+
+        .item-number {
+            font-family: var(--font-headings);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-right: 24px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .item-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .item-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+        
+        .quote {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(198, 255, 0, 0.05);
+            border-left: 2px solid var(--accent-color);
+            font-style: italic;
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    
+    <header>
+        <div class="logo">ГРОМ<span class="neon">.</span></div>
+        <div class="page-title">
+            <span style="color: #fff">Система премий</span><br>
+            Чек-лист мастера
+        </div>
+    </header>
+
+    <div class="highlight-banner">
+        <div class="title">Еженедельная премия за чек-лист</div>
+        <div class="desc">
+            Премия <strong>1 000 ₽</strong> раз в неделю за стабильное выполнение чек-листа. 
+            <span>При выполнении 4 премий за месяц добавляется бонус 1 000 ₽ <br>(совокупно 5 000 ₽ при регулярном выполнении чек-листа в течение месяца).</span>
+        </div>
+    </div>
+
+    <div class="section-header-main">Обязательные шаги:</div>
+
+    <div class="checklist-container">
+        
+        <div class="checklist-item">
+            <div class="item-number">01</div>
+            <div class="item-content">
+                <div class="item-title">Поздороваться с клиентом</div>
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="item-number">02</div>
+            <div class="item-content">
+                <div class="item-title">Обработка инструментов</div>
+                <div class="item-desc">
+                    Машинка, триммер, шейвер, каждая пара ножниц — обработка каждого инструмента 1 раз перед стрижкой.
+                </div>
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="item-number">03</div>
+            <div class="item-content">
+                <div class="item-title">Показать стрижку зеркалом заднего вида</div>
+                <div class="item-desc">Убедиться, что клиент доволен результатом.</div>
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="item-number">04</div>
+            <div class="item-content">
+                <div class="item-title">Обязательный скрипт при оплате</div>
+                <div class="quote">
+                    «Пожалуйста, оставьте номер телефона, будет кэшбэк 100 ₽ за каждую стрижку»
+                </div>
+            </div>
+        </div>
+
+        <div class="checklist-item">
+            <div class="item-number">05</div>
+            <div class="item-content">
+                <div class="item-title">Попрощаться с клиентом</div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

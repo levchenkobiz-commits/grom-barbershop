@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GROM BARBERSHOP | Мужские стрижки в Москве</title>
+    <meta name="description" content="Мужская парикмахерская GROМ. 6 барбершопов у метро. Стрижка за 30 минут, 5-я стрижка в подарок. Сеть барбершопов в Москве.">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&family=Syne:wght@600;800&display=swap" rel="stylesheet">
+    <!-- Map API -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=cf21ddbf-8869-42b4-ab98-ec8e3ae134e7&lang=ru_RU" type="text/javascript"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ВАРИАНТ 2: Форма "Таблетка" (максимальное скругление) */
+        .btn { border-radius: 100px; }
+        .btn-neon::after, .btn-neon::before { border-radius: 100px; }
+    </style>
+</head>
+<body>
+
+    <!-- STICKY HEADER -->
+    <header class="header sticky-header">
+        <div class="container header-inner">
+            <div class="logo glitch" data-text="ГРОМ">ГРОМ</div>
+            <nav class="desktop-nav">
+                <a href="#advantages" class="nav-link">Преимущества</a>
+                <a href="#locations" class="nav-link">Локации</a>
+                <a href="#pricing" class="nav-link">Цены</a>
+                <a href="#barbers" class="nav-link">Команда</a>
+                <a href="#reviews" class="nav-link">Отзывы</a>
+            </nav>
+            <a href="https://n2015703.yclients.com" target="_top" class="btn btn-neon header-btn">ЗАПИСЬ</a>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero" id="hero">
+        <div class="hero-bg parallax-bg"></div>
+        <div class="container hero-content">
+            <h1 class="hero-title reveal-text">СТРИЖКА<br><span class="text-neon">БЫСТРО.</span><br>У МЕТРО.</h1>
+            <p class="hero-subtitle reveal-text delay-1">Твой стиль. Твое время. 30 минут на стрижку.</p>
+            <div class="hero-cta reveal-text delay-2">
+                <a href="https://n2015703.yclients.com" target="_top" class="btn btn-lg btn-neon">ЗАПИСАТЬСЯ НА СТРИЖКУ</a>
+                <span class="cta-note">*бронь за 10 секунд</span>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="mouse"></div>
+        </div>
+    </section>
+
+    <!-- ADVANTAGES TAPE MARQUEE -->
+    <div class="marquee-wrapper">
+        <div class="marquee">
+            <span>5-Я СТРИЖКА БЕСПЛАТНО</span> • <span>1 МИНУТА ОТ МЕТРО</span> • <span>ОПЫТНЫЕ БАРБЕРЫ</span> • <span>СТРИЖКА ЗА 30 МИНУТ</span> • 
+            <span>5-Я СТРИЖКА БЕСПЛАТНО</span> • <span>1 МИНУТА ОТ МЕТРО</span> • <span>ОПЫТНЫЕ БАРБЕРЫ</span> • <span>СТРИЖКА ЗА 30 МИНУТ</span> • 
+        </div>
+    </div>
+
+    <!-- ADVANTAGES GRID SECTION -->
+    <section class="advantages section-padding" id="advantages">
+        <div class="container">
+            <h2 class="section-title text-center">ПОЧЕМУ <span class="text-neon glitch" data-text="ГРОМ?">ГРОМ?</span></h2>
+            <div class="grid grid-2-to-4">
+                <div class="adv-card fade-up">
+                    <div class="adv-number">01</div>
+                    <h3 class="adv-title">30 МИНУТ</h3>
+                    <p class="adv-desc">Ценим твое время. Быстрая и качественная работа без потери стиля.</p>
+                </div>
+                <div class="adv-card fade-up delay-1">
+                    <div class="adv-number text-neon">02</div>
+                    <h3 class="adv-title">1 МИНУТА</h3>
+                    <p class="adv-desc">От метро. Мы всегда рядом, чтобы ты не тратил время на дорогу.</p>
+                </div>
+                <div class="adv-card fade-up delay-2">
+                    <div class="adv-number">03</div>
+                    <h3 class="adv-title">ПРОФИ</h3>
+                    <p class="adv-desc">Опытные барберы, которые знают, что тебе нужно.</p>
+                </div>
+                <div class="adv-card fade-up delay-3 highlight-card">
+                    <div class="adv-number text-black">04</div>
+                    <h3 class="adv-title text-black">5-Я БЕСПЛАТНО</h3>
+                    <p class="adv-desc text-black">Каждая пятая стрижка в подарок. Мы ценим своих.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LOCATIONS -->
+    <section class="locations section-padding bg-dark" id="locations">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">ЛОКАЦИИ.<br>ВЫБИРАЙ <span class="text-neon">СВОЮ.</span></h2>
+            </div>
+            <div class="metro-grid fade-up">
+                <div class="metro-card">
+                    <div class="metro-circle text-neon">M</div>
+                    <h4>АЛЕКСЕЕВСКАЯ</h4>
+                    <a href="https://n2015703.yclients.com" target="_top" class="metro-link">Записаться &rarr;</a>
+                </div>
+                <div class="metro-card">
+                    <div class="metro-circle text-neon">M</div>
+                    <h4>ТЕКСТИЛЬЩИКИ</h4>
+                    <a href="https://n2015703.yclients.com" target="_top" class="metro-link">Записаться &rarr;</a>
+                </div>
+                <div class="metro-card">
+                    <div class="metro-circle text-neon">M</div>
+                    <h4>РЯЗАНСКИЙ ПРОСПЕКТ</h4>
+                    <a href="https://n2015703.yclients.com" target="_top" class="metro-link">Записаться &rarr;</a>
+                </div>
+                <div class="metro-card">
+                    <div class="metro-circle text-neon">M</div>
+                    <h4>ВАРШАВСКАЯ</h4>
+                    <a href="https://n2015703.yclients.com" target="_top" class="metro-link">Записаться &rarr;</a>
+                </div>
+                <div class="metro-card">
+                    <div class="metro-circle text-neon">M</div>
+                    <h4>ПАРТИЗАНСКАЯ</h4>
+                    <a href="https://n2015703.yclients.com" target="_top" class="metro-link">Записаться &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="pricing section-padding" id="pricing">
+        <div class="container">
+            <h2 class="section-title text-center">ПРАЙС <span class="text-neon">БИЛЕТЫ</span></h2>
+            <div class="price-list fade-up">
+                <!-- TICKET 1 -->
+                <div class="ticket-wrap">
+                    <div class="ticket">
+                        <div class="ticket-main">
+                            <h3 class="price-name">МУЖСКАЯ СТРИЖКА</h3>
+                            <p class="price-desc">Мытье головы, укладка, 30 минут.</p>
+                        </div>
+                        <div class="ticket-divider"></div>
+                        <div class="ticket-stub">
+                            <div class="price-value">900 ₽</div>
+                            <a href="https://n2015703.yclients.com" target="_top" class="btn btn-sm btn-neon">ХОЧУ!</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- TICKET 2 -->
+                <div class="ticket-wrap">
+                    <div class="ticket ticket-neon">
+                        <div class="ticket-main">
+                            <h3 class="price-name text-black">СТРИЖКА МАШИНКОЙ</h3>
+                            <p class="price-desc text-black">1 насадка, окантовка.</p>
+                        </div>
+                        <div class="ticket-divider"></div>
+                        <div class="ticket-stub">
+                            <div class="price-value text-black">600 ₽</div>
+                            <a href="https://n2015703.yclients.com" target="_top" class="btn btn-sm btn-black">ХОЧУ!</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- TICKET 3 -->
+                <div class="ticket-wrap">
+                    <div class="ticket">
+                        <div class="ticket-main">
+                            <h3 class="price-name">МОДЕЛИРОВАНИЕ БОРОДЫ</h3>
+                            <p class="price-desc">Контуры, опасная бритва.</p>
+                        </div>
+                        <div class="ticket-divider"></div>
+                        <div class="ticket-stub">
+                            <div class="price-value">800 ₽</div>
+                            <a href="https://n2015703.yclients.com" target="_top" class="btn btn-sm btn-neon">ХОЧУ!</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- TICKET 4 -->
+                <div class="ticket-wrap">
+                    <div class="ticket">
+                        <div class="ticket-main">
+                            <h3 class="price-name">СТРИЖКА + БОРОДА</h3>
+                            <p class="price-desc">Комплекс, полный образ.</p>
+                        </div>
+                        <div class="ticket-divider"></div>
+                        <div class="ticket-stub">
+                            <div class="price-value">1600 ₽</div>
+                            <a href="https://n2015703.yclients.com" target="_top" class="btn btn-sm btn-neon">ХОЧУ!</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-xl">
+                <a href="https://n2015703.yclients.com" target="_top" class="btn btn-lg btn-neon">ЗАПИСАТЬСЯ ОНЛАЙН</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- BARBERS -->
+    <section class="barbers section-padding bg-dark" id="barbers">
+        <div class="container">
+            <div class="section-header relative">
+                <h2 class="section-title">НАШИ <span class="text-neon">МАСТЕРА</span></h2>
+                <svg class="scribble arrow-down" width="80" height="120" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20 C 40 50, 60 80, 50 130" stroke="#C6FF00" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M20 100 L 50 135 L 85 95" stroke="#C6FF00" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="grid grid-3">
+                <div class="barber-card brutal-card fade-up">
+                    <div class="barber-img-wrapper hover-silhouette">
+                        <img src="barber_new_1.jpg" alt="Шохназар" class="barber-img">
+                    </div>
+                    <div class="barber-info">
+                        <h3>ШОХНАЗАР</h3>
+                    </div>
+                </div>
+                <div class="barber-card brutal-card fade-up delay-1">
+                    <div class="barber-img-wrapper hover-silhouette">
+                        <!-- CSS flip to create a different pose framing -->
+                        <img src="barber_new_2.jpg" alt="Шурик" class="barber-img" style="transform: scaleX(-1);">
+                    </div>
+                    <div class="barber-info">
+                        <h3>ШУРИК</h3>
+                    </div>
+                </div>
+                <div class="barber-card brutal-card fade-up delay-2">
+                    <div class="barber-img-wrapper hover-silhouette">
+                        <img src="barber_new_3.jpg" alt="Эльдар" class="barber-img">
+                    </div>
+                    <div class="barber-info">
+                        <h3>ЭЛЬДАР</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section class="gallery-wrapper" id="gallery">
+        <div class="gallery-sticky">
+            <div class="gallery-title-wrap">
+                <h2 class="section-title">ГАЛЕРЕЯ</h2>
+            </div>
+            <div class="gallery-track" id="gallery-track">
+                <div class="gallery-item brutal-border">
+                    <img src="gallery_new_1.jpg" alt="Barbershop" class="hover-scale">
+                </div>
+                <!-- Added slight transforms for random offset minimalism effect -->
+                <div class="gallery-item brutal-border" style="transform: translateY(30px);">
+                    <img src="gallery_new_2.jpg" alt="Barbershop" class="hover-scale">
+                </div>
+                <div class="gallery-item brutal-border" style="transform: translateY(-20px);">
+                    <img src="gallery_new_3.jpg" alt="Barbershop" class="hover-scale">
+                </div>
+                <div class="gallery-item brutal-border" style="transform: translateY(15px);">
+                    <img src="gallery_new_4.jpg" alt="Barbershop" class="hover-scale">
+                </div>
+                <div class="gallery-item brutal-border" style="transform: translateY(-30px);">
+                    <img src="gallery_new_5.jpg" alt="Barbershop" class="hover-scale">
+                </div>
+                <div style="width: 10vw; flex-shrink: 0;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="reviews section-padding bg-dark" id="reviews">
+        <div class="container">
+            <h2 class="section-title">ЧТО <span class="text-neon">ГОВОРЯТ</span></h2>
+            <div class="grid grid-2">
+                <div class="review-card fade-up">
+                    <div class="stars text-neon">★★★★★</div>
+                    <p class="review-text">"Реально быстро и четко. Опаздывал на встречу, зашел по пути от метро, за 30 минут сделали пушку. Респект."</p>
+                    <div class="review-author">- Дмитрий, 28 лет</div>
+                </div>
+                <div class="review-card fade-up delay-1">
+                    <div class="stars text-neon">★★★★★</div>
+                    <p class="review-text">"Цена-качество идеальное. 900 рублей за такой уровень сервиса - топ. 5-я стрижка в подарок работает, проверил!"</p>
+                    <div class="review-author">- Сергей, 34 года</div>
+                </div>
+                <div class="review-card fade-up delay-2">
+                    <div class="stars text-neon">★★★★★</div>
+                    <p class="review-text">"Атмосфера кайф, музыка правильная. Мастера понимают с полуслова что нужно сделать. Рекомендую."</p>
+                    <div class="review-author">- Антон, 22 года</div>
+                </div>
+                <div class="review-card fade-up delay-3 highlight-card-review">
+                    <div class="stars text-black">★★★★★</div>
+                    <p class="review-text text-black">"Записался онлайн за 10 секунд. Пришел - сразу сел в кресло. Никакого ожидания. Супер."</p>
+                    <div class="review-author text-black">- Илья, 31 год</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="map-section section-padding" id="map-section">
+        <div class="container custom-map-container">
+            <h2 class="section-title text-center">ЖДЕМ <span class="text-neon">ТЕБЯ</span></h2>
+            <div class="map-wrapper fade-up" id="map"></div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer bg-dark">
+        <div class="container footer-content">
+            <div class="footer-logo glitch" data-text="ГРОМ">ГРОМ</div>
+            <div class="footer-links">
+                <a href="#advantages">Преимущества</a>
+                <a href="#pricing">Цены</a>
+                <a href="#barbers">Команда</a>
+            </div>
+            <div class="footer-legal">
+                <p>&copy; 2026 Стрижки Гром. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MOBILE STICKY CTA -->
+    <div class="mobile-sticky-cta">
+        <a href="https://n2015703.yclients.com" target="_top" class="btn btn-neon btn-full-width">ЗАПИСАТЬСЯ ЗА 10 СЕКУНД</a>
+    </div>
+
+    <!-- TELEGRAM WIDGET -->
+    <a href="https://t.me/grometeam" target="_blank" class="tg-widget" aria-label="Связаться в Telegram">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#C6FF00"/>
+            <path d="M16.4445 7.82862C16.6341 7.2796 16.1554 6.78443 15.6021 6.94165L5.79724 9.72895C5.17646 9.90547 5.1507 10.7818 5.75949 10.9926L8.8502 12.0624C9.17628 12.1754 9.53589 12.0917 9.79092 11.8427L13.8863 7.84274C13.9877 7.74373 14.1503 7.8767 14.0722 7.99616L10.7725 13.0428C10.5187 13.4309 10.4939 13.9312 10.7071 14.3406L12.35 17.4952C12.6368 18.0458 13.4566 17.9616 13.6234 17.3615L16.4445 7.82862Z" fill="#050505"/>
+        </svg>
+    </a>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>

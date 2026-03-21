@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добро пожаловать в Grome</title>
+    <!-- Подключаем Unbounded для кириллицы -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #050505;
+            --text-main: #FFFFFF;
+            --text-muted: #888888;
+            --accent-color: #C6FF00; /* Неон */
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --font-headings: 'Akony', 'Onder', 'Benzin', 'Brigends Expanded', 'Unbounded', sans-serif;
+            --font-body: 'Unbounded', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+            padding: 40px;
+            /* Формат A4 */
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Задний фон */
+        .ambient-glow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 300px;
+            background: radial-gradient(ellipse at top, rgba(198, 255, 0, 0.15) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            font-family: var(--font-headings);
+            font-weight: 700;
+            font-size: 32px;
+            color: var(--text-main);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .logo .neon {
+            color: var(--accent-color);
+        }
+
+        .page-title {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .intro-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: rgba(255,255,255,0.9);
+            padding: 0 10px;
+        }
+
+        .intro-text p {
+            margin-bottom: 16px;
+        }
+
+        .intro-text p:first-child {
+            font-family: var(--font-headings);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 24px;
+        }
+
+        .intro-text .highlight {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .principles-header {
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .principles-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .principle-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: border-color 0.3s ease;
+        }
+
+        .principle-card:hover {
+            border-color: rgba(198, 255, 0, 0.3);
+        }
+
+        .principle-header {
+            display: flex;
+            align-items: baseline;
+        }
+
+        .section-number {
+            font-family: var(--font-headings);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-right: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .principle-desc {
+            font-size: 13px;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .notes-section {
+            padding: 24px;
+            border-radius: 12px;
+            background: rgba(198, 255, 0, 0.05);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .notes-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        
+        .notes-text:last-child {
+            margin-bottom: 0;
+        }
+
+        .footer-greeting {
+            margin-top: 40px;
+            font-family: var(--font-headings);
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding-top: 40px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-greeting .neon {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    
+    <header>
+        <div class="logo">ГРОМ<span class="neon">.</span></div>
+        <div class="page-title">
+            <span style="color: #fff">Команда</span><br>
+            Добро пожаловать
+        </div>
+    </header>
+
+    <div class="intro-text">
+        <p>Команда Grome,</p>
+        <p>Рады приветствовать вас в сети барбершопов честных цен!</p>
+        <p>Grome — это про понятный сервис и честную работу. Здесь важен результат, дисциплина и уважение к клиенту и команде.</p>
+    </div>
+
+    <div class="principles-header">Наши основные принципы:</div>
+
+    <div class="principles-grid">
+        <div class="principle-card">
+            <div class="principle-header">
+                <span class="section-number">01</span>
+                <h2 class="section-title">Скорость</h2>
+            </div>
+            <div class="principle-desc">
+                Работаем быстро и уверенно, без лишних движений и задержек.
+            </div>
+        </div>
+
+        <div class="principle-card">
+            <div class="principle-header">
+                <span class="section-number">02</span>
+                <h2 class="section-title">Качество</h2>
+            </div>
+            <div class="principle-desc">
+                Каждая стрижка аккуратная и ровная. Клиент должен быть доволен.
+            </div>
+        </div>
+
+        <div class="principle-card">
+            <div class="principle-header">
+                <span class="section-number">03</span>
+                <h2 class="section-title">Чистота</h2>
+            </div>
+            <div class="principle-desc">
+                Рабочее место и инструменты всегда в порядке.
+            </div>
+        </div>
+
+        <div class="principle-card">
+            <div class="principle-header">
+                <span class="section-number">04</span>
+                <h2 class="section-title">Совершенство</h2>
+            </div>
+            <div class="principle-desc">
+                Стремление к развитию. Каждый день стараемся работать лучше, чем вчера.
+            </div>
+        </div>
+    </div>
+
+    <div class="notes-section">
+        <div class="notes-text">
+            У нас <span  style="color: var(--accent-color); font-weight: 500;">единые правила для всех</span>. Они помогают держать высокий уровень и порядок в команде.
+        </div>
+        <div class="notes-text">
+            В конце документа вы найдете регламент и штраф-лист — ознакомьтесь с ними внимательно. Это часть нашей общей ответственности.
+        </div>
+    </div>
+
+    <div class="footer-greeting">
+        Добро пожаловать в ГРОМ<span class="neon">!</span>
+    </div>
+
+</body>
+</html>
