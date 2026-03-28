@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>GROME | Next-Gen Barbershop</title>
     
     <!-- Load Unbounded for fallback and body text -->
@@ -11,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script src="https://api-maps.yandex.ru/2.1/?apikey=cf21ddbf-8869-42b4-ab98-ec8e3ae134e7&lang=ru_RU" type="text/javascript"></script>
-    <link rel="stylesheet" href="styles_premium.css">
+    <link rel="stylesheet" href="styles_premium.css?v=1.0.2">
 </head>
 <body class="framer-theme">
     
@@ -28,8 +31,8 @@
             <div class="nav-actions">
                 <a href="https://n2015703.yclients.com" target="_top" class="framer-btn primary">Запись</a>
             </div>
-            <!-- Mobile Menu Toggle (Visual Only) -->
-            <div class="mobile-toggle">
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-toggle" id="mobileMenuBtn">
                 <span></span><span></span>
             </div>
         </div>
@@ -302,7 +305,7 @@
         
         <div id="location-buttons" class="location-chips scroll-reveal delay-1" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
 
-        <div id="map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
+        <div id="map" class="desktop-map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
         <style>
             /* Yandex Map Native Dark Mode Overlay - Keeps markers their original neon color! */
             #map [class*="-ground-pane"] {
@@ -406,6 +409,22 @@
         
         revealElements.forEach(el => revealObserver.observe(el));
         
+        // Mobile Menu Toggle Logic
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.querySelector('.nav-links');
+        
+        if (mobileBtn && navLinks) {
+            mobileBtn.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+            
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                });
+            });
+        }
+        
         // Header transparency on scroll
         const header = document.querySelector('.header-nav');
         // Hero Scroll Parallax (Colizeum-style)
@@ -429,8 +448,6 @@
             } else {
                 header.classList.remove('scrolled');
             }
-            
-            // Main document scroll effects logic can stay here if needed
         });
 
         // ==========================================
@@ -505,9 +522,82 @@
                 const delta = Math.sign(e.deltaY); // +1 or -1
                 targetRotation -= delta * (theta * 0.5); // Move smoothly
             }, { passive: false });
+            
+            // Mobile Swipe Interaction for Carousel
+            let touchStartX = 0;
+            carouselContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            carouselContainer.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Prevent page scroll while spinning the carousel
+                const currentTouchX = e.touches[0].clientX;
+                const deltaX = touchStartX - currentTouchX;
+                targetRotation -= deltaX * 0.4; // Slightly higher sensitivity
+                touchStartX = currentTouchX; 
+            }, { passive: false });
         }
 
-        // YANDEX MAP INIT
+        // LOCATIONS DATA (Decoupled from Map API)
+        const locations = [
+            { id: "alx", coords: [55.807794, 37.638531], name: "ГРОМ - Алексеевская", label: "м. Алексеевская" },
+            { id: "tex", coords: [55.708811, 37.732789], name: "ГРОМ - Текстильщики", label: "м. Текстильщики" },
+            { id: "rzp", coords: [55.716616, 37.792823], name: "ГРОМ - Рязанский проспект", label: "м. Рязанский проспект" },
+            { id: "var", coords: [55.653537, 37.625522], name: "ГРОМ - Варшавская", label: "м. Варшавская", link: "https://yandex.ru/maps/-/CPB8AD87" },
+            { id: "par", coords: [55.789234, 37.749557], name: "ГРОМ - Партизанская", label: "м. Партизанская" },
+            { id: "sok", coords: [55.805175, 37.514867], name: "ГРОМ - Сокол", label: "м. Сокол, Ленинградский проспект 78к1", link: "https://yandex.ru/maps/-/CPRV5AOd" }
+        ];
+
+        // 1. RENDER CHIPS IMMEDIATELY (Fallback logic)
+        const buttonContainer = document.getElementById('location-buttons');
+        const renderedButtons = {}; // Keep track of buttons for map interaction
+        
+        if (buttonContainer) {
+            locations.forEach(loc => {
+                const finalLink = loc.link || `https://yandex.ru/maps/?pt=${loc.coords[1]},${loc.coords[0]}&z=17&l=map`;
+                
+                if (loc.label) {
+                    const btn = document.createElement('button');
+                    btn.innerText = loc.label;
+                    btn.style.padding = "12px 24px";
+                    btn.style.borderRadius = "99px";
+                    btn.style.border = "1px solid rgba(255,255,255,0.15)";
+                    btn.style.background = "rgba(0,0,0,0.4)";
+                    btn.style.backdropFilter = "blur(10px)";
+                    btn.style.color = "rgba(255,255,255,0.9)";
+                    btn.style.cursor = "pointer";
+                    btn.style.fontFamily = "inherit";
+                    btn.style.fontSize = "14px";
+                    btn.style.fontWeight = "500";
+                    btn.style.transition = "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
+                    
+                    btn.onmouseover = () => {
+                        btn.style.background = "#C6FF00";
+                        btn.style.color = "#000";
+                        btn.style.borderColor = "#C6FF00";
+                        btn.style.transform = "translateY(-2px)";
+                        btn.style.boxShadow = "0 8px 20px rgba(198,255,0,0.3)";
+                    };
+                    btn.onmouseout = () => {
+                        btn.style.background = "rgba(0,0,0,0.4)";
+                        btn.style.color = "rgba(255,255,255,0.9)";
+                        btn.style.borderColor = "rgba(255,255,255,0.15)";
+                        btn.style.transform = "translateY(0)";
+                        btn.style.boxShadow = "none";
+                    };
+                    
+                    // Default fallback action if map fails
+                    btn.onclick = () => {
+                        window.open(finalLink, '_blank');
+                    };
+                    
+                    buttonContainer.appendChild(btn);
+                    renderedButtons[loc.id] = btn;
+                }
+            });
+        }
+
+        // 2. YANDEX MAP INIT (Enhancement)
         if (typeof ymaps !== 'undefined') {
             ymaps.ready(function () {
                 var myMap = new ymaps.Map("map", {
@@ -515,18 +605,6 @@
                     zoom: 10,
                     controls: ['zoomControl']
                 });
-
-                // Locations Array
-                var locations = [
-                    { coords: [55.807794, 37.638531], name: "ГРОМ - Алексеевская", label: "м. Алексеевская" },
-                    { coords: [55.708811, 37.732789], name: "ГРОМ - Текстильщики", label: "м. Текстильщики" },
-                    { coords: [55.716616, 37.792823], name: "ГРОМ - Рязанский проспект", label: "м. Рязанский проспект" },
-                    { coords: [55.653537, 37.625522], name: "ГРОМ - Варшавская", label: "м. Варшавская", link: "https://yandex.ru/maps/-/CPB8AD87" },
-                    { coords: [55.789234, 37.749557], name: "ГРОМ - Партизанская", label: "м. Партизанская" },
-                    { coords: [55.805175, 37.514867], name: "ГРОМ - Сокол", label: "м. Сокол, Ленинградский проспект 78к1", link: "https://yandex.ru/maps/-/CPRV5AOd" }
-                ];
-
-                const buttonContainer = document.getElementById('location-buttons');
 
                 locations.forEach(loc => {
                     const finalLink = loc.link || `https://yandex.ru/maps/?pt=${loc.coords[1]},${loc.coords[0]}&z=17&l=map`;
@@ -546,13 +624,13 @@
 
                     var markerHTML = `
                     <div style="position: relative; width: 44px; height: 60px; cursor: pointer; display: flex; justify-content: center; align-items: flex-start;">
-                        <!-- Narrow SVG Pin Drop (Pure black to match logo background) -->
+                        <!-- Narrow SVG Pin Drop -->
                         <svg width="44" height="60" viewBox="0 0 44 60" style="position: absolute; left: 0; top: 0; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); z-index: 1;">
                             <path d="M22,1 C11,1 2,10 2,21.5 C2,37 22,58 22,58 C22,58 42,37 42,21.5 C42,10 33,1 22,1 Z" fill="#000" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
                         </svg>
-                        <!-- Logo inside (Tall rectangle fitting the Zeus head cleanly without circular masks, blending via screen to drop the black background natively!) -->
+                        <!-- Logo inside -->
                         <div style="position: absolute; top: 4px; left: 4px; width: 36px; height: 42px; background-color: transparent; background-image: url('zeus_head_only.jpg'); background-position: center; z-index: 2; ${logoInnerCSS}"></div>
-                        <!-- Notification (visible only when property is set) -->
+                        <!-- Notification -->
                         <div style="position: absolute; top: -5px; right: -60px; background: rgba(198, 255, 0, 0.95); color: #000; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; font-family: 'Unbounded', sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.4); opacity: $[properties.myOpacity]; transition: opacity 0.3s; animation: floatNotify 2s ease-in-out infinite; z-index: 3;">нажми на меня</div>
                     </div>
                     <style>@keyframes floatNotify { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }</style>
@@ -570,78 +648,61 @@
                             coordinates: [[0, 0], [44, 60]]
                         },
                         balloonPanelMaxMapArea: 0,
-                        iconOffset: [-22, -58], // exact anchor to the tip of SVG
+                        iconOffset: [-22, -58], 
                         balloonOffset: [0, -60]
                     });
                     
                     myMap.geoObjects.add(placemark);
                     
-                    // Button logic
-                    if (buttonContainer && loc.label) {
-                        const btn = document.createElement('button');
-                        btn.innerText = loc.label;
-                        btn.style.padding = "12px 24px";
-                        btn.style.borderRadius = "99px";
-                        btn.style.border = "1px solid rgba(255,255,255,0.15)";
-                        btn.style.background = "rgba(0,0,0,0.4)";
-                        btn.style.backdropFilter = "blur(10px)";
-                        btn.style.color = "rgba(255,255,255,0.9)";
-                        btn.style.cursor = "pointer";
-                        btn.style.fontFamily = "inherit";
-                        btn.style.fontSize = "14px";
-                        btn.style.fontWeight = "500";
-                        btn.style.transition = "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
-                        
-                        btn.onmouseover = () => {
-                            btn.style.background = "#C6FF00";
-                            btn.style.color = "#000";
-                            btn.style.borderColor = "#C6FF00";
-                            btn.style.transform = "translateY(-2px)";
-                            btn.style.boxShadow = "0 8px 20px rgba(198,255,0,0.3)";
-                        };
-                        btn.onmouseout = () => {
-                            btn.style.background = "rgba(0,0,0,0.4)";
-                            btn.style.color = "rgba(255,255,255,0.9)";
-                            btn.style.borderColor = "rgba(255,255,255,0.15)";
-                            btn.style.transform = "translateY(0)";
-                            btn.style.boxShadow = "none";
-                        };
-                        
-                        btn.onclick = () => {
-                            // Highlight marker's notification popup on click
+                    // Upgrade button logic since map loaded successfully
+                    const btn = renderedButtons[loc.id];
+                    if (btn) {
+                        btn.onclick = (e) => {
+                            // On mobile, keep the default logic which opens Yandex Maps directly
+                            if (window.innerWidth < 768) {
+                                return;
+                            }
+                            
+                            e.preventDefault();
                             placemark.properties.set('myOpacity', "1");
                             
                             const mapEl = document.getElementById('map');
-                            // Micro-loading sleek transition: fade to black
                             mapEl.style.opacity = '0';
                             
                             setTimeout(() => {
-                                // Snap instantly to location (duration: 0), no travelling
                                 myMap.setCenter(loc.coords, 16, {
                                     checkZoomRange: true,
                                     duration: 0
                                 }).then(() => {
                                     placemark.balloon.open();
                                     
-                                    // Fade smoothly back in after the map renders
                                     setTimeout(() => {
                                         mapEl.style.opacity = '1';
                                     }, 150);
                                     
-                                    // Hide tooltip after a few seconds
                                     setTimeout(() => {
                                         placemark.properties.set('myOpacity', "0");
                                     }, 4000);
                                 });
                             }, 300);
                         };
-                        
-                        buttonContainer.appendChild(btn);
                     }
                 });
                 
                 myMap.behaviors.disable('scrollZoom');
             });
+        } else {
+            // Map failed to inject entirely, set fallback map container style block
+            const mapEl = document.getElementById('map');
+            if(mapEl) {
+                mapEl.style.display = 'flex';
+                mapEl.style.justifyContent = 'center';
+                mapEl.style.alignItems = 'center';
+                mapEl.style.color = 'rgba(255,255,255,0.4)';
+                mapEl.style.fontSize = '14px';
+                mapEl.style.padding = '40px';
+                mapEl.innerHTML = '<div style="text-align: center;">Для просмотра интерактивной карты необходимо отключить блокировщик рекламы.<br><br>Пожалуйста, выберите локацию выше 👆</div>';
+            }
         }
     </script>
 </body>
