@@ -695,9 +695,9 @@ body.framer-theme {
 
 .cta-heading {
     font-family: 'Akony', var(--font-heading);
-    font-size: clamp(1.5rem, 7vw, 4.5rem);
+    font-size: clamp(24px, 6vw, 56px); /* Safely constrained to prevent any Desktop/Tablet clipping */
     font-weight: normal;
-    letter-spacing: 0.02em;
+    letter-spacing: 0;
     line-height: 1.1;
     margin-bottom: 4rem;
     text-transform: uppercase;
