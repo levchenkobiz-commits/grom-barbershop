@@ -302,8 +302,25 @@
         
         <div id="location-buttons" class="location-chips scroll-reveal delay-1" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
 
-        <div id="map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
+        <div id="map" class="desktop-map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
         <style>
+            /* Mobile tweaks for the locations block */
+            @media (max-width: 767px) {
+                .desktop-map {
+                    display: none !important;
+                }
+                #location-buttons {
+                    flex-direction: column !important;
+                }
+                #location-buttons button {
+                    width: 100%;
+                    padding: 16px 24px !important;
+                    font-size: 15px !important;
+                }
+                .section-cta {
+                    padding-top: 4rem !important; /* adjust spacing when map is hidden */
+                }
+            }
             /* Yandex Map Native Dark Mode Overlay - Keeps markers their original neon color! */
             #map [class*="-ground-pane"] {
                 filter: grayscale(100%) invert(100%) contrast(1.15) brightness(0.85);
@@ -519,6 +536,19 @@
                 const delta = Math.sign(e.deltaY); // +1 or -1
                 targetRotation -= delta * (theta * 0.5); // Move smoothly
             }, { passive: false });
+            
+            // Mobile Swipe Interaction for Carousel
+            let touchStartX = 0;
+            carouselContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            carouselContainer.addEventListener('touchmove', (e) => {
+                const currentTouchX = e.touches[0].clientX;
+                const deltaX = touchStartX - currentTouchX;
+                targetRotation -= deltaX * 0.2; // Adjust swipe sensitivity
+                touchStartX = currentTouchX; // reset for continuous drag
+            }, { passive: true });
         }
 
         // LOCATIONS DATA (Decoupled from Map API)
@@ -641,6 +671,11 @@
                     const btn = renderedButtons[loc.id];
                     if (btn) {
                         btn.onclick = (e) => {
+                            // On mobile, keep the default logic which opens Yandex Maps directly
+                            if (window.innerWidth < 768) {
+                                return;
+                            }
+                            
                             e.preventDefault();
                             placemark.properties.set('myOpacity', "1");
                             

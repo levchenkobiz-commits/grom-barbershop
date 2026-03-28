@@ -5,10 +5,10 @@
 
 @font-face {
     font-family: 'Akony';
-    /* Using local Brigends Expanded as a reliable fallback since Akony CDN is 404 */
-    src: local('Akony'), url('brigends-expanded.otf') format('opentype');
+    src: local('Akony'), url('https://fonts.cdnfonts.com/s/72225/AkonyTest.woff') format('woff');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
