@@ -250,19 +250,43 @@
             <div class="text-center mt-6 scroll-reveal delay-4">
                 <a href="https://n2015703.yclients.com" target="_top" class="framer-btn secondary lg">Весь прайс-лист</a>
             </div>
-        </div>
-    </section>
-
-    <!-- MASONRY BENTO GALLERY -->
+    <!-- RESPONSIVE GALLERY SECTION -->
     <section class="section-layout" id="gallery" style="position: relative; overflow: hidden; padding: 100px 0;">
         <div class="container">
             <div class="section-head text-center scroll-reveal" style="margin-bottom: 4rem;">
                 <h2 class="section-title">АТМОСФЕРА</h2>
-                <p class="section-sub">Пространство для тех, кто ценит премиальную эстетику</p>
+                <p class="section-sub desktop-only">Скролльте галерею, чтобы вращать</p>
+                <p class="section-sub mobile-only">Пространство для тех, кто ценит эстетику</p>
+            </div>
+        </div>
+
+        <style>
+            @media (min-width: 1024px) {
+                .mobile-only { display: none !important; }
+            }
+            @media (max-width: 1023px) {
+                .desktop-only { display: none !important; }
+            }
+            
+            /* Carousel specific */
+            .carousel-card { position: absolute; width: 100%; height: 100%; left: 0; top: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); transition: filter 0.3s; background: #000; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+            .carousel-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+        </style>
+
+        <!-- DESKTOP 3D CAROUSEL -->
+        <div class="carousel-container desktop-only" id="carouselContainer" style="max-width: 960px; margin: 0 auto; perspective: 1400px; -webkit-perspective: 1400px; height: 600px; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; cursor: grab; touch-action: pan-y;">
+            <div class="carousel-spinner" id="carouselSpinner" style="transform-style: preserve-3d; -webkit-transform-style: preserve-3d; width: 360px; height: 480px; position: relative; transition: transform 0.1s ease-out; -webkit-transition: -webkit-transform 0.1s ease-out;">
+                <div class="carousel-card"><img src="gallery_new_1.jpg" alt="Barber working"></div>
+                <div class="carousel-card"><img src="gallery_new_2.jpg" alt="Interior Details"></div>
+                <div class="carousel-card"><img src="gallery_new_4.jpg" alt="Haircut profile"></div>
+                <div class="carousel-card"><img src="barber_bg.jpg" alt="Barber Master"></div>
+                <div class="carousel-card"><img src="gallery_new_3.jpg" alt="Interior Side"></div>
+                <div class="carousel-card"><img src="gallery_new_5.jpg" alt="Waiting Area"></div>
             </div>
         </div>
         
-        <div class="masonry-gallery" style="display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 160px; gap: 12px; padding: 0 16px; max-width: 1100px; margin: 0 auto; width: 100%;">
+        <!-- MOBILE BENTO GRID -->
+        <div class="masonry-gallery mobile-only" style="display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 160px; gap: 12px; padding: 0 16px; max-width: 1100px; margin: 0 auto; width: 100%;">
             <div class="gallery-item g-large scroll-reveal delay-1">
                 <img src="gallery_new_1.jpg" alt="Barber Master">
             </div>
@@ -338,10 +362,9 @@
         <div class="container text-center text-center" style="margin-bottom: 3rem;">
             <h2 class="section-title scroll-reveal">ЛОКАЦИИ И КОНТАКТЫ</h2>
         </div>
-        
-        <div id="location-buttons" class="location-chips scroll-reveal delay-1" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
+        <div id="location-buttons" class="location-chips scroll-reveal delay-1 mobile-only" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
 
-        <div id="map" class="desktop-map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
+        <div id="map" class="desktop-map desktop-only" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
         <style>
             /* Yandex Map Native Dark Mode Overlay - Keeps markers their original neon color! */
             #map [class*="-ground-pane"] {
@@ -502,6 +525,61 @@
             }, { passive: true });
         });
 
+
+
+        // 3D Carousel Initialization & Wheel Logic
+        const carouselContainer = document.getElementById('carouselContainer');
+        const carouselSpinner = document.getElementById('carouselSpinner');
+        
+        if (carouselContainer && carouselSpinner) {
+            const cards = Array.from(carouselSpinner.querySelectorAll('.carousel-card'));
+            const numCards = cards.length;
+            const theta = 360 / numCards;
+            const radius = Math.round((360 / 2) / Math.tan(Math.PI / numCards)) + 72; 
+            
+            cards.forEach((card, i) => {
+                const angle = theta * i;
+                card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+            });
+            
+            let targetRotation = 0;
+            let currentRotation = 0;
+            let carouselAnimationFrame;
+            
+            function animateCarousel() {
+                currentRotation += (targetRotation - currentRotation) * 0.05;
+                carouselSpinner.style.transform = `translateZ(-${radius}px) rotateY(${currentRotation}deg)`;
+                
+                const normalizedRotation = ((currentRotation % 360) + 360) % 360;
+                cards.forEach((card, i) => {
+                    const cardAngle = (numCards - i) * theta % 360; 
+                    let diff = Math.abs(normalizedRotation - cardAngle);
+                    if (diff > 180) diff = 360 - diff;
+                    const distFromCenter = diff / 180;
+                    
+                    const img = card.querySelector('img');
+                    if (img) {
+                        img.style.filter = `brightness(${1 - distFromCenter}) grayscale(${distFromCenter * 50}%)`;
+                        img.style.opacity = 1 - (distFromCenter * 0.4);
+                    }
+                });
+                carouselAnimationFrame = requestAnimationFrame(animateCarousel);
+            }
+            
+            // Only start loop if element is visible (e.g. desktop)
+            if (window.innerWidth >= 1024) {
+                animateCarousel();
+            }
+
+            carouselContainer.addEventListener('wheel', (e) => {
+                // Ignore scroll hijack on mobile completely
+                if (window.innerWidth < 1024) return;
+                
+                e.preventDefault(); 
+                const delta = Math.sign(e.deltaY); 
+                targetRotation -= delta * (theta * 0.5); 
+            }, { passive: false });
+        }
 
 
         // LOCATIONS DATA (Decoupled from Map API)
