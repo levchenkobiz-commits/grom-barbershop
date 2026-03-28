@@ -578,13 +578,6 @@ body.framer-theme {
     min-width: max-content; /* Prevent stacking */
 }
 
-@media (max-width: 767px) {
-    .price-amount {
-        font-size: 1.25rem;
-        letter-spacing: 0.05em; /* Add space on mobile so Akony digits don't merge */
-    }
-}
-
 .hover-btn-icon {
     width: 48px;
     height: 48px;
@@ -602,6 +595,43 @@ body.framer-theme {
     background: var(--text-primary);
     color: var(--bg-dark);
     transform: rotate(45deg);
+}
+
+@media (max-width: 767px) {
+    .price-row {
+        padding: 1.5rem;
+        flex-wrap: wrap;
+        position: relative;
+    }
+    .price-info {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .price-info h3 {
+        font-size: 1rem; /* Smaller for wide Akony text */
+        line-height: 1.2;
+        letter-spacing: 0.05em;
+    }
+    .price-info p {
+        max-width: 80%;
+    }
+    .price-line {
+        display: none; /* Hide the dots on mobile since it is stacked */
+    }
+    .price-amount {
+        font-size: 1.3rem;
+        letter-spacing: 0.05em; 
+        align-self: flex-end;
+        padding-bottom: 0.5rem;
+    }
+    .hover-btn-icon {
+        position: absolute;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        margin-left: 0;
+        width: 40px;
+        height: 40px;
+    }
 }
 
 /* 3D SCROLL GALLERY */
