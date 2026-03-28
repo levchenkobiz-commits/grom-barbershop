@@ -5,14 +5,15 @@
 
 @font-face {
     font-family: 'Akony';
-    src: local('Akony'), url('https://fonts.cdnfonts.com/s/72225/AkonyTest.woff') format('woff');
+    /* Using local Brigends Expanded as a reliable fallback since Akony CDN is 404 */
+    src: local('Akony'), url('brigends-expanded.otf') format('opentype');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Brigends Expanded';
-    src: local('Brigends Expanded'), url('https://fonts.cdnfonts.com/s/90022/BrigendsExpanded.woff') format('woff');
+    src: local('Brigends Expanded'), url('brigends-expanded.otf') format('opentype');
     font-weight: normal;
 }
 
@@ -123,6 +124,26 @@ body.framer-theme {
 .nav-links {
     display: none;
     gap: 2rem;
+}
+
+@media (max-width: 767px) {
+    .nav-links.active {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 0;
+        right: 0;
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        gap: 16px;
+        text-align: center;
+    }
 }
 
 @media (min-width: 768px) {
