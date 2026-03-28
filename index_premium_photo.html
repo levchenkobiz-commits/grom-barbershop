@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script src="https://api-maps.yandex.ru/2.1/?apikey=cf21ddbf-8869-42b4-ab98-ec8e3ae134e7&lang=ru_RU" type="text/javascript"></script>
-    <link rel="stylesheet" href="styles_premium.css?v=1.0.8">
+    <link rel="stylesheet" href="styles_premium.css?v=1.0.9">
 </head>
 <body class="framer-theme">
     
@@ -606,43 +606,8 @@
                 if (loc.label) {
                     const btn = document.createElement('a');
                     btn.href = finalLink;
-                    // Smart Magic Link Handler for Yandex Maps
-                    btn.onclick = (e) => {
-                        e.preventDefault();
-                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                        
-                        if (isMobile) {
-                            // Extract OID for direct app schema
-                            let appUri = finalLink;
-                            const oidMatch = finalLink.match(/org\/[^\/]+\/(\d+)/);
-                            
-                            if (oidMatch) {
-                                appUri = `yandexmaps://maps.yandex.ru/?oid=${oidMatch[1]}`;
-                            } else if (finalLink.includes('/-/')) {
-                                // Shortened links usually get intercepted by OS natively if not _blank
-                                appUri = finalLink; 
-                            }
-
-                            // If Android, use Intent which cleanly handles fallbacks natively
-                            if (/Android/i.test(navigator.userAgent) && oidMatch) {
-                                window.location.href = `intent://maps.yandex.ru/?oid=${oidMatch[1]}#Intent;scheme=yandexmaps;package=ru.yandex.yandexmaps;S.browser_fallback_url=${encodeURIComponent(finalLink)};end`;
-                                return;
-                            }
-
-                            // If iOS or other, try scheme, then fallback
-                            window.location.href = appUri;
-                            
-                            // If it was a custom scheme (not https), set a fallback timer
-                            if (appUri.startsWith('yandexmaps:')) {
-                                setTimeout(() => {
-                                    window.location.href = finalLink;
-                                }, 1000);
-                            }
-                        } else {
-                            // Desktop
-                            window.open(finalLink, "_blank");
-                        }
-                    };
+                    btn.target = "_blank";
+                    btn.rel = "noopener noreferrer";
                     
                     btn.style.display = "block";
                     btn.style.textDecoration = "none";
