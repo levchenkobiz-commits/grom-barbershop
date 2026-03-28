@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script src="https://api-maps.yandex.ru/2.1/?apikey=cf21ddbf-8869-42b4-ab98-ec8e3ae134e7&lang=ru_RU" type="text/javascript"></script>
-    <link rel="stylesheet" href="styles_premium.css?v=1.0.1">
+    <link rel="stylesheet" href="styles_premium.css?v=1.0.2">
 </head>
 <body class="framer-theme">
     
@@ -307,23 +307,6 @@
 
         <div id="map" class="desktop-map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
         <style>
-            /* Mobile tweaks for the locations block */
-            @media (max-width: 767px) {
-                .desktop-map {
-                    display: none !important;
-                }
-                #location-buttons {
-                    flex-direction: column !important;
-                }
-                #location-buttons button {
-                    width: 100%;
-                    padding: 16px 24px !important;
-                    font-size: 15px !important;
-                }
-                .section-cta {
-                    padding-top: 4rem !important; /* adjust spacing when map is hidden */
-                }
-            }
             /* Yandex Map Native Dark Mode Overlay - Keeps markers their original neon color! */
             #map [class*="-ground-pane"] {
                 filter: grayscale(100%) invert(100%) contrast(1.15) brightness(0.85);
@@ -547,11 +530,12 @@
             }, { passive: true });
             
             carouselContainer.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Prevent page scroll while spinning the carousel
                 const currentTouchX = e.touches[0].clientX;
                 const deltaX = touchStartX - currentTouchX;
-                targetRotation -= deltaX * 0.2; // Adjust swipe sensitivity
-                touchStartX = currentTouchX; // reset for continuous drag
-            }, { passive: true });
+                targetRotation -= deltaX * 0.4; // Slightly higher sensitivity
+                touchStartX = currentTouchX; 
+            }, { passive: false });
         }
 
         // LOCATIONS DATA (Decoupled from Map API)

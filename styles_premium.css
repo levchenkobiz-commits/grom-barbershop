@@ -867,3 +867,21 @@ body.framer-theme {
 .delay-3 { animation-delay: 0.3s; transition-delay: 0.3s; }
 .delay-4 { animation-delay: 0.4s; transition-delay: 0.4s; }
 .delay-5 { animation-delay: 0.5s; transition-delay: 0.5s; }
+
+/* --- MOBILE TWEAKS --- */
+@media (max-width: 767px) {
+    .desktop-map {
+        display: none !important;
+    }
+    #location-buttons {
+        flex-direction: column !important;
+    }
+    #location-buttons button {
+        width: 100%;
+        padding: 16px 24px !important;
+        font-size: 15px !important;
+    }
+    .section-cta {
+        padding-top: 4rem !important; /* adjust spacing when map is hidden */
+    }
+}
