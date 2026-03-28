@@ -5,11 +5,6 @@
 
 @font-face { font-family: 'Akony'; src: local('Akony'), url('https://fonts.cdnfonts.com/s/72225/AkonyTest.woff') format('woff'); font-weight: normal; font-style: normal; font-display: swap; }
 
-@font-face {
-    font-family: 'Brigends Expanded';
-    src: local('Brigends Expanded'), url('brigends-expanded.otf') format('opentype');
-    font-weight: normal;
-}
 
 @font-face {
     font-family: 'Benzin';
@@ -34,7 +29,7 @@
     
     /* Typography */
     /* Falling back through the requested fonts, assuming they are installed locally or web fonts are provided */
-    --font-heading: 'Akony', 'Brigends Expanded', 'Benzin', 'Onder', 'Unbounded', sans-serif;
+    --font-heading: 'Akony', 'Benzin', 'Onder', 'Unbounded', sans-serif;
     --font-body: 'Unbounded', 'Inter', sans-serif;
     
     --text-primary: #FFFFFF;
