@@ -104,7 +104,7 @@ body.framer-theme {
 }
 
 .logo {
-@font-face { font-family: 'Akony'; src: local('Akony'), url('https://fonts.cdnfonts.com/s/72225/AkonyTest.woff') format('woff'); font-weight: normal; font-style: normal; font-display: swap; }
+    font-family: 'Akony', var(--font-heading);
     font-size: 1.5rem;
     font-weight: normal;
     letter-spacing: 0.05em;
@@ -571,9 +571,18 @@ body.framer-theme {
 }
 
 .price-amount {
-    font-family: var(--font-heading);
+    font-family: 'Akony', var(--font-heading);
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: normal;
+    letter-spacing: 0.02em;
+    min-width: max-content; /* Prevent stacking */
+}
+
+@media (max-width: 767px) {
+    .price-amount {
+        font-size: 1.25rem;
+        letter-spacing: 0.05em; /* Add space on mobile so Akony digits don't merge */
+    }
 }
 
 .hover-btn-icon {
