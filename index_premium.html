@@ -253,54 +253,81 @@
         </div>
     </section>
 
-    <!-- 3D CAROUSEL GALLERY -->
+    <!-- MASONRY BENTO GALLERY -->
     <section class="section-layout" id="gallery" style="position: relative; overflow: hidden; padding: 100px 0;">
         <div class="container">
             <div class="section-head text-center scroll-reveal" style="margin-bottom: 4rem;">
                 <h2 class="section-title">АТМОСФЕРА</h2>
-                <p class="section-sub">Скролльте галерею, чтобы вращать</p>
+                <p class="section-sub">Пространство для тех, кто ценит премиальную эстетику</p>
             </div>
         </div>
         
-        <div class="carousel-container" id="carouselContainer" style="max-width: 960px; margin: 0 auto; perspective: 1400px; -webkit-perspective: 1400px; height: 600px; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; cursor: grab; touch-action: pan-y;">
-            <div class="carousel-spinner" id="carouselSpinner" style="transform-style: preserve-3d; -webkit-transform-style: preserve-3d; width: 360px; height: 480px; position: relative; transition: transform 0.1s ease-out; -webkit-transition: -webkit-transform 0.1s ease-out;">
-                <!-- Cards will be initialized via JS to position them in a 3D circle -->
-                <div class="carousel-card"><img src="gallery_new_1.jpg" alt="Barber working"></div>
-                <div class="carousel-card"><img src="gallery_new_2.jpg" alt="Interior Details"></div>
-                <div class="carousel-card"><img src="gallery_new_4.jpg" alt="Haircut profile"></div>
-                <div class="carousel-card"><img src="barber_bg.jpg" alt="Barber Master"></div>
-                <div class="carousel-card"><img src="gallery_new_3.jpg" alt="Interior Side"></div>
-                <div class="carousel-card"><img src="gallery_new_5.jpg" alt="Waiting Area"></div>
+        <div class="masonry-gallery" style="display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 160px; gap: 12px; padding: 0 16px; max-width: 1100px; margin: 0 auto; width: 100%;">
+            <div class="gallery-item g-large scroll-reveal delay-1">
+                <img src="gallery_new_1.jpg" alt="Barber Master">
+            </div>
+            <div class="gallery-item scroll-reveal delay-2">
+                <img src="gallery_new_2.jpg" alt="Interior Details">
+            </div>
+            <div class="gallery-item g-tall scroll-reveal delay-3">
+                <img src="barber_bg.jpg" alt="Barber working">
+            </div>
+            <div class="gallery-item scroll-reveal delay-4">
+                <img src="gallery_new_4.jpg" alt="Haircut profile">
+            </div>
+            <div class="gallery-item g-wide scroll-reveal delay-2">
+                <img src="gallery_new_3.jpg" alt="Interior Side">
+            </div>
+            <div class="gallery-item scroll-reveal delay-3">
+                <img src="gallery_new_5.jpg" alt="Waiting Area">
             </div>
         </div>
         
         <style>
-            .carousel-card {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                left: 0;
-                top: 0;
+            .gallery-item {
                 border-radius: 16px;
                 overflow: hidden;
-                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                position: relative;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.6);
                 border: 1px solid rgba(255,255,255,0.05);
-                transition: filter 0.3s;
-                background: #000;
-                backface-visibility: hidden;
-                -webkit-backface-visibility: hidden;
+                transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
+                background: #111;
             }
-            .carousel-card img {
+            .gallery-item img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
-                opacity: 0.85;
+                transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+                filter: brightness(0.9) grayscale(20%);
             }
-            @media (max-width: 767px) {
-                /* Make it slightly smaller explicitly for mobile to avoid overflow stacking bugs */
-                #carouselSpinner {
-                    width: 280px !important;
-                    height: 380px !important;
+            .gallery-item:hover {
+                box-shadow: 0 20px 40px rgba(198,255,0,0.15);
+                border-color: rgba(198,255,0,0.3);
+                z-index: 10;
+            }
+            .gallery-item:hover img {
+                transform: scale(1.05);
+                filter: brightness(1.1) grayscale(0%);
+            }
+
+            /* Responsive Masonry Spanning */
+            .g-tall { grid-row: span 2; }
+            .g-wide { grid-column: span 2; }
+            .g-large { grid-row: span 2; grid-column: span 2; }
+
+            /* Desktop Scale Up */
+            @media (min-width: 768px) {
+                .masonry-gallery {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    grid-auto-rows: 220px !important;
+                    gap: 24px !important;
+                    padding: 0 40px !important;
+                }
+            }
+            /* Very Large Screen Adjusts */
+            @media (min-width: 1200px) {
+                .masonry-gallery {
+                    grid-auto-rows: 260px !important;
                 }
             }
         </style>
@@ -475,77 +502,7 @@
             }, { passive: true });
         });
 
-        // 3D Carousel Initialization & Wheel Logic
-        const carouselContainer = document.getElementById('carouselContainer');
-        const carouselSpinner = document.getElementById('carouselSpinner');
-        
-        if (carouselContainer && carouselSpinner) {
-            const cards = Array.from(carouselSpinner.querySelectorAll('.carousel-card'));
-            const numCards = cards.length;
-            const theta = 360 / numCards;
-            const radius = Math.round((360 / 2) / Math.tan(Math.PI / numCards)) + 72; 
-            
-            // Layout cards in a 3D circle
-            cards.forEach((card, i) => {
-                const angle = theta * i;
-                card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
-            });
-            
-            let targetRotation = 0;
-            let currentRotation = 0;
-            
-            // Render loop for smooth interpolation
-            function animateCarousel() {
-                // Lerp current rotation towards target
-                currentRotation += (targetRotation - currentRotation) * 0.05;
-                carouselSpinner.style.transform = `translateZ(-${radius}px) rotateY(${currentRotation}deg)`;
-                
-                // Calculate which card is closest to the front and adjust brightness
-                const normalizedRotation = ((currentRotation % 360) + 360) % 360;
-                cards.forEach((card, i) => {
-                    // Card angle is from 0 to 360
-                    const cardAngle = (numCards - i) * theta % 360; 
-                    
-                    // Smallest angular distance
-                    let diff = Math.abs(normalizedRotation - cardAngle);
-                    if (diff > 180) diff = 360 - diff;
-                    
-                    // Normalizing difference (0 front, 180 back)
-                    const distFromCenter = diff / 180;
-                    
-                    const img = card.querySelector('img');
-                    if (img) {
-                        // Center is fully bright, back is dark
-                        img.style.filter = `brightness(${1 - distFromCenter}) grayscale(${distFromCenter * 50}%)`;
-                        img.style.opacity = 1 - (distFromCenter * 0.4);
-                    }
-                });
-                
-                requestAnimationFrame(animateCarousel);
-            }
-            animateCarousel();
-            
-            // Intercept mouse wheel on the carousel
-            carouselContainer.addEventListener('wheel', (e) => {
-                e.preventDefault(); // Stop normal document scroll
-                const delta = Math.sign(e.deltaY); // +1 or -1
-                targetRotation -= delta * (theta * 0.5); // Move smoothly
-            }, { passive: false });
-            
-            // Mobile Swipe Interaction for Carousel
-            let touchStartX = 0;
-            carouselContainer.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].clientX;
-            }, { passive: true });
-            
-            carouselContainer.addEventListener('touchmove', (e) => {
-                e.preventDefault(); // Prevent page scroll while spinning the carousel
-                const currentTouchX = e.touches[0].clientX;
-                const deltaX = touchStartX - currentTouchX;
-                targetRotation -= deltaX * 0.4; // Slightly higher sensitivity
-                touchStartX = currentTouchX; 
-            }, { passive: false });
-        }
+
 
         // LOCATIONS DATA (Decoupled from Map API)
         const locations = [
