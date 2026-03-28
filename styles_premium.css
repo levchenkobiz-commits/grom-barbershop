@@ -1,9 +1,10 @@
-/* 
-  PREMIUM FRAMER / APPLE STYLE THEME
-  Fonts: Brigends Expanded, Akony, Onder, Benzin, Unbounded
-*/
-
-@font-face { font-family: 'Akony'; src: local('Akony'), url('https://fonts.cdnfonts.com/s/72225/AkonyTest.woff') format('woff'); font-weight: normal; font-style: normal; font-display: swap; }
+@font-face {
+    font-family: 'Akony';
+    src: local('Akony'), url('https://fonts.cdnfonts.com/s/103244/akony.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
 
 
 @font-face {
