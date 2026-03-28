@@ -277,7 +277,7 @@ body.framer-theme {
 }
 
 .hero-heading {
-    font-family: var(--font-heading);
+    font-family: 'Akony', var(--font-heading);
     font-size: clamp(3rem, 6vw, 5rem);
     font-weight: 800;
     line-height: 1;
@@ -353,7 +353,7 @@ body.framer-theme {
 
 .tape-track {
     display: inline-block;
-    font-family: var(--font-heading);
+    font-family: 'Akony', var(--font-heading);
     font-size: 1.5rem;
     color: var(--text-secondary);
     letter-spacing: 0.05em;
@@ -381,7 +381,7 @@ body.framer-theme {
 }
 
 .section-title {
-    font-family: var(--font-heading);
+    font-family: 'Akony', var(--font-heading);
     font-size: clamp(1.5rem, 3.5vw, 2.5rem);
     font-weight: normal;
     letter-spacing: 0.05em;
@@ -488,7 +488,7 @@ body.framer-theme {
 }
 
 .bento-title {
-    font-family: var(--font-heading);
+    font-family: 'Akony', var(--font-heading);
     font-size: clamp(0.9rem, 1.8vw, 1.2rem);
     font-weight: normal;
     margin-bottom: 1rem;
@@ -556,7 +556,7 @@ body.framer-theme {
 }
 
 .price-info { width: 40%; }
-.price-info h3 { font-family: var(--font-heading); font-size: 1.25rem; margin-bottom: 0.5rem; }
+.price-info h3 { font-family: 'Akony', var(--font-heading); font-size: 1.25rem; margin-bottom: 0.5rem; }
 .price-info p { color: var(--text-secondary); font-size: 0.9rem; }
 
 .flex-align { display: flex; align-items: center; gap: 12px; }
@@ -664,8 +664,8 @@ body.framer-theme {
 }
 
 .cta-heading {
-    font-family: var(--font-heading);
-    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-family: 'Akony', var(--font-heading);
+    font-size: clamp(2rem, 6vw, 4rem);
     font-weight: normal;
     letter-spacing: 0.05em;
     line-height: 1.2;
@@ -698,8 +698,11 @@ body.framer-theme {
 }
 
 .footer-brand .logo {
+    font-family: 'Akony', var(--font-heading);
     font-size: 2.5rem;
     margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    font-weight: normal;
 }
 .footer-brand p { color: var(--text-secondary); }
 
