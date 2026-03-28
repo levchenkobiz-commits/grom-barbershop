@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>GROME | Next-Gen Barbershop</title>
     
     <!-- Load Unbounded for fallback and body text -->
@@ -11,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script src="https://api-maps.yandex.ru/2.1/?apikey=cf21ddbf-8869-42b4-ab98-ec8e3ae134e7&lang=ru_RU" type="text/javascript"></script>
-    <link rel="stylesheet" href="styles_premium.css">
+    <link rel="stylesheet" href="styles_premium.css?v=1.0.3">
 </head>
 <body class="framer-theme">
     
@@ -28,25 +31,19 @@
             <div class="nav-actions">
                 <a href="https://n2015703.yclients.com" target="_top" class="framer-btn primary">Запись</a>
             </div>
-            <!-- Mobile Menu Toggle (Visual Only) -->
-            <div class="mobile-toggle">
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-toggle" id="mobileMenuBtn">
                 <span></span><span></span>
             </div>
         </div>
     </header>
 
-    <!-- HERO SECTION (Interior Pan Scroll) -->
-    <section class="hero-section synapse-style" id="hero" style="position: relative; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; padding-top: 80px; background: #000;">
+    <!-- HERO SECTION (Synapse Style) -->
+    <section class="hero-section synapse-style" id="hero" style="position: relative; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; padding-top: 80px;">
         
-        <!-- Interior Background Container (Panning and Zooming) -->
-        <div style="position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;">
-            <!-- Dark Vignette Overlay for Crisp Readability (Since it's highly detailed photo) -->
-            <div style="position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%); z-index: 2;"></div>
-            
-            <!-- Panning Image Container -->
-            <div id="hero-interior-container" style="position: absolute; width: 100%; height: 100%; z-index: 1; transform-origin: center center; will-change: transform;">
-                <img src="hero_photo.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center; transition: none; filter: brightness(0.9);" alt="Luxury Barbershop Interior">
-            </div>
+        <!-- Video Background from Synapse -->
+        <div class="parallax" data-speed="0.2" style="position: absolute; left: 0; right: 0; bottom: 35vh; height: 80vh; width: 100%; z-index: 0; pointer-events: none; overflow: hidden; will-change: transform;">
+            <video id="hero-bg-video" style="min-width: 100%; min-height: 100%; object-fit: cover; opacity: 1;" autoPlay loop muted playsInline></video>
         </div>
 
         <div style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px; width: 100%; max-width: 1000px; margin: 0 auto;">
@@ -89,7 +86,24 @@
 
 
 
-        <!-- Removed HLS Script since we use image pan now -->
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const video = document.getElementById('hero-bg-video');
+                const src = "https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8";
+                if (video && typeof Hls !== 'undefined') {
+                    if (Hls.isSupported()) {
+                        const hls = new Hls({ startPosition: -1 });
+                        hls.loadSource(src);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn(e)));
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = src;
+                        video.addEventListener('loadedmetadata', () => video.play());
+                    }
+                }
+            });
+        </script>
         <style>
             /* Synapse specific animations replacing original load-slide-up */
             .load-fade-up {
@@ -248,8 +262,8 @@
             </div>
         </div>
         
-        <div class="carousel-container" id="carouselContainer" style="max-width: 960px; margin: 0 auto; perspective: 1400px; height: 600px; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; cursor: grab;">
-            <div class="carousel-spinner" id="carouselSpinner" style="transform-style: preserve-3d; width: 360px; height: 480px; position: relative; transition: transform 0.1s ease-out;">
+        <div class="carousel-container" id="carouselContainer" style="max-width: 960px; margin: 0 auto; perspective: 1400px; -webkit-perspective: 1400px; height: 600px; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; cursor: grab; touch-action: pan-y;">
+            <div class="carousel-spinner" id="carouselSpinner" style="transform-style: preserve-3d; -webkit-transform-style: preserve-3d; width: 360px; height: 480px; position: relative; transition: transform 0.1s ease-out; -webkit-transition: -webkit-transform 0.1s ease-out;">
                 <!-- Cards will be initialized via JS to position them in a 3D circle -->
                 <div class="carousel-card"><img src="gallery_new_1.jpg" alt="Barber working"></div>
                 <div class="carousel-card"><img src="gallery_new_2.jpg" alt="Interior Details"></div>
@@ -273,12 +287,21 @@
                 border: 1px solid rgba(255,255,255,0.05);
                 transition: filter 0.3s;
                 background: #000;
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
             }
             .carousel-card img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
                 opacity: 0.85;
+            }
+            @media (max-width: 767px) {
+                /* Make it slightly smaller explicitly for mobile to avoid overflow stacking bugs */
+                #carouselSpinner {
+                    width: 280px !important;
+                    height: 380px !important;
+                }
             }
         </style>
     </section>
@@ -291,7 +314,7 @@
         
         <div id="location-buttons" class="location-chips scroll-reveal delay-1" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
 
-        <div id="map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
+        <div id="map" class="desktop-map" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
         <style>
             /* Yandex Map Native Dark Mode Overlay - Keeps markers their original neon color! */
             #map [class*="-ground-pane"] {
@@ -395,40 +418,41 @@
         
         revealElements.forEach(el => revealObserver.observe(el));
         
+        // Mobile Menu Toggle Logic
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.querySelector('.nav-links');
+        
+        if (mobileBtn && navLinks) {
+            mobileBtn.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+            
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                });
+            });
+        }
+        
         // Header transparency on scroll
         const header = document.querySelector('.header-nav');
-        // Hero Scroll Parallax (Interior Pan + Heading)
+        // Hero Scroll Parallax (Colizeum-style)
         const heroHeading = document.getElementById('hero-parallax-heading');
-        const interiorContainer = document.getElementById('hero-interior-container');
-        
         window.addEventListener('scroll', () => {
-            const scrolled = window.scrollY;
-            
-            // 1. Zoom and Pan the Interior Photo to simulate 3D walking in
-            if (interiorContainer && scrolled < window.innerHeight * 1.5) {
-                // Calculate precise progress based on view height
-                const progress = Math.min(scrolled / window.innerHeight, 1);
-                
-                // Slow, cinematic zoom (scale from 1.0 to 1.15)
-                const scale = 1 + (progress * 0.15);
-                // Subtle pan down
-                const translateY = progress * 80; 
-                
-                interiorContainer.style.transform = `scale(${scale}) translateY(${translateY}px)`;
+            if (heroHeading) {
+                const scrolled = window.scrollY;
+                if (scrolled < window.innerHeight) {
+                    // Extreme movement: moves down VERY fast and scales up, then fades
+                    const opacity = Math.max(0, 1 - (scrolled / 400));
+                    const translateY = scrolled * 1.5; // moves down out of view very noticeably
+                    const scale = 1 + (scrolled * 0.002); // grows significantly
+                    
+                    heroHeading.style.transform = `translateY(${translateY}px) scale(${scale})`;
+                    heroHeading.style.opacity = opacity;
+                }
             }
             
-            // 2. Existing Hero Heading Parallax
-            if (heroHeading && scrolled < window.innerHeight) {
-                const opacity = Math.max(0, 1 - (scrolled / 400));
-                const translateY = scrolled * 1.5; 
-                const scale = 1 + (scrolled * 0.002); 
-                
-                heroHeading.style.transform = `translateY(${translateY}px) scale(${scale})`;
-                heroHeading.style.opacity = opacity;
-            }
-            
-            // 3. Header Glass styling
-            if (scrolled > 50) {
+            if (window.scrollY > 50) {
                 header.classList.add('scrolled');
             } else {
                 header.classList.remove('scrolled');
@@ -507,28 +531,122 @@
                 const delta = Math.sign(e.deltaY); // +1 or -1
                 targetRotation -= delta * (theta * 0.5); // Move smoothly
             }, { passive: false });
+            
+            // Mobile Swipe Interaction for Carousel
+            let touchStartX = 0;
+            carouselContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            carouselContainer.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Prevent page scroll while spinning the carousel
+                const currentTouchX = e.touches[0].clientX;
+                const deltaX = touchStartX - currentTouchX;
+                targetRotation -= deltaX * 0.4; // Slightly higher sensitivity
+                touchStartX = currentTouchX; 
+            }, { passive: false });
         }
 
-        // YANDEX MAP INIT
-        if (typeof ymaps !== 'undefined') {
+        // LOCATIONS DATA (Decoupled from Map API)
+        const locations = [
+            { id: "alx", coords: [55.807794, 37.638531], name: "ГРОМ - Алексеевская", label: "м. Алексеевская" },
+            { id: "tex", coords: [55.708811, 37.732789], name: "ГРОМ - Текстильщики", label: "м. Текстильщики" },
+            { id: "rzp", coords: [55.716616, 37.792823], name: "ГРОМ - Рязанский проспект", label: "м. Рязанский проспект" },
+            { id: "var", coords: [55.653537, 37.625522], name: "ГРОМ - Варшавская", label: "м. Варшавская", link: "https://yandex.ru/maps/-/CPB8AD87" },
+            { id: "par", coords: [55.789234, 37.749557], name: "ГРОМ - Партизанская", label: "м. Партизанская" },
+            { id: "sok", coords: [55.805175, 37.514867], name: "ГРОМ - Сокол", label: "м. Сокол, Ленинградский проспект 78к1", link: "https://yandex.ru/maps/-/CPRV5AOd" }
+        ];
+
+        // 1. RENDER CHIPS IMMEDIATELY (Fallback logic)
+        const buttonContainer = document.getElementById('location-buttons');
+        const renderedButtons = {}; // Keep track of buttons for map interaction
+        
+        if (buttonContainer) {
+            locations.forEach(loc => {
+                const finalLink = loc.link || `https://yandex.ru/maps/?pt=${loc.coords[1]},${loc.coords[0]}&z=17&l=map`;
+                
+                if (loc.label) {
+                    const btn = document.createElement('a');
+                    btn.href = finalLink;
+                    btn.target = "_blank";
+                    btn.style.display = "block";
+                    btn.style.textDecoration = "none";
+                    btn.style.width = "100%";
+                    btn.style.padding = "20px 24px";
+                    btn.style.borderRadius = "20px";
+                    btn.style.border = "1px solid rgba(198, 255, 0, 0.3)";
+                    btn.style.background = "linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(20,20,20,0.8) 100%)";
+                    btn.style.backdropFilter = "blur(10px)";
+                    btn.style.color = "rgba(255,255,255,0.9)";
+                    btn.style.cursor = "pointer";
+                    btn.style.fontFamily = "inherit";
+                    btn.style.fontSize = "16px";
+                    btn.style.fontWeight = "600";
+                    btn.style.transition = "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
+                    btn.style.marginBottom = "8px";
+                    btn.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
+                    btn.style.textAlign = "left";
+                    
+                    // Create inner flex layout
+                    btn.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="display: block; font-family: 'Unbounded', sans-serif; font-size: 14px; margin-bottom: 4px; color: #C6FF00;">${loc.name.replace('ГРОМ - ', '')}</span>
+                                <span style="display: block; font-size: 13px; color: #aaa; font-weight: 400;">${loc.label}</span>
+                            </div>
+                            <div style="background: rgba(198,255,0,0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #C6FF00;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
+                    `;
+                    
+                    btn.onmouseover = () => {
+                        btn.style.background = "#C6FF00";
+                        btn.style.color = "#000";
+                        btn.style.borderColor = "#C6FF00";
+                        btn.style.transform = "translateY(-4px)";
+                        btn.style.boxShadow = "0 12px 30px rgba(198,255,0,0.4)";
+                        const arrowBox = btn.querySelector('div > div > div:nth-child(2)');
+                        const mainText = btn.querySelector('div > div > div > span:nth-child(1)');
+                        const subText = btn.querySelector('div > div > div > span:nth-child(2)');
+                        if (arrowBox) { arrowBox.style.background = "rgba(0,0,0,0.1)"; arrowBox.style.color = "#000"; }
+                        if (mainText) { mainText.style.color = "#000"; }
+                        if (subText) { subText.style.color = "rgba(0,0,0,0.7)"; }
+                    };
+                    btn.onmouseout = () => {
+                        btn.style.background = "linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(20,20,20,0.8) 100%)";
+                        btn.style.color = "rgba(255,255,255,0.9)";
+                        btn.style.borderColor = "rgba(198, 255, 0, 0.3)";
+                        btn.style.transform = "translateY(0)";
+                        btn.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
+                        const arrowBox = btn.querySelector('div > div > div:nth-child(2)');
+                        const mainText = btn.querySelector('div > div > div > span:nth-child(1)');
+                        const subText = btn.querySelector('div > div > div > span:nth-child(2)');
+                        if (arrowBox) { arrowBox.style.background = "rgba(198,255,0,0.1)"; arrowBox.style.color = "#C6FF00"; }
+                        if (mainText) { mainText.style.color = "#C6FF00"; }
+                        if (subText) { subText.style.color = "#aaa"; }
+                    };
+                    
+                    buttonContainer.appendChild(btn);
+                    renderedButtons[loc.id] = btn;
+                }
+            });
+        }
+        
+        // Mobile Hard-Kill for Map
+        if (window.innerWidth <= 1024) {
+            const mapEl = document.getElementById('map');
+            if (mapEl) mapEl.remove();
+        }
+
+        // 2. YANDEX MAP INIT (Enhancement)
+        if (typeof ymaps !== 'undefined' && window.innerWidth > 1024) {
             ymaps.ready(function () {
                 var myMap = new ymaps.Map("map", {
                     center: [55.753215, 37.622504], // Center of Moscow
                     zoom: 10,
                     controls: ['zoomControl']
                 });
-
-                // Locations Array
-                var locations = [
-                    { coords: [55.807794, 37.638531], name: "ГРОМ - Алексеевская", label: "м. Алексеевская" },
-                    { coords: [55.708811, 37.732789], name: "ГРОМ - Текстильщики", label: "м. Текстильщики" },
-                    { coords: [55.716616, 37.792823], name: "ГРОМ - Рязанский проспект", label: "м. Рязанский проспект" },
-                    { coords: [55.653537, 37.625522], name: "ГРОМ - Варшавская", label: "м. Варшавская", link: "https://yandex.ru/maps/-/CPB8AD87" },
-                    { coords: [55.789234, 37.749557], name: "ГРОМ - Партизанская", label: "м. Партизанская" },
-                    { coords: [55.805175, 37.514867], name: "ГРОМ - Сокол", label: "м. Сокол, Ленинградский проспект 78к1", link: "https://yandex.ru/maps/-/CPRV5AOd" }
-                ];
-
-                const buttonContainer = document.getElementById('location-buttons');
 
                 locations.forEach(loc => {
                     const finalLink = loc.link || `https://yandex.ru/maps/?pt=${loc.coords[1]},${loc.coords[0]}&z=17&l=map`;
@@ -548,13 +666,13 @@
 
                     var markerHTML = `
                     <div style="position: relative; width: 44px; height: 60px; cursor: pointer; display: flex; justify-content: center; align-items: flex-start;">
-                        <!-- Narrow SVG Pin Drop (Pure black to match logo background) -->
+                        <!-- Narrow SVG Pin Drop -->
                         <svg width="44" height="60" viewBox="0 0 44 60" style="position: absolute; left: 0; top: 0; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); z-index: 1;">
                             <path d="M22,1 C11,1 2,10 2,21.5 C2,37 22,58 22,58 C22,58 42,37 42,21.5 C42,10 33,1 22,1 Z" fill="#000" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
                         </svg>
-                        <!-- Logo inside (Tall rectangle fitting the Zeus head cleanly without circular masks, blending via screen to drop the black background natively!) -->
+                        <!-- Logo inside -->
                         <div style="position: absolute; top: 4px; left: 4px; width: 36px; height: 42px; background-color: transparent; background-image: url('zeus_head_only.jpg'); background-position: center; z-index: 2; ${logoInnerCSS}"></div>
-                        <!-- Notification (visible only when property is set) -->
+                        <!-- Notification -->
                         <div style="position: absolute; top: -5px; right: -60px; background: rgba(198, 255, 0, 0.95); color: #000; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; font-family: 'Unbounded', sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.4); opacity: $[properties.myOpacity]; transition: opacity 0.3s; animation: floatNotify 2s ease-in-out infinite; z-index: 3;">нажми на меня</div>
                     </div>
                     <style>@keyframes floatNotify { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }</style>
@@ -572,78 +690,61 @@
                             coordinates: [[0, 0], [44, 60]]
                         },
                         balloonPanelMaxMapArea: 0,
-                        iconOffset: [-22, -58], // exact anchor to the tip of SVG
+                        iconOffset: [-22, -58], 
                         balloonOffset: [0, -60]
                     });
                     
                     myMap.geoObjects.add(placemark);
                     
-                    // Button logic
-                    if (buttonContainer && loc.label) {
-                        const btn = document.createElement('button');
-                        btn.innerText = loc.label;
-                        btn.style.padding = "12px 24px";
-                        btn.style.borderRadius = "99px";
-                        btn.style.border = "1px solid rgba(255,255,255,0.15)";
-                        btn.style.background = "rgba(0,0,0,0.4)";
-                        btn.style.backdropFilter = "blur(10px)";
-                        btn.style.color = "rgba(255,255,255,0.9)";
-                        btn.style.cursor = "pointer";
-                        btn.style.fontFamily = "inherit";
-                        btn.style.fontSize = "14px";
-                        btn.style.fontWeight = "500";
-                        btn.style.transition = "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
-                        
-                        btn.onmouseover = () => {
-                            btn.style.background = "#C6FF00";
-                            btn.style.color = "#000";
-                            btn.style.borderColor = "#C6FF00";
-                            btn.style.transform = "translateY(-2px)";
-                            btn.style.boxShadow = "0 8px 20px rgba(198,255,0,0.3)";
-                        };
-                        btn.onmouseout = () => {
-                            btn.style.background = "rgba(0,0,0,0.4)";
-                            btn.style.color = "rgba(255,255,255,0.9)";
-                            btn.style.borderColor = "rgba(255,255,255,0.15)";
-                            btn.style.transform = "translateY(0)";
-                            btn.style.boxShadow = "none";
-                        };
-                        
-                        btn.onclick = () => {
-                            // Highlight marker's notification popup on click
+                    // Upgrade button logic since map loaded successfully
+                    const btn = renderedButtons[loc.id];
+                    if (btn) {
+                        btn.onclick = (e) => {
+                            // On mobile, keep the default logic which opens Yandex Maps directly
+                            if (window.innerWidth < 768) {
+                                return;
+                            }
+                            
+                            e.preventDefault();
                             placemark.properties.set('myOpacity', "1");
                             
                             const mapEl = document.getElementById('map');
-                            // Micro-loading sleek transition: fade to black
                             mapEl.style.opacity = '0';
                             
                             setTimeout(() => {
-                                // Snap instantly to location (duration: 0), no travelling
                                 myMap.setCenter(loc.coords, 16, {
                                     checkZoomRange: true,
                                     duration: 0
                                 }).then(() => {
                                     placemark.balloon.open();
                                     
-                                    // Fade smoothly back in after the map renders
                                     setTimeout(() => {
                                         mapEl.style.opacity = '1';
                                     }, 150);
                                     
-                                    // Hide tooltip after a few seconds
                                     setTimeout(() => {
                                         placemark.properties.set('myOpacity', "0");
                                     }, 4000);
                                 });
                             }, 300);
                         };
-                        
-                        buttonContainer.appendChild(btn);
                     }
                 });
                 
                 myMap.behaviors.disable('scrollZoom');
             });
+        } else {
+            // Map failed to inject entirely, set fallback map container style block
+            const mapEl = document.getElementById('map');
+            if(mapEl) {
+                mapEl.style.display = 'flex';
+                mapEl.style.justifyContent = 'center';
+                mapEl.style.alignItems = 'center';
+                mapEl.style.color = 'rgba(255,255,255,0.4)';
+                mapEl.style.fontSize = '14px';
+                mapEl.style.padding = '40px';
+                mapEl.innerHTML = '<div style="text-align: center;">Для просмотра интерактивной карты необходимо отключить блокировщик рекламы.<br><br>Пожалуйста, выберите локацию выше 👆</div>';
+            }
         }
     </script>
 </body>

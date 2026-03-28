@@ -262,8 +262,8 @@
             </div>
         </div>
         
-        <div class="carousel-container" id="carouselContainer" style="max-width: 960px; margin: 0 auto; perspective: 1400px; height: 600px; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; cursor: grab;">
-            <div class="carousel-spinner" id="carouselSpinner" style="transform-style: preserve-3d; width: 360px; height: 480px; position: relative; transition: transform 0.1s ease-out;">
+        <div class="carousel-container" id="carouselContainer" style="max-width: 960px; margin: 0 auto; perspective: 1400px; -webkit-perspective: 1400px; height: 600px; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; cursor: grab; touch-action: pan-y;">
+            <div class="carousel-spinner" id="carouselSpinner" style="transform-style: preserve-3d; -webkit-transform-style: preserve-3d; width: 360px; height: 480px; position: relative; transition: transform 0.1s ease-out; -webkit-transition: -webkit-transform 0.1s ease-out;">
                 <!-- Cards will be initialized via JS to position them in a 3D circle -->
                 <div class="carousel-card"><img src="gallery_new_1.jpg" alt="Barber working"></div>
                 <div class="carousel-card"><img src="gallery_new_2.jpg" alt="Interior Details"></div>
@@ -287,12 +287,21 @@
                 border: 1px solid rgba(255,255,255,0.05);
                 transition: filter 0.3s;
                 background: #000;
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
             }
             .carousel-card img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
                 opacity: 0.85;
+            }
+            @media (max-width: 767px) {
+                /* Make it slightly smaller explicitly for mobile to avoid overflow stacking bugs */
+                #carouselSpinner {
+                    width: 280px !important;
+                    height: 380px !important;
+                }
             }
         </style>
     </section>
@@ -557,38 +566,65 @@
                 const finalLink = loc.link || `https://yandex.ru/maps/?pt=${loc.coords[1]},${loc.coords[0]}&z=17&l=map`;
                 
                 if (loc.label) {
-                    const btn = document.createElement('button');
-                    btn.innerText = loc.label;
-                    btn.style.padding = "12px 24px";
-                    btn.style.borderRadius = "99px";
-                    btn.style.border = "1px solid rgba(255,255,255,0.15)";
-                    btn.style.background = "rgba(0,0,0,0.4)";
+                    const btn = document.createElement('a');
+                    btn.href = finalLink;
+                    btn.target = "_blank";
+                    btn.style.display = "block";
+                    btn.style.textDecoration = "none";
+                    btn.style.width = "100%";
+                    btn.style.padding = "20px 24px";
+                    btn.style.borderRadius = "20px";
+                    btn.style.border = "1px solid rgba(198, 255, 0, 0.3)";
+                    btn.style.background = "linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(20,20,20,0.8) 100%)";
                     btn.style.backdropFilter = "blur(10px)";
                     btn.style.color = "rgba(255,255,255,0.9)";
                     btn.style.cursor = "pointer";
                     btn.style.fontFamily = "inherit";
-                    btn.style.fontSize = "14px";
-                    btn.style.fontWeight = "500";
+                    btn.style.fontSize = "16px";
+                    btn.style.fontWeight = "600";
                     btn.style.transition = "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
+                    btn.style.marginBottom = "8px";
+                    btn.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
+                    btn.style.textAlign = "left";
+                    
+                    // Create inner flex layout
+                    btn.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="display: block; font-family: 'Unbounded', sans-serif; font-size: 14px; margin-bottom: 4px; color: #C6FF00;">${loc.name.replace('ГРОМ - ', '')}</span>
+                                <span style="display: block; font-size: 13px; color: #aaa; font-weight: 400;">${loc.label}</span>
+                            </div>
+                            <div style="background: rgba(198,255,0,0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #C6FF00;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
+                    `;
                     
                     btn.onmouseover = () => {
                         btn.style.background = "#C6FF00";
                         btn.style.color = "#000";
                         btn.style.borderColor = "#C6FF00";
-                        btn.style.transform = "translateY(-2px)";
-                        btn.style.boxShadow = "0 8px 20px rgba(198,255,0,0.3)";
+                        btn.style.transform = "translateY(-4px)";
+                        btn.style.boxShadow = "0 12px 30px rgba(198,255,0,0.4)";
+                        const arrowBox = btn.querySelector('div > div > div:nth-child(2)');
+                        const mainText = btn.querySelector('div > div > div > span:nth-child(1)');
+                        const subText = btn.querySelector('div > div > div > span:nth-child(2)');
+                        if (arrowBox) { arrowBox.style.background = "rgba(0,0,0,0.1)"; arrowBox.style.color = "#000"; }
+                        if (mainText) { mainText.style.color = "#000"; }
+                        if (subText) { subText.style.color = "rgba(0,0,0,0.7)"; }
                     };
                     btn.onmouseout = () => {
-                        btn.style.background = "rgba(0,0,0,0.4)";
+                        btn.style.background = "linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(20,20,20,0.8) 100%)";
                         btn.style.color = "rgba(255,255,255,0.9)";
-                        btn.style.borderColor = "rgba(255,255,255,0.15)";
+                        btn.style.borderColor = "rgba(198, 255, 0, 0.3)";
                         btn.style.transform = "translateY(0)";
-                        btn.style.boxShadow = "none";
-                    };
-                    
-                    // Default fallback action if map fails
-                    btn.onclick = () => {
-                        window.open(finalLink, '_blank');
+                        btn.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
+                        const arrowBox = btn.querySelector('div > div > div:nth-child(2)');
+                        const mainText = btn.querySelector('div > div > div > span:nth-child(1)');
+                        const subText = btn.querySelector('div > div > div > span:nth-child(2)');
+                        if (arrowBox) { arrowBox.style.background = "rgba(198,255,0,0.1)"; arrowBox.style.color = "#C6FF00"; }
+                        if (mainText) { mainText.style.color = "#C6FF00"; }
+                        if (subText) { subText.style.color = "#aaa"; }
                     };
                     
                     buttonContainer.appendChild(btn);
@@ -596,9 +632,15 @@
                 }
             });
         }
+        
+        // Mobile Hard-Kill for Map
+        if (window.innerWidth <= 1024) {
+            const mapEl = document.getElementById('map');
+            if (mapEl) mapEl.remove();
+        }
 
         // 2. YANDEX MAP INIT (Enhancement)
-        if (typeof ymaps !== 'undefined') {
+        if (typeof ymaps !== 'undefined' && window.innerWidth > 1024) {
             ymaps.ready(function () {
                 var myMap = new ymaps.Map("map", {
                     center: [55.753215, 37.622504], // Center of Moscow
