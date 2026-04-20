@@ -695,7 +695,7 @@ body.framer-theme {
 
 .cta-heading {
     font-family: 'Akony', var(--font-heading);
-    font-size: clamp(24px, 6vw, 56px); /* Safely constrained to prevent any Desktop/Tablet clipping */
+    font-size: clamp(20px, 4vw, 42px); /* Scaled down to fit ЗАПИСАТЬСЯ in one line */
     font-weight: normal;
     letter-spacing: 0;
     line-height: 1.1;
@@ -705,7 +705,6 @@ body.framer-theme {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    word-break: keep-all; 
 }
 
 /* FOOTER */
