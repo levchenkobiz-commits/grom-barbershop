@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markov Studio | Павел Марков</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --text-gold: #c3a479;
+            --text-dim: rgba(255, 255, 255, 0.4);
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: #fff;
+            overflow-x: hidden;
+            font-family: var(--font-sans);
+        }
+
+        .hero {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            padding: 0 8%;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('markov_studio_hero_bg_1776527654914.png') center/cover no-repeat;
+            z-index: 0;
+            filter: brightness(0.6) contrast(1.1);
+            animation: zoomBg 20s infinite alternate;
+        }
+
+        @keyframes zoomBg {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%);
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            max-width: 900px;
+        }
+
+        .studio-label {
+            font-size: 14px;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--text-gold);
+            margin-bottom: 30px;
+            display: block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1s forwards 0.2s;
+        }
+
+        h1 {
+            font-family: var(--font-serif);
+            font-size: clamp(4rem, 8vw, 7rem);
+            font-weight: 300;
+            line-height: 0.95;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s forwards 0.4s;
+        }
+
+        .headline-accent {
+            display: block;
+            font-size: 0.35em;
+            font-family: var(--font-sans);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-top: 10px;
+        }
+
+        .description {
+            font-size: 18px;
+            line-height: 1.6;
+            color: var(--text-dim);
+            max-width: 500px;
+            margin-bottom: 50px;
+            font-weight: 300;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1s forwards 0.6s;
+        }
+
+        .stats {
+            display: flex;
+            gap: 60px;
+            margin-bottom: 60px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1s forwards 0.8s;
+        }
+
+        .stat-item h3 {
+            font-family: var(--font-serif);
+            font-size: 32px;
+            color: var(--text-gold);
+        }
+
+        .stat-item p {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+        }
+
+        .cta-wrap {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1s forwards 1s;
+        }
+
+        .btn-primary {
+            background: none;
+            border: 1px solid var(--text-gold);
+            color: var(--text-gold);
+            padding: 20px 45px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            background: var(--text-gold);
+            color: #000;
+        }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 50px;
+            right: 8%;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.3em;
+            transform: rotate(90deg) translateX(50%);
+            transform-origin: right bottom;
+            z-index: 10;
+        }
+
+        .scroll-down::after {
+            content: '';
+            width: 80px;
+            height: 1px;
+            background: var(--text-dim);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Border frame */
+        .frame {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            right: 30px;
+            bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="frame"></div>
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        
+        <div class="content">
+            <span class="studio-label">Markov Studio — Est. 1994</span>
+            <h1>
+                ПАВЕЛ МАРКОВ
+                <span class="headline-accent">Бескомпромиссная роскошь</span>
+            </h1>
+            
+            <p class="description">
+                Интерьеры, которые не требуют объяснений. Мы работаем с теми, кто уже всё доказал и ценит искусство тишины.
+            </p>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <h3>30+</h3>
+                    <p>Лет опыта</p>
+                </div>
+                <div class="stat-item">
+                    <h3>240</h3>
+                    <p>Объектов</p>
+                </div>
+            </div>
+
+            <div class="cta-wrap">
+                <button class="btn-primary">Пригласить в проект</button>
+            </div>
+        </div>
+
+        <div class="scroll-down">Scroll to explore</div>
+    </section>
+</body>
+</html>

@@ -1,0 +1,1 @@
+const fs = require("fs"); fs.appendFileSync("mainscript.js", `\n${block}`); console.log("Done");

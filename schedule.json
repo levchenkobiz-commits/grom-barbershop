@@ -1,0 +1,3920 @@
+[
+  {
+    "date": "2026-04-10",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁР°РІРєР°С‚",
+        "isReplacement": false,
+        "startTime": "09:00",
+        "text": "РЎ 09 РґРѕ 22"
+      },
+      {
+        "name": "РЁСѓСЂРёРє",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      },
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-06",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-07",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-08",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-09",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-11",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-12",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-13",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-14",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-15",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-16",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-17",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-18",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-19",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-21",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-22",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-23",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-25",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-26",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-29",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-01",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-03",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-05",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "location": "РђР»РµРєСЃРµРµРІСЃРєР°СЏ",
+    "masters": [
+      {
+        "name": "РЁРѕС…РЅР°Р·Р°СЂ Р”.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "РЎ 10 РґРѕ 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-13",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-14",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-15",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-16",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-17",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-18",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-19",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-21",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-22",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-23",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-25",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-26",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-29",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-01",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-03",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-05",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-07",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-08",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-10",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-11",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-12",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-13",
+    "location": "Алексеевская",
+    "masters": [
+      {
+        "name": "Шавкат",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шурик",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Шохназар Д.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-13",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-14",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-15",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-16",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-17",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-18",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-19",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-21",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-22",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-23",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-25",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-26",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-29",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-01",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-03",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-05",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-07",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-08",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-10",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-11",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-12",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-13",
+    "location": "Партизанская",
+    "masters": [
+      {
+        "name": "Элёрбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азамджон Т.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-13",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-14",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-15",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-16",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-17",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-18",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-19",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-21",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-22",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-23",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-25",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-26",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-29",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-01",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-03",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-05",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-07",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-08",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-10",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-11",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-12",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-13",
+    "location": "Варшавская",
+    "masters": [
+      {
+        "name": "Тима Ж.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Азим",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-13",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-14",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-15",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-16",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-17",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-18",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-19",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-21",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-22",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-23",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-25",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-26",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-29",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-01",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-03",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-05",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-07",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-08",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-10",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-11",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-12",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-13",
+    "location": "Рязанский",
+    "masters": [
+      {
+        "name": "Новы мастер рп",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухаммад",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-13",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-14",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-15",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-16",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-17",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-18",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-19",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-21",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-22",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-23",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-25",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-26",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-29",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-01",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-03",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-05",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-07",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-08",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-10",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-11",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-12",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-13",
+    "location": "Сокол",
+    "masters": [
+      {
+        "name": "Авазбек М.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Мухамаджон С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-13",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-14",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-15",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-16",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-17",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-18",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-19",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-20",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-21",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-22",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-23",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-24",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-25",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-26",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-29",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-01",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-03",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-05",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-07",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-08",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-10",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-11",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-12",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-13",
+    "location": "Текстильщики",
+    "masters": [
+      {
+        "name": "Санжар Б.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      },
+      {
+        "name": "Эрболот С.",
+        "isReplacement": false,
+        "startTime": "10:00",
+        "text": "С 10 до 22"
+      }
+    ]
+  }
+]

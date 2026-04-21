@@ -1,0 +1,1372 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GROME Dashboard</title>
+    <link rel="icon" href="logo_v2.png" type="image/png">
+    <link rel="shortcut icon" href="logo_v2.png" type="image/png">
+    <link rel="apple-touch-icon" href="logo_v2.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/quarterOfYear.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/customParseFormat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isoWeek.js"></script>
+    <script src="adapter.js"></script>
+    <script>
+        try {
+            if (typeof window.dayjs_plugin_quarterOfYear !== 'undefined') {
+                dayjs.extend(window.dayjs_plugin_quarterOfYear);
+            }
+            if (typeof window.dayjs_plugin_customParseFormat !== 'undefined') {
+                dayjs.extend(window.dayjs_plugin_customParseFormat);
+            }
+            if (typeof window.dayjs_plugin_isoWeek !== 'undefined') {
+                dayjs.extend(window.dayjs_plugin_isoWeek);
+            }
+        } catch(e) { console.error('DayJS plugins error:', e); }
+    </script>
+    <style>
+        
+        /* Global Mobile Prevent Stretch */
+        html, body { max-width: 100vw; overflow-x: hidden; }
+        
+        @media (max-width: 768px) {
+            body { padding: 20px 15px; }
+            header { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 20px; }
+            header > div { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+            #current-date { order: 3; font-size: 12px; margin-top: -5px; color: var(--text-muted); text-align: left; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; gap: 15px; }
+            
+            /* Responsive tables containers */
+            .ovn-matrix-container, .sched-table-wrapper, .modal-content table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .ovn-matrix-container::-webkit-scrollbar, .sched-table-wrapper::-webkit-scrollbar {
+                display: none;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 20px !important;
+                max-height: 90vh;
+            }
+            .modal-content h2 { font-size: 20px !important; }
+        }
+
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .grome-toast {
+            min-width: 280px;
+            max-width: 350px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+        .grome-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .grome-toast.success { border-left: 4px solid #C4D600; }
+        .grome-toast.error { border-left: 4px solid #FF3B30; }
+        .grome-toast.info { border-left: 4px solid #0A84FF; }
+        .grome-toast-icon { font-size: 18px; }
+        .grome-toast-content { flex: 1; line-height: 1.4; }
+
+        :root {
+            --bg: #050505;
+            --card-bg: rgba(255,255,255,0.03);
+            --card-border: rgba(255,255,255,0.08);
+            --accent: #E8FF38;
+            --text: #fff;
+            --text-muted: #8e8e93;
+            --glass-blur: blur(24px);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.04), transparent 35%), radial-gradient(circle at 85% 30%, rgba(200, 200, 200, 0.04), transparent 35%), var(--bg); background-attachment: fixed; color: var(--text); 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            padding: 40px 20px; line-height: 1.5;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 60px; }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+        .logo span { color: var(--accent); }
+        .btn-refresh { 
+            background: rgba(255,255,255, 0.1); color: #fff; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
+            padding: 10px 20px; border-radius: 12px; font-weight: 600; 
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-refresh:hover { transform: translateY(-2px); background: rgba(255,255,255,0.15); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        .tabs-container {
+            scroll-snap-type: x mandatory;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            margin-bottom: 30px;
+        }
+        .tabs-container::-webkit-scrollbar {
+            display: none;
+        }
+        .tabs { 
+            display: inline-flex; gap: 8px; background: rgba(25, 25, 25, 0.6); 
+            border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); padding: 6px; border-radius: 20px; 
+            white-space: nowrap; margin-bottom: 0;
+        }
+        .tab-btn {
+            scroll-snap-align: start; background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 24px; border-radius: 14px; transition: all 0.3s; flex-shrink: 0; }
+        .tab-btn.active { background: rgba(255, 255, 255, 0.12); color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border-bottom: none; }
+        
+        /* Settings Dropdown */
+        .menu-item:hover { background: rgba(255,255,255,0.08); color: var(--accent); }
+        .dropdown-content { transition: opacity 0.2s, transform 0.2s; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .section-title { font-size: 32px; font-weight: 700; margin-bottom: 40px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        
+        .card { 
+            background: var(--card-bg); border: 1px solid var(--card-border); 
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); padding: 30px; border-radius: 24px; cursor: pointer; transition: 0.3s;
+        }
+        .card:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255,255,255,0.06); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4); }
+        .card-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; font-weight: 700; }
+        .card-value { font-size: 44px; font-weight: 800; margin-bottom: 10px; }
+        .card-subtext { font-size: 14px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+        
+        .drilldown { 
+            display: none; background: var(--card-bg); border: 1px solid var(--card-border);
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); margin-top: 40px; border-radius: 24px; padding: 40px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; border-bottom: 1px solid var(--card-border); }
+        td { padding: 15px; border-bottom: 1px solid var(--card-border); font-size: 15px; transition: 0.2s; }
+        
+        .branch-row { cursor: pointer; }
+        .branch-row:hover { background: rgba(255,255,255,0.03); }
+        .branch-row.active { background: rgba(232, 255, 56, 0.05); color: var(--accent); }
+        .chevron { display: inline-block; width: 20px; transition: 0.3s; color: var(--text-muted); }
+        .branch-row.active .chevron { transform: rotate(90deg); color: var(--accent); }
+
+        .master-row { display: none; background: rgba(0,0,0,0.4); font-size: 14px; }
+        .master-row.active { display: table-row; }
+        .trend-up { color: #34C759; }
+        .trend-down { color: #FF3B30; }
+
+        /* OVN Matrix */
+        .ovn-matrix-container { 
+            background: var(--card-bg); border: 1px solid var(--card-border); 
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); border-radius: 28px; padding: 25px; margin-bottom: 40px; overflow-x: auto; 
+            max-width: 100%;
+        }
+        .ovn-matrix { display: grid; grid-template-columns: 160px repeat(31, 120px); border-radius: 12px; overflow: hidden; }
+        .matrix-header-cell { 
+            background: rgba(255,255,255,0.03); padding: 12px; font-size: 11px; 
+            font-weight: 700; color: var(--text-muted); text-transform: uppercase; 
+            text-align: center; border: 1px solid var(--card-border);
+        }
+        .matrix-side-cell { 
+            padding: 15px; font-size: 13px; font-weight: 600; 
+            border: 1px solid var(--card-border); background: rgba(0,0,0,0.2);
+            position: sticky; left: 0; z-index: 10;
+        }
+        .matrix-day-cell { border: 1px solid var(--card-border); display: grid; grid-template-columns: 1fr 1fr 1fr; background: rgba(255,255,255,0.01); }
+        .matrix-slot { 
+            height: 40px; border-right: 1px solid var(--card-border); 
+            display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: background 0.2s;
+        }
+        .matrix-slot:last-child { border-right: none; }
+        .matrix-slot:hover { background: rgba(255,255,255,0.1); }
+        .slot-ok { background: rgba(52, 199, 89, 0.4); } 
+        .slot-error { background: rgba(255, 59, 48, 0.4); }
+        .slot-warn { background: rgba(255, 159, 10, 0.4); }
+
+        .modal { 
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;
+            backdrop-filter: blur(10px);
+        }
+        .modal.active { display: flex; }
+        .modal-content { 
+            background: rgba(20, 20, 22, 0.6); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); box-shadow: 0 24px 64px rgba(0,0,0,0.6); padding: 40px; border-radius: 32px; 
+            width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;
+            border: 1px solid var(--card-border);
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .form-field { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        input, select, textarea { 
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: border-color 0.2s, background 0.2s; color: #fff; 
+            padding: 12px 16px; border-radius: 12px; font-size: 15px;
+            font-family: inherit;
+        }
+        input:focus, select:focus { outline: none; border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+        option { background-color: #1a1a1a; color: #ffffff; }
+        .btn-submit { 
+            background: var(--accent); color: #000; border: none; width: 100%; 
+            padding: 16px; border-radius: 16px; font-weight: 800; cursor: pointer;
+        }
+
+        .badge-status { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .badge-yes { background: rgba(52, 199, 89, 0.15); color: #34C759; }
+        .badge-no { background: rgba(255, 59, 48, 0.15); color: #FF3B30; }
+
+        .tooltip-wrapper:hover .tooltip-text { display: block !important; }
+        .analytic-card { position: relative; }
+        .card-icons {
+            position: absolute; top: 12px; right: 12px;
+            display: flex; gap: 8px; align-items: center; z-index: 5;
+        }
+        .btn-refresh-cell { 
+            cursor: pointer; color: var(--text-muted); background: none; 
+            border: none; outline: none; padding: 4px; border-radius: 6px;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-refresh-cell:hover { background: rgba(255,255,255,0.05); color: var(--accent); }
+        .err-icon { color: #FFCC00; font-size: 16px; cursor: help; display: none; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
+
+        /* Schedule Grid Styles */
+        .sched-table-wrapper { 
+            width: 100%; overflow-x: auto; background: var(--card-bg); 
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); border-radius: 20px; border: 1px solid var(--card-border);
+            margin-top: 20px;
+        }
+        .sched-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .sched-table th, .sched-table td { 
+            border: 1px solid rgba(255,255,255,0.05); 
+            padding: 8px 6px; text-align: center; min-width: 90px;
+            white-space: normal;
+            word-wrap: break-word;
+            line-height: 1.3;
+        }
+        .sched-table th { background: rgba(255,255,255,0.02); font-weight: 700; color: var(--text-muted); }
+        .sched-table tr.loc-header td { 
+            background: rgba(30, 215, 96, 0.05); color: var(--accent); 
+            font-weight: 800; text-align: left; padding-left: 20px;
+            font-size: 14px; border-top: 2px solid rgba(30,215,96,0.2);
+        }
+        .sched-cell { 
+            cursor: pointer; min-height: 48px; border-radius: 6px; transition: all 0.2s;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4px 6px;
+        }
+        .sched-cell:hover { background: rgba(255,255,255,0.05); }
+        .sched-cell:focus { background: rgba(255,255,255,0.1); box-shadow: 0 0 0 2px var(--accent); }
+        .sched-master-name { text-align: left; font-weight: 600; width: 150px; position: sticky; left: 0; background: var(--card-bg); z-index: 2; }
+        .sched-master-row-btn { cursor: pointer; transition: 0.2s; }
+        .sched-master-row-btn:hover { color: var(--accent); background: rgba(232, 255, 56, 0.05); }
+        
+        .sched-cell.weekend { color: #888; background: rgba(255,255,255,0.02); }
+        .sched-cell.work { color: #fff; font-weight: 600; }
+        .sched-cell.replacement { color: var(--accent); font-style: italic; }
+
+        /* Context Menu */
+        #sched-context-menu {
+            position: absolute; background: rgba(30, 30, 30, 0.7); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+            border-radius: 12px; z-index: 10000; display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 10px 0;
+            min-width: 180px; max-height: 400px; overflow-y: auto;
+        }
+        .ctx-item.has-submenu::after { content: 'в†’'; float: right; color: #666; }
+        .time-picker-popover {
+            position: absolute; background: rgba(30, 30, 30, 0.7); border: 1px solid var(--accent);
+            border-radius: 8px; z-index: 11000; display: none; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); padding: 5px;
+        }
+        .time-btn { 
+            display: block; width: 100%; padding: 8px 12px; 
+            background: none; border: none; color: #fff; 
+            text-align: left; cursor: pointer; border-radius: 4px;
+        }
+        .time-btn:hover { background: rgba(30, 215, 96, 0.2); color: var(--accent); }
+
+        .ctx-item { padding: 10px 20px; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .ctx-item:hover { background: var(--accent); color: #000; }
+        .ctx-header { padding: 5px 20px; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* [Additional Login Styles] */
+        .login-wrapper {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+            text-align: center; background: radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.04), transparent 25%), #050505;
+        }
+        .login-card {
+            background: rgba(20, 20, 22, 0.5); border: 1px solid var(--card-border);
+            padding: 40px; border-radius: 24px; max-width: 400px; width: 90%;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.6); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+        }
+        .login-btn {
+            background: var(--accent); color: #000; font-size: 16px; font-weight: 800;
+            padding: 15px 30px; border: none; border-radius: 12px; cursor: pointer;
+            margin-top: 30px; width: 100%; transition: all 0.2s;
+        }
+        .login-btn:hover { transform: scale(1.05); }
+        .welcome-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 100000; display: flex; align-items: center; justify-content: center;
+            opacity: 1; transition: opacity 0.5s ease-out;
+        }
+        .welcome-text {
+            font-size: 32px; font-weight: 800; color: #fff;
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .hidden { display: none !important; }
+        
+        /* Cleaning Widget Styles */
+        @keyframes rotateBorder {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 10px rgba(30,215,96,0.3); }
+            50% { box-shadow: 0 0 25px rgba(30,215,96,0.8); }
+            100% { box-shadow: 0 0 10px rgba(30,215,96,0.3); }
+        }
+        .cleaning-widget {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 3px;
+            width: 100%;
+            height: 220px;
+            background: var(--card-border);
+            display: flex;
+        }
+        .cleaning-widget.active::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, transparent, transparent, var(--accent));
+            animation: rotateBorder 2.5s linear infinite;
+        }
+        .cleaning-inner {
+            position: relative;
+            background: rgba(20, 20, 22, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            width: 100%;
+            height: 100%;
+            border-radius: 14px;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .btn-glow {
+            background: var(--accent);
+            color: #000;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(30,215,96,0.5);
+            animation: pulseGlow 2s infinite;
+            transition: all 0.2s;
+        }
+        .btn-glow.disabled {
+            background: #333;
+            color: #888;
+            box-shadow: none;
+            animation: none;
+            cursor: not-allowed;
+        }
+
+    
+        @media (max-width: 768px) {
+            .journal-table { display: block; width: 100%; border-collapse: separate; border-spacing: 0; }
+            .journal-table thead { display: none; }
+            .journal-table tbody { display: block; width: 100%; }
+            .journal-table tr { 
+                display: block; width: 100%;
+                background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); 
+                border-radius: 16px; padding: 16px; margin-bottom: 16px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            }
+            .journal-table td { 
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 10px 0; font-size: 14px; text-align: right; 
+                border-bottom: 1px solid rgba(255,255,255,0.04);
+            }
+            .journal-table td:last-child { border-bottom: none; }
+            .journal-table td::before { 
+                content: attr(data-label); 
+                color: var(--text-muted); 
+                font-size: 11px; font-weight: 700; text-transform: uppercase; 
+                flex-shrink: 0; text-align: left; margin-right: 15px;
+            }
+            
+            /* Highlight Master Name */
+            .journal-table td[data-label="РњРђРЎРўР•Р "] {
+                font-size: 18px; font-weight: 800; color: #fff;
+                border-bottom: 1px dashed rgba(255,255,255,0.1);
+                margin-bottom: 8px; padding-bottom: 12px;
+                justify-content: flex-start;
+            }
+            .journal-table td[data-label="РњРђРЎРўР•Р "]::before { display: none; }
+        }
+
+    
+        /* PREMIUM ANALYTICS REDESIGN */
+        .analytics-wrapper {
+            background: radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(76, 29, 149, 0.08) 0%, transparent 40%);
+            border-radius: 30px;
+            padding: 20px;
+            position: relative;
+        }
+        #analytics-section .section-title {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 28px;
+            background: linear-gradient(90deg, #ffffff, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+        .analytic-card {
+            background: linear-gradient(145deg, rgba(20, 18, 30, 0.95) 0%, rgba(13, 11, 20, 0.95) 100%) !important;
+            border: 1px solid rgba(139, 92, 246, 0.2) !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+            border-radius: 20px !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            padding: 24px !important;
+        }
+        .analytic-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.8), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .analytic-card:hover {
+            transform: translateY(-6px) !important;
+            border-color: rgba(167, 139, 250, 0.5) !important;
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.2), inset 0 0 20px rgba(139, 92, 246, 0.05) !important;
+        }
+        .analytic-card:hover::after { opacity: 1; }
+        
+        .analytic-card .card-label {
+            color: #c4b5fd !important;
+            font-weight: 600 !important;
+            letter-spacing: 1.5px !important;
+            font-size: 11px !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .analytic-card .card-value {
+            font-size: 38px !important;
+            font-weight: 800 !important;
+            margin: 15px 0 10px 0 !important;
+            background: linear-gradient(to bottom right, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 20px rgba(139, 92, 246, 0.3) !important;
+        }
+        .analytic-card .card-subtext {
+            color: #8b8d9b !important;
+        }
+        .analytic-card .btn-refresh-cell {
+            color: #a78bfa !important;
+            opacity: 0.6;
+            transition: all 0.2s;
+            background: rgba(139, 92, 246, 0.1) !important;
+            padding: 6px !important;
+            border-radius: 8px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .analytic-card:hover .btn-refresh-cell {
+            opacity: 1;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+            color: #ffffff !important;
+        }
+
+    </style>
+
+<style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="login-wrapper hidden">
+        <div class="login-card">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                <img src="logo_v2.png" style="height: 40px; filter: invert(1);" alt="Logo">
+            </div>
+            <h1 style="margin: 0 0 10px 0; font-size: 24px;">Р’С…РѕРґ РІ СЃРёСЃС‚РµРјСѓ</h1>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.5;">РђРІС‚РѕСЂРёР·Р°С†РёСЏ РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ С‡РµСЂРµР· Telegram-Р±РѕС‚Р° <b>@grometeambot</b>.</p>
+            <button class="login-btn" onclick="window.open('https://t.me/grometeambot?start=login', '_blank')">рџ“± Р’РѕР№С‚Рё С‡РµСЂРµР· Telegram</button>
+            <p style="margin-top: 20px; font-size: 12px; color: #666;">РџРѕР»СѓС‡РёР»Рё СЃСЃС‹Р»РєСѓ РІ Р±РѕС‚Рµ? РџСЂРѕСЃС‚Рѕ РїРµСЂРµР№РґРёС‚Рµ РїРѕ РЅРµР№.</p>
+        </div>
+    </div>
+
+    <!-- WELCOME ANIMATION -->
+    <div id="welcome-screen" class="welcome-overlay hidden">
+        <div class="welcome-text" id="welcome-msg">РџСЂРёРІРµС‚, РРјСЏ рџ‘‹</div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="container hidden" id="app-container">
+        <header>
+            <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                <img src="logo_v2.png" style="height: 32px; filter: invert(1); opacity: 1;" alt="Logo">
+                GROME<span style="color: var(--accent); opacity: 0.8; font-weight: 400; font-size: 0.8em; margin-left: -2px;">.DASH</span>
+            </div>
+            <div id="current-date" style="font-size: 14px; font-weight: 600;">Р—Р°РіСЂСѓР·РєР°...</div>
+            <div style="display: flex; gap: 10px;">
+                
+            <div class="settings-dropdown" style="position: relative; display: inline-block;">
+                <button id="refresh-btn" class="btn-refresh" onclick="toggleSettingsMenu()" style="display: flex; align-items: center; gap: 8px;">
+                    вљ™пёЏ РќР°СЃС‚СЂРѕР№РєРё <span style="font-size: 18px;">в°</span>
+                </button>
+                <div id="settings-menu" class="dropdown-content" style="display: none; position: absolute; right: 0; top: 110%; background: #1a1a1a; border: 1px solid var(--card-border); border-radius: 12px; min-width: 180px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 5px;">
+                    <div class="menu-item" onclick="openAdapterModal(); toggleSettingsMenu()" style="padding: 12px 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                        вљ™пёЏ YC РђРґР°РїС‚РµСЂ
+                    </div>
+                    <div class="menu-item" onclick="openHandbookConfigModal(); toggleSettingsMenu()" style="padding: 12px 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                        рџ“ РќР°СЃС‚СЂРѕР№РєР° С€С‚СЂР°С„РѕРІ
+                    </div>
+                    <div class="menu-divider" style="height: 1px; background: rgba(255,255,255,0.05); margin: 5px 0;"></div>
+                    <div class="menu-item" onclick="triggerSync(); toggleSettingsMenu()" style="padding: 12px 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-muted);">
+                        рџ”„ РћР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ
+                    </div>
+                </div>
+            </div>
+            </div>
+        </header>
+        <div class="tabs-container">
+            <div class="tabs">
+            <button class="tab-btn active" id="tab-analytics" onclick="switchTab('analytics', this)">РђРЅР°Р»РёС‚РёРєР°</button>
+            <button class="tab-btn" id="tab-master" onclick="switchTab('master-cabinet', this)">РљР°Р±РёРЅРµС‚ РјР°СЃС‚РµСЂР°</button>
+            <button class="tab-btn" id="tab-ovn" onclick="switchTab('ovn', this)">Р’РёРґРµРѕРєРѕРЅС‚СЂРѕР»СЊ (РћР’Рќ)</button>
+            <button class="tab-btn" id="tab-lates" onclick="switchTab('lates', this)">РћРџРћР—Р”РђРќРРЇ</button>
+            <button class="tab-btn" id="tab-manager" onclick="switchTab('manager', this)">РљР°Р±РёРЅРµС‚ РјРµРЅРµРґР¶РµСЂР°</button>
+            <button class="tab-btn" id="tab-schedule" onclick="switchTab('schedule', this)">Р“Р РђР¤РРљ</button>
+            <button class="tab-btn" id="tab-settings" onclick="switchTab('settings', this)">РќР°СЃС‚СЂРѕР№РєРё</button>
+        </div>
+        </div>
+
+        <div id="analytics-section" class="tab-content active">
+            <h1 class="section-title">РђРЅР°Р»РёС‚РёРєР° СЃРµС‚Рё</h1>
+            <div class="analytics-wrapper">
+                <div class="metrics-grid">
+                    <div class="card analytic-card" onclick="toggleDrilldown('revenue')">
+                        <div class="card-icons">
+                            <span class="err-icon" title="РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…!">вљ пёЏ</span>
+                            <button class="btn-refresh-cell" onclick="event.stopPropagation(); triggerSyncModule('finance', this)" title="РћР±РЅРѕРІРёС‚СЊ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></button>
+                        </div>
+                        <div class="card-label">Р РѕСЃС‚ РєРІР°СЂС‚Р°Р»Р° (YoY)</div>
+                        <div class="card-value">+0%</div>
+                        <div class="card-subtext">Р—Р°РіСЂСѓР·РєР°...</div>
+                    </div>
+                    <div class="card analytic-card" onclick="toggleDrilldown('returns')">
+                        <div class="card-icons">
+                            <span class="err-icon" title="РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…!">вљ пёЏ</span>
+                            <button class="btn-refresh-cell" onclick="event.stopPropagation(); triggerSyncModule('clients', this)" title="РћР±РЅРѕРІРёС‚СЊ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></button>
+                        </div>
+                        <div class="card-label">Return Rate (90d)</div>
+                        <div class="card-value">0%</div>
+                        <div class="card-subtext">LTV РїСЂРѕРіРЅРѕР·: СЂР°СЃС‡РµС‚...</div>
+                    </div>
+                    <div class="card analytic-card" onclick="toggleDrilldown('intervals')">
+                        <div class="card-icons">
+                            <span class="err-icon" title="РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…!">вљ пёЏ</span>
+                            <button class="btn-refresh-cell" onclick="event.stopPropagation(); triggerSyncModule('clients', this)" title="РћР±РЅРѕРІРёС‚СЊ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></button>
+                        </div>
+                        <div class="card-label">Р¦РёРєР» РІРёР·РёС‚Р° (СЃСЂ.)</div>
+                        <div class="card-value">0Рґ</div>
+                        <div class="card-subtext">Р”РЅРµР№ РјРµР¶РґСѓ СЃС‚СЂРёР¶РєР°РјРё</div>
+                    </div>
+                    <div class="card analytic-card" onclick="toggleDrilldown('revenue')">
+                        <div class="card-icons">
+                            <span class="err-icon" title="РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…!">вљ пёЏ</span>
+                            <button class="btn-refresh-cell" onclick="event.stopPropagation(); triggerSyncModule('finance', this)" title="РћР±РЅРѕРІРёС‚СЊ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></button>
+                        </div>
+                        <div class="card-label">Р’С‹СЂСѓС‡РєР° СЃРµРіРѕРґРЅСЏ</div>
+                        <div class="card-value">0 в‚Ѕ</div>
+                        <div class="card-subtext">Р§РёСЃС‚Р°СЏ (Р±РµР· Р±РѕРЅСѓСЃРѕРІ)</div>
+                    </div>
+                    <div class="card analytic-card" onclick="toggleDrilldown('appointments')">
+                        <div class="card-icons">
+                            <span class="err-icon" title="РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…!">вљ пёЏ</span>
+                            <button class="btn-refresh-cell" onclick="event.stopPropagation(); triggerSyncModule('online', this)" title="РћР±РЅРѕРІРёС‚СЊ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></button>
+                        </div>
+                        <div class="card-label">Р”РѕР»СЏ РѕРЅР»-Р·Р°РїРёСЃРµР№ (MTD)</div>
+                        <div class="card-value">0%</div>
+                        <div class="card-subtext">Р—Р°РїРёСЃРё РѕС‚ РѕР±С‰РµРіРѕ С‡РёСЃР»Р° СѓСЃР»СѓРі</div>
+                    </div>
+                    <div class="card analytic-card" onclick="toggleDrilldown('occupancy')">
+                        <div class="card-icons">
+                            <span class="err-icon" title="РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…!">вљ пёЏ</span>
+                            <button class="btn-refresh-cell" onclick="event.stopPropagation(); triggerSyncModule('online', this)" title="РћР±РЅРѕРІРёС‚СЊ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></button>
+                        </div>
+                        <div class="card-label">Р—Р°РїРѕР»РЅСЏРµРјРѕСЃС‚СЊ (MTD)</div>
+                        <div class="card-value">0</div>
+                        <div class="card-subtext">РЎСЂ. С‡РµРєРѕРІ РІ СЂР°Р±. РґРµРЅСЊ (>2)</div>
+                    </div>
+                    <div class="card analytic-card">
+                        <div class="card-icons">
+                            <span class="err-icon" title="РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р°РєС‚СѓР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…!">вљ пёЏ</span>
+                        </div>
+                        <div class="card-label">РљР°С‡РµСЃС‚РІРѕ СЃРµСЂРІРёСЃР° (РћР’Рќ)</div>
+                        <div class="card-value" id="card-ovn-runrate">0%</div>
+                        <div class="card-subtext" id="card-ovn-subtext">0 РёР· 0 РїСЂРѕРІРµСЂРѕРє Р±РµР· Р·Р°РјРµС‡Р°РЅРёР№</div>
+                    </div>
+                </div>
+                <div id="drilldown" class="drilldown">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:30px; align-items:center;">
+                        <h2 id="drilldown-title" style="font-size:24px; font-weight:700;">Р”РµС‚Р°Р»РёР·Р°С†РёСЏ</h2>
+                        <button onclick="document.getElementById('drilldown').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+                    </div>
+                    <table id="drilldown-table">
+                        <thead>
+                            <tr>
+                                <th>Р¤РёР»РёР°Р» / РњР°СЃС‚РµСЂ</th>
+                                <th>РџРѕРєР°Р·Р°С‚РµР»СЊ</th>
+                                <th>РўСЂРµРЅРґ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drilldown-body">
+                            <!-- Data rows here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="master-cabinet-section" class="tab-content">
+            <h1 class="section-title">РљР°Р±РёРЅРµС‚ РјР°СЃС‚РµСЂР° (<span id="dynamic-master-name">РРјСЏ</span>)</h1>
+            <div id="master-zone-container" style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px; background: var(--card-bg); padding: 15px 25px; border-radius: 20px; border: 1px solid var(--card-border);">
+                <div style="font-size: 16px; font-weight: 700;">РўРµРєСѓС‰Р°СЏ Р·РѕРЅР°:</div>
+                <div id="master-zone-badge" style="padding: 6px 14px; border-radius: 12px; font-weight: 800; font-size: 14px; background: rgba(52, 199, 89, 0.15); color: #34C759;">
+                    рџџў Р—Р•Р›Р•РќРђРЇ
+                </div>
+                <div class="tooltip-wrapper" style="position: relative; display: inline-block; cursor: help;">
+                    <div style="width: 20px; height: 20px; border-radius: 50%; background: #333; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">?</div>
+                    <div class="tooltip-text" style="display: none; position: absolute; top: 30px; left: 0; width: 350px; background: #222; border: 1px solid var(--accent); padding: 15px; border-radius: 12px; font-size: 12px; color: #ccc; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                        <b>Р—РµР»РµРЅР°СЏ:</b> РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ. <br>
+                        <b>Р–РµР»С‚Р°СЏ:</b> > 9 РЅР°СЂСѓС€РµРЅРёР№ РІ РЅРµРґРµР»СЋ. <span style="color:#FF9F0A">РЁС‚СЂР°С„ Р·Р° 1 СЃР°РјРѕРµ С‡Р°СЃС‚РѕРµ РЅР°СЂСѓС€РµРЅРёРµ.</span> Р’РѕР·РІСЂР°С‚ РІ Р·РµР»РµРЅСѓСЋ, РµСЃР»Рё <= 9. <br>
+                        <b>РљСЂР°СЃРЅР°СЏ:</b> > 9 РЅР°СЂСѓС€РµРЅРёР№ РІ Р¶РµР»С‚РѕР№ Р·РѕРЅРµ (РёР»Рё >= 14 РІ Р·РµР»РµРЅРѕР№). <span style="color:#FF3B30">РЁС‚СЂР°С„ Р·Р° Р’РЎР• РЅР°СЂСѓС€РµРЅРёСЏ.</span> Р’РѕР·РІСЂР°С‚ РІ Р·РµР»РµРЅСѓСЋ, РµСЃР»Рё <= 9.<br>
+                        <i style="color:#aaa; display:block; margin-top:8px;">* РћРїРѕР·РґР°РЅРёСЏ, РЅРµРІС‹С…РѕРґ Рё РІРѕСЂРѕРІСЃС‚РІРѕ/РЅРµРѕРїР»Р°С‚Р° С€С‚СЂР°С„СѓСЋС‚СЃСЏ <b>РІСЃРµРіРґР°</b> (РІ Р»СЋР±РѕР№ Р·РѕРЅРµ).</i>
+                    </div>
+                </div>
+                <div style="margin-left: auto; display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="font-size: 14px; color: var(--text-muted);">РќР°СЂСѓС€РµРЅРёСЏ (РЅРµРґ): <strong id="master-week-violations" style="color: #fff; font-size: 16px;">0</strong></div>
+                    <div style="font-size: 14px; color: var(--text-muted);">РЎСѓРјРјР° С€С‚СЂР°С„РѕРІ (РјРµСЃ): <strong id="master-total-fines" style="color: #FF3B30; font-size: 16px;">0 в‚Ѕ</strong></div>
+                    <button class="btn-refresh" onclick="openSalaryModal(false)" style="padding: 4px 12px; font-size: 12px; border-radius: 8px; border: 1px solid #FF9F0A; color: #FF9F0A;">рџ’° РњРѕСЏ Р—Р°СЂРїР»Р°С‚Р°</button>
+                </div>
+            </div>
+            </div>
+            <div class="metrics-grid">
+                <!-- Card 1: Отработка -->
+                <div class="card" onclick="window.location.hash='#analytics'" style="cursor: pointer; position: relative;">
+                    <i class="fas fa-sync sync-icon" onclick="event.stopPropagation(); syncDashboard(this);" style="position: absolute; top: 15px; right: 15px; color: #888;"></i>
+                    <div class="card-icon" style="background: rgba(232, 255, 56, 0.1); color: var(--accent);">📊</div>
+                    <div class="card-title">ЗАПОЛНЯЕМОСТЬ СМЕНЫ</div>
+                    <div class="card-value" id="master-occupancy" style="display: flex; align-items: baseline; gap: 8px;">0</div>
+                    <div class="card-subtext" style="text-transform:none">Ср. чеков в рабочий день</div>
+                </div>
+                
+                <!-- Card 2: Качество сервиса -->
+                <div class="card" onclick="switchTab('ovn', document.getElementById('tab-ovn'))" style="cursor: pointer; position: relative;">
+                    <i class="fas fa-sync sync-icon" onclick="event.stopPropagation(); syncDashboard(this);" style="position: absolute; top: 15px; right: 15px; color: #888;"></i>
+                    <div class="card-icon" style="background: rgba(52, 199, 89, 0.1); color: #34C759;">✓</div>
+                    <div class="card-title">КАЧЕСТВО СЕРВИСА (ОВН)</div>
+                    <div class="card-value" id="master-ovn-score" style="display: flex; align-items: baseline; gap: 8px;">0%</div>
+                    <div class="card-subtext" style="text-transform:none">Нет проверок</div>
+                </div>
+
+                <!-- Card 3: Возвращаемость -->
+                <div class="card" style="position: relative;">
+                    <i class="fas fa-sync sync-icon" onclick="event.stopPropagation(); syncDashboard(this);" style="position: absolute; top: 15px; right: 15px; color: #888;"></i>
+                    <div class="card-icon" style="background: rgba(255, 159, 10, 0.1); color: #FF9F0A;">🔄</div>
+                    <div class="card-title">RETURN RATE</div>
+                    <div class="card-value" id="master-rr" style="display: flex; align-items: baseline; gap: 8px;">0%</div>
+                    <div class="card-subtext" id="master-rr-sub" style="text-transform:none">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+<div id="manager-section" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <h1 class="section-title" style="margin: 0; margin-bottom: 15px;">РљР°Р±РёРЅРµС‚ РјРµРЅРµРґР¶РµСЂР°</h1>
+                    <div style="display: flex; align-items: stretch; gap: 15px; flex-wrap: wrap;">
+                        <div style="background: rgba(232, 255, 56, 0.1); border: 1px solid var(--accent); padding: 10px 20px; border-radius: 14px; display: flex; align-items: center; gap: 10px;">
+                            <span style="color: #fff; font-size: 14px; opacity: 0.8;">РџСЂРѕРІРµСЂРѕРє Р·Р° СЃРµРіРѕРґРЅСЏ:</span>
+                            <span id="manager-checks-count" style="color: var(--accent); font-weight: 800; font-size: 18px;">0 / 3</span>
+                        </div>
+                        <button class="btn-submit" onclick="openManagerModal()" style="width: auto; padding: 10px 28px; border-radius: 14px; font-size: 15px; box-shadow: 0 4px 15px rgba(232, 255, 56, 0.2);">+ РќРѕРІР°СЏ РїСЂРѕРІРµСЂРєР°</button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-refresh" onclick="openHandbookConfigModal()" style="border-radius: 10px; padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 13px;">рџ—‚ РЈС‡РµС‚ С€С‚СЂР°С„РѕРІ</button>
+                    <button class="btn-refresh" onclick="openSalaryModal(true)" style="border-radius: 10px; padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 13px;">рџ’° Р Р°СЃС‡РµС‚ Р·Р°СЂРїР»Р°С‚</button>
+                    <button class="btn-refresh" onclick="openManualFineModal()" style="border-radius: 10px; padding: 10px 16px; background: rgba(255, 59, 48, 0.05); border: 1px solid rgba(255, 59, 48, 0.3); color: #FF3B30; font-size: 13px;">рџљЁ Р СѓС‡РЅРѕР№ С€С‚СЂР°С„</button>
+                </div>
+            </div>
+            <div class="ovn-matrix-container" style="padding: 0; overflow: hidden; border-radius: 20px;">
+                <table id="manager-table" class="journal-table">
+                    <thead>
+                        <tr>
+                            <th>Р”Р°С‚Р° / Р’СЂРµРјСЏ</th>
+                            <th>РЎР°Р»РѕРЅ</th>
+                            <th>РЎС‚Р°С‚СѓСЃ</th>
+                            <th>РџСЂРѕР±Р»РµРјС‹</th>
+                            <th>Р”РµР№СЃС‚РІРёСЏ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manager-history"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="ovn-section" class="tab-content">
+            <!-- DAILY CHECKS (TODAY) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--card-border);">
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <button class="btn-submit" onclick="openOVNModal()" style="width: auto; padding: 10px 20px; border-radius: 12px; font-size: 14px;">
+                        + РќРѕРІР°СЏ РїСЂРѕРІРµСЂРєР°
+                    </button>
+                </div>
+                <div style="text-align: right">
+                   <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">РђРєС‚СѓР°Р»СЊРЅРѕ РЅР° СЃРµРіРѕРґРЅСЏ</div>
+                   <h2 style="font-size: 20px; font-weight: 700; color: #FF9F0A;"><span id="ovn-remaining-count">РћСЃС‚Р°Р»РѕСЃСЊ РїСЂРѕРІРµСЂРѕРє: 35</span></h2>
+                </div>
+            </div>
+
+            <!-- TODAY'S OVN GRID -->
+            <div class="ovn-matrix-container" style="padding: 0; overflow: hidden; border-radius: 20px; margin-bottom: 40px;">
+                <table id="ovn-today-table" class="journal-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:25px">Р‘Р°СЂР±РµСЂ</th>
+                            <th>РќР°СЂСѓС€РµРЅРёРµ</th>
+                            <th>Р”Р°С‚Р° РїСЂРѕСЃРј.</th>
+                            <th>РЎР°Р»РѕРЅ</th>
+                            <th>Р’СЂРµРјСЏ</th>
+                            <th>Р Р°Р±РѕС‚Р°</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ovn-today-history"></tbody>
+                </table>
+            </div>
+
+            <!-- JOURNAL HEADER -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 40px; border-top: 1px solid #333;">
+                <h2 style="font-size: 20px; font-weight: 700; margin: 0;">Р–СѓСЂРЅР°Р» РІРёРґРµРѕРєРѕРЅС‚СЂРѕР»СЏ</h2>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                    <select id="ovn-history-preset" onchange="applyOvnPreset()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 140px;">
+                        <option value="none">Р’С‹Р±РµСЂРёС‚Рµ РїРµСЂРёРѕРґ</option>
+                        <option value="today">РЎРµРіРѕРґРЅСЏ</option>
+                        <option value="yesterday">Р’С‡РµСЂР°</option>
+                        <option value="week">Р­С‚Р° РЅРµРґРµР»СЏ</option>
+                        <option value="month">Р­С‚РѕС‚ РјРµСЃСЏС†</option>
+                        <option value="all">Р’СЃРµ РІСЂРµРјСЏ</option>
+                        <option value="custom">РЎРІРѕРё РґР°С‚С‹</option>
+                    </select>
+                    
+                    <button onclick="shiftOvnDate(-1)" title="РџСЂРµРґС‹РґСѓС‰РёР№ РґРµРЅСЊ" style="background:#000; border:1px solid var(--card-border); color:#fff; border-radius:12px; padding:10px 15px; cursor:pointer;">&larr;</button>
+                    
+                    <input type="date" id="ovn-history-start" onchange="document.getElementById('ovn-history-preset').value='custom'; renderOvnJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 140px;">
+                    <span style="color: #666; font-size: 20px;">-</span>
+                    <input type="date" id="ovn-history-end" onchange="document.getElementById('ovn-history-preset').value='custom'; renderOvnJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 140px;">
+                    <button onclick="shiftOvnDate(1)" title="РЎР»РµРґСѓСЋС‰РёР№ РґРµРЅСЊ" style="background:#000; border:1px solid var(--card-border); color:#fff; border-radius:12px; padding:10px 15px; cursor:pointer;">&rarr;</button>
+                    
+                    <select id="ovn-history-loc-filter" onchange="renderOvnJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 160px;">
+                        <option value="">Р’СЃРµ С„РёР»РёР°Р»С‹</option>
+                        <option value="РђР»РµРєСЃРµРµРІСЃРєР°СЏ">РђР»РµРєСЃРµРµРІСЃРєР°СЏ</option>
+                        <option value="РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ">РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ</option>
+                        <option value="Р’Р°СЂС€Р°РІСЃРєР°СЏ">Р’Р°СЂС€Р°РІСЃРєР°СЏ</option>
+                        <option value="Р СЏР·Р°РЅРєР°">Р СЏР·Р°РЅРєР°</option>
+                        <option value="РЎРѕРєРѕР»">РЎРѕРєРѕР»</option>
+                        <option value="РўРµРєСЃС‚РёР»СЊС‰РёРєРё">РўРµРєСЃС‚РёР»СЊС‰РёРєРё</option>
+                    </select>
+                    
+                    <select id="ovn-history-master-filter" onchange="renderOvnJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 150px;">
+                        <option value="">Р’СЃРµ РјР°СЃС‚РµСЂР°</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="ovn-matrix-container" id="ovn-history-table-container" style="padding: 0; overflow: hidden; border-radius: 20px; display: none;">
+                <table id="ovn-table" class="journal-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:25px">Р‘Р°СЂР±РµСЂ</th>
+                            <th>РќР°СЂСѓС€РµРЅРёРµ</th>
+                            <th>Р”Р°С‚Р° РїСЂРѕСЃРј.</th>
+                            <th>РЎР°Р»РѕРЅ</th>
+                            <th>Р’СЂРµРјСЏ</th>
+                            <th>Р Р°Р±РѕС‚Р°</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ovn-history-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="lates-section" class="tab-content">
+            <!-- CALENDAR & DAILY AUDIT -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--card-border);">
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div>
+                        <label style="display:block; margin-bottom:8px">Р›РѕРєР°С†РёСЏ (РЎРµРіРѕРґРЅСЏ)</label>
+                        <select id="lates-audit-loc" onchange="loadLatesHistory()" style="width: 200px; padding: 10px; background: var(--card-bg); color: #fff; border: 1px solid var(--card-border); border-radius: 8px;">
+                            <option value="РђР»РµРєСЃРµРµРІСЃРєР°СЏ">РђР»РµРєСЃРµРµРІСЃРєР°СЏ</option>
+                            <option value="РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ">РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ</option>
+                            <option value="Р’Р°СЂС€Р°РІСЃРєР°СЏ">Р’Р°СЂС€Р°РІСЃРєР°СЏ</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="text-align: right">
+                   <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">РђРєС‚СѓР°Р»СЊРЅРѕ РЅР° СЃРµРіРѕРґРЅСЏ</div>
+                   <h2 style="font-size: 20px; font-weight: 700; color: #FF9F0A;"><span id="lates-remaining-count">...</span></h2>
+                </div>
+            </div>
+
+            <!-- WORKFORCE AUDIT GRID (Linked to Schedule) -->
+            <div id="lates-workforce-audit" style="margin-bottom: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                <!-- Filled dynamically from Schedule -->
+            </div>
+
+            <!-- JOURNAL HEADER -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 40px; border-top: 1px solid #333;">
+                <h2 style="font-size: 20px; font-weight: 700; margin: 0;">Р–СѓСЂРЅР°Р» РѕРїРѕР·РґР°РЅРёР№</h2>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                    <select id="lates-history-preset" onchange="applyLatesPreset()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 140px;">
+                        <option value="today">РЎРµРіРѕРґРЅСЏ</option>
+                        <option value="week">Р­С‚Р° РЅРµРґРµР»СЏ</option>
+                        <option value="month">Р­С‚РѕС‚ РјРµСЃСЏС†</option>
+                        <option value="all">Р’СЃРµ РІСЂРµРјСЏ</option>
+                        <option value="custom">РЎРІРѕРё РґР°С‚С‹</option>
+                    </select>
+                    <button onclick="shiftLatesDate(-1)" title="РџСЂРµРґС‹РґСѓС‰РёР№ РґРµРЅСЊ" style="background:#000; border:1px solid var(--card-border); color:#fff; border-radius:12px; padding:10px 15px; cursor:pointer;">&larr;</button>
+                    
+                    <input type="date" id="lates-history-start" onchange="document.getElementById('lates-history-preset').value='custom'; renderLatesJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 140px;">
+                    <span style="color: #666; font-size: 20px;">-</span>
+                    <input type="date" id="lates-history-end" onchange="document.getElementById('lates-history-preset').value='custom'; renderLatesJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 140px;">
+                    <button onclick="shiftLatesDate(1)" title="РЎР»РµРґСѓСЋС‰РёР№ РґРµРЅСЊ" style="background:#000; border:1px solid var(--card-border); color:#fff; border-radius:12px; padding:10px 15px; cursor:pointer;">&rarr;</button>
+                    
+                    <select id="lates-history-loc-filter" onchange="renderLatesJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 160px;">
+                        <option value="">Р’СЃРµ С„РёР»РёР°Р»С‹</option>
+                        <option value="РђР»РµРєСЃРµРµРІСЃРєР°СЏ">РђР»РµРєСЃРµРµРІСЃРєР°СЏ</option>
+                        <option value="РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ">РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ</option>
+                        <option value="Р’Р°СЂС€Р°РІСЃРєР°СЏ">Р’Р°СЂС€Р°РІСЃРєР°СЏ</option>
+                        <option value="Р СЏР·Р°РЅРєР°">Р СЏР·Р°РЅРєР°</option>
+                        <option value="РЎРѕРєРѕР»">РЎРѕРєРѕР»</option>
+                        <option value="РўРµРєСЃС‚РёР»СЊС‰РёРєРё">РўРµРєСЃС‚РёР»СЊС‰РёРєРё</option>
+                    </select>
+                    
+                    <select id="lates-history-master-filter" onchange="document.getElementById('lates-history-preset').value='custom'; renderLatesJournal()" style="background: #000; color: #fff; border: 1px solid var(--card-border); padding: 10px; border-radius: 12px; width: 150px;">
+                        <option value="">Р’СЃРµ РјР°СЃС‚РµСЂР°</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="ovn-matrix-container" style="padding: 0; overflow: hidden; border-radius: 20px;">
+                <table id="lates-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:25px">РњР°СЃС‚РµСЂ</th>
+                            <th>РќР°СЂСѓС€РµРЅРёРµ</th>
+                            <th>Р”Р°С‚Р° / Р’СЂРµРјСЏ</th>
+                            <th>Р›РѕРєР°С†РёСЏ</th>
+                            <th>Р“СЂР°С„РёРє</th>
+                            <th>РџСЂРёС…РѕРґ</th>
+                            <th>Р—Р°РґРµСЂР¶РєР°</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lates-history"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="schedule-section" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <div>
+                    <h1 class="section-title" style="margin: 0;">РЈРїСЂР°РІР»РµРЅРёРµ РіСЂР°С„РёРєРѕРј</h1>
+                    <p id="schedule-hint-text" style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">Р РµРґР°РєС‚РёСЂСѓР№С‚Рµ СЏС‡РµР№РєРё РєР°Рє РІ Excel. РџСЂР°РІС‹Р№ РєР»РёРє РґР»СЏ Р·Р°РјРµРЅ.</p>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-field" style="margin: 0;">
+                        <input type="date" id="sched-start-date" onchange="loadSchedule()" style="padding: 10px; border-radius: 12px; width: 140px;">
+                    </div>
+                    <button class="btn-submit" style="width: auto; padding: 10px 25px; border-radius: 12px;" onclick="saveScheduleAll()">РЎРѕС…СЂР°РЅРёС‚СЊ РІСЃРµ РёР·РјРµРЅРµРЅРёСЏ</button>
+                </div>
+            </div>
+
+            <div class="sched-top-scroll" style="width: 100%; overflow-x: auto; margin-bottom: 5px;">
+                <div class="sched-top-dummy" style="height: 1px;"></div>
+            </div>
+            <div class="sched-table-wrapper">
+                <table class="sched-table">
+                    <thead id="sched-thead"></thead>
+                    <tbody id="sched-tbody"></tbody>
+                </table>
+            </div>
+            
+            <div id="sched-context-menu">
+                <div class="ctx-header">РџРѕСЃС‚Р°РІРёС‚СЊ Р·Р°РјРµРЅСѓ</div>
+                <div id="ctx-masters-list"></div>
+                <div style="border-top: 1px solid #333; margin-top: 5px; padding-top: 5px;">
+                    <div class="ctx-item" style="color: #FF3B30;" onclick="clearCell()">Г— РЈР±СЂР°С‚СЊ РёР· РіСЂР°С„РёРєР°</div>
+                </div>
+            </div>
+
+            <!-- Time Picker Popover -->
+            <div id="time-picker" class="time-picker-popover">
+                <button class="time-btn" onclick="applyTime('РЎ 09 РґРѕ 22')">РЎ 09 РґРѕ 22</button>
+                <button class="time-btn" onclick="applyTime('РЎ 10 РґРѕ 22')">РЎ 10 РґРѕ 22</button>
+                <button class="time-btn" onclick="applyTime('РЎ 11 РґРѕ 23')">РЎ 11 РґРѕ 23</button>
+                <button class="time-btn" onclick="applyTime('РІС‹С…РѕРґРЅРѕР№')">Р’С‹С…РѕРґРЅРѕР№</button>
+                <button class="time-btn" onclick="applyCustomTime()" style="border-top:1px solid #333; margin-top:5px; color:#aaa; font-size:11px;">РЎРІРѕР№ РІР°СЂРёР°РЅС‚...</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADAPTER MODAL -->
+    <div id="adapter-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px; height: 95vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <h2 style="font-size: 24px; font-weight: 800;">РќР°СЃС‚СЂРѕР№РєРё С„РёР»РёР°Р»РѕРІ Рё РјР°СЃС‚РµСЂРѕРІ</h2>
+                <button onclick="closeAdapterModal()" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            <p style="color: #888; font-size: 13px; margin-bottom: 20px;">РќР°СЃС‚СЂРѕР№С‚Рµ СЃРІСЏР·Рё РјРµР¶РґСѓ Р”Р°С€Р±РѕСЂРґРѕРј, Р­Р».РљР°СЃСЃРѕР№ Рё YClients РІ СѓРґРѕР±РЅРѕРј С„РѕСЂРјР°С‚Рµ.</p>
+            
+            <div id="adapter-gui-container" style="flex: 1; overflow-y: auto; padding-right: 10px;"></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+                <button type="button" class="btn-secondary" onclick="addAdapterBranch()" style="background: transparent; border: 1px dashed #555;">+ Р”РѕР±Р°РІРёС‚СЊ С„РёР»РёР°Р»</button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-secondary" onclick="closeAdapterModal()">РћС‚РјРµРЅР°</button>
+                    <button type="button" class="btn-submit" onclick="saveAdapter()">РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- CUSTOM TIME MODAL -->
+    <div id="custom-time-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h2 style="font-size: 20px; font-weight: 800;">Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РІСЂРµРјРµРЅРё</h2>
+                <button type="button" onclick="closeCustomTimeModal()" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-field">
+                    <label>РћС‚ (Р§Р°СЃРѕРІ)</label>
+                    <select id="custom-time-from" style="width: 100%;">
+                        <option value="06">06:00</option>
+                        <option value="07">07:00</option>
+                        <option value="08">08:00</option>
+                        <option value="09">09:00</option>
+                        <option value="10" selected>10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>Р”Рѕ (Р§Р°СЃРѕРІ)</label>
+                    <select id="custom-time-to" style="width: 100%;">
+                        <option value="06">06:00</option>
+                        <option value="07">07:00</option>
+                        <option value="08">08:00</option>
+                        <option value="09">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22" selected>22:00</option>
+                        <option value="23">23:00</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="button" class="btn-submit" onclick="submitCustomTime()">РџСЂРёРјРµРЅРёС‚СЊ РІСЂРµРјСЏ</button>
+        </div>
+    </div>
+
+    <!-- MANAGER MODAL -->
+    <div id="manager-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px; height: 95vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h2 style="font-size: 24px; font-weight: 800;">РќРѕРІР°СЏ РїСЂРѕРІРµСЂРєР° РјРµРЅРµРґР¶РµСЂР°</h2>
+                <button onclick="closeManagerModal()" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="manager-form" onsubmit="submitManagerCheck(event)" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+                <div class="form-field" style="margin-bottom: 20px;">
+                    <label>РЎР°Р»РѕРЅ</label>
+                    <select id="manager-location" required style="width: 100%;">
+                        <option value="">Р’С‹Р±РµСЂРёС‚Рµ СЃР°Р»РѕРЅ</option>
+                        <option value="РђР»РµРєСЃРµРµРІСЃРєР°СЏ">РђР»РµРєСЃРµРµРІСЃРєР°СЏ</option>
+                        <option value="РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ">РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ</option>
+                        <option value="Р’Р°СЂС€Р°РІСЃРєР°СЏ">Р’Р°СЂС€Р°РІСЃРєР°СЏ</option>
+                        <option value="Р СЏР·Р°РЅСЃРєРёР№">Р СЏР·Р°РЅСЃРєРёР№</option>
+                        <option value="РЎРѕРєРѕР»">РЎРѕРєРѕР»</option>
+                        <option value="РўРµРєСЃС‚РёР»СЊС‰РёРєРё">РўРµРєСЃС‚РёР»СЊС‰РёРєРё</option>
+                    </select>
+                </div>
+                
+                <div id="manager-fields-container" style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- Auto-generated via JS -->
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn-submit" id="manager-submit-btn">РЈ РјРµРЅСЏ РІСЃС‘ РїРѕРґ РєРѕРЅС‚СЂРѕР»РµРј</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- OVN MODAL -->
+    <div id="ovn-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <h2 id="ovn-modal-title" style="font-size: 24px; font-weight: 800;">РќРѕРІР°СЏ РїСЂРѕРІРµСЂРєР° РћР’Рќ</h2>
+                <button onclick="closeOVNModal()" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="ovn-form" onsubmit="submitOVN(event)">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>РЎР°Р»РѕРЅ</label>
+                        <select id="ovn-location" onchange="updateMastersDropdown()" required>
+                            <option value="">Р’С‹Р±РµСЂРёС‚Рµ СЃР°Р»РѕРЅ</option>
+                            <option value="РђР»РµРєСЃРµРµРІСЃРєР°СЏ">РђР»РµРєСЃРµРµРІСЃРєР°СЏ</option>
+                            <option value="РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ">РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ</option>
+                            <option value="Р’Р°СЂС€Р°РІСЃРєР°СЏ">Р’Р°СЂС€Р°РІСЃРєР°СЏ</option>
+                            <option value="Р СЏР·Р°РЅСЃРєРёР№">Р СЏР·Р°РЅСЃРєРёР№</option>
+                            <option value="РЎРѕРєРѕР»">РЎРѕРєРѕР»</option>
+                            <option value="РўРµРєСЃС‚РёР»СЊС‰РёРєРё">РўРµРєСЃС‚РёР»СЊС‰РёРєРё</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>РњР°СЃС‚РµСЂ</label>
+                        <select id="ovn-barber" required>
+                            <option value="">Р’С‹Р±РµСЂРёС‚Рµ РјР°СЃС‚РµСЂР°</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Р”Р°С‚Р° СЃС‚СЂРёР¶РєРё</label>
+                        <input type="date" id="ovn-date" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Р’СЂРµРјСЏ РїРѕ РєР°РјРµСЂР°Рј</label>
+                        <input type="time" id="ovn-time" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Р¦РµРЅР°, в‚Ѕ</label>
+                        <input type="number" id="ovn-cost" placeholder="900" required>
+                    </div>
+                    
+                    <div class="form-field">
+                        <label>РќР°С†. РїСЂРёРЅР°РґР»РµР¶РЅРѕСЃС‚СЊ</label>
+                        <select id="ovn-nation">
+                            <option value="Р СѓСЃСЃРєРёР№">Р СѓСЃСЃРєРёР№</option>
+                            <option value="РњРёРіСЂР°РЅС‚">РњРёРіСЂР°РЅС‚</option>
+                        </select>
+                    </div>
+                    <div class="form-field" style="grid-column: span 2;">
+                        <label>РќР°СЂСѓС€РµРЅРёСЏ</label>
+                        <div id="ovn-violations-container" style="display: flex; flex-direction: column; gap: 10px;">
+                            <select class="ovn-violation-select" required style="width: 100%;">
+                                <option value="Р—Р°РјРµС‡Р°РЅРёР№ РЅРµС‚">вњ… Р—Р°РјРµС‡Р°РЅРёР№ РЅРµС‚</option>
+                                <option value="РџСЂРѕ Р°РєС†РёСЋ РЅРµ СЃРєР°Р·Р°Р»">вљ пёЏ РџСЂРѕ Р°РєС†РёСЋ РЅРµ СЃРєР°Р·Р°Р»</option>
+                                <option value="РўРµР»РµС„РѕРЅ РїСЂРё РєР»РёРµРЅС‚Рµ">рџ“± РўРµР»РµС„РѕРЅ РїСЂРё РєР»РёРµРЅС‚Рµ</option>
+                                <option value="РќРµРѕРїР»Р°С‡РµРЅРЅР°СЏ СЃС‚СЂРёР¶РєР°">рџ’ё РќРµРѕРїР»Р°С‡РµРЅРЅР°СЏ СЃС‚СЂРёР¶РєР°</option>
+                            <option value="РџСЂРѕР±РёС‚С‹ РЅРµ РІСЃРµ СѓСЃР»СѓРіРё">рџ§ѕ РџСЂРѕР±РёС‚С‹ РЅРµ РІСЃРµ СѓСЃР»СѓРіРё</option>
+                                <option value="Р Р°Р·РіРѕРІРѕСЂ РЅР° РЅР°С†. СЏР·С‹РєРµ">рџ—ЈпёЏ Р Р°Р·РіРѕРІРѕСЂ РЅР° РЅР°С†. СЏР·С‹РєРµ</option>
+                                <option value="Р‘РµР· С„РѕСЂРјС‹">рџ‘• Р‘РµР· С„РѕСЂРјС‹</option>
+                                <option value="РћС‚РєР°Р· РєР»РёРµРЅС‚Сѓ">рџљ« РћС‚РєР°Р· РєР»РёРµРЅС‚Сѓ</option>
+                                <option value="РќРµ РїРѕРєР°Р·Р°Р» Р·РµСЂРєР°Р»Рѕ Р·Р°РґРЅРµРіРѕ РІРёРґР°">рџЄћ РќРµ РїРѕРєР°Р·Р°Р» Р·РµСЂРєР°Р»Рѕ Р·Р°РґРЅРµРіРѕ РІРёРґР°</option>
+                                <option value="РќРµ РѕР±СЂР°Р±РѕС‚Р°Р» РёРЅСЃС‚СЂСѓРјРµРЅС‚">рџ§ј РќРµ РѕР±СЂР°Р±РѕС‚Р°Р» РёРЅСЃС‚СЂСѓРјРµРЅС‚</option>
+                                <option value="Р”СЂСѓРіРѕРµ">рџ“ќ Р”СЂСѓРіРѕРµ (Р±РµР· С€С‚СЂР°С„Р°)</option>
+                            </select>
+                        </div>
+                        <button type="button" onclick="addViolationRow()" style="margin-top: 10px; background: rgba(255,255,255,0.05); border: 1px dashed #444; color: var(--text-muted); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s;">
+                            + Р”РѕР±Р°РІРёС‚СЊ РЅР°СЂСѓС€РµРЅРёРµ
+                        </button>
+                    </div>
+                </div>
+                <div class="form-field" style="margin-bottom: 30px;">
+                    <label>РљРѕРјРјРµРЅС‚Р°СЂРёР№ / Р Р°Р±РѕС‚Р°</label>
+                    <textarea id="ovn-notes" rows="3" placeholder="Р§С‚Рѕ СЃРґРµР»Р°РЅРѕ..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit">РЎРѕС…СЂР°РЅРёС‚СЊ</button>
+            </form>
+        </div>
+    </div>
+
+    
+    <!-- HANDBOOK CONFIG MODAL -->
+    <div id="handbook-config-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h2 style="font-size: 18px; margin: 0">РќР°СЃС‚СЂРѕР№РєР° С€С‚СЂР°С„РѕРІ</h2>
+                <button onclick="closeHandbookConfigModal()" style="background:none; border:none; color: var(--text-muted); cursor:pointer; font-size: 20px;">&times;</button>
+            </div>
+            
+            <div id="handbook-config-list" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                <!-- Generated dynamically -->
+            </div>
+            
+            <div style="margin-top: 25px; text-align: right;">
+                <button class="btn-submit" onclick="saveHandbookConfig()" style="font-size: 14px;">РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINES MODAL -->
+    
+    <!-- SALARY MODAL -->
+    <div id="salary-modal" class="modal">
+        <div class="modal-content" style="max-width: 1000px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 style="font-size: 24px; font-weight: 700; margin: 0;">рџ’° РџРѕРґСЃС‡РµС‚ Р·Р°СЂРїР»Р°С‚</h2>
+                <button onclick="document.getElementById('salary-modal').classList.remove('active')" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end;">
+                <div>
+                    <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">РЎ (РїРµСЂРёРѕРґ)</label>
+                    <input type="date" id="salary-date-start" style="padding: 10px; border-radius: 12px; background: #111; color: #fff; border: 1px solid #333;">
+                </div>
+                <div>
+                    <label style="display:block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">РџРѕ (РІРєР»СЋС‡РёС‚РµР»СЊРЅРѕ)</label>
+                    <input type="date" id="salary-date-end" style="padding: 10px; border-radius: 12px; background: #111; color: #fff; border: 1px solid #333;">
+                </div>
+                
+                <button class="btn-submit" id="salary-fetch-btn" onclick="window.fetchRealtimeSalary()" style="padding: 10px 20px; border-radius: 12px; font-size: 14px; background: rgba(232, 255, 56, 0.1); border: 1px solid var(--accent); color: var(--accent);">рџ”„ Р’С‹РіСЂСѓР·РёС‚СЊ РёР· El-Kassa</button>
+                <button class="btn-submit" id="salary-calc-btn" onclick="startSalaryCalc()" style="padding: 10px 20px; border-radius: 12px; font-size: 14px;">Р Р°СЃСЃС‡РёС‚Р°С‚СЊ</button>
+            </div>
+            
+            <div class="ovn-matrix-container" style="flex: 1; overflow-y: auto; padding: 0;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead style="position: sticky; top: 0; background: #1A1A1A; z-index: 10;">
+                        <tr>
+                            <th style="padding: 15px; border-bottom: 1px solid #333; color: var(--text-muted); font-size: 13px;">РњРђРЎРўР•Р </th>
+                            <th style="padding: 15px; border-bottom: 1px solid #333; color: var(--text-muted); font-size: 13px;">РЈРЎР›РћР’РРЇ</th>
+                            <th style="padding: 15px; border-bottom: 1px solid #333; color: var(--text-muted); font-size: 13px; width: 150px;">Р’Р«Р РЈР§РљРђ (Р’Р’РћР”)</th>
+                            <th style="padding: 15px; border-bottom: 1px solid #333; color: var(--text-muted); font-size: 13px;">РЎРњР•РќР« (Р§РђРЎР«)</th>
+                            <th style="padding: 15px; border-bottom: 1px solid #333; color: var(--text-muted); font-size: 13px;">РЁРўР РђР¤Р«</th>
+                            <th style="padding: 15px; border-bottom: 1px solid #333; color: var(--accent); font-size: 13px; text-align: right;">Рљ Р’Р«РџР›РђРўР•</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salary-table-body">
+                        <!-- rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="fines-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <h2 style="font-size: 24px; font-weight: 800;">РўР°Р±Р»РёС†Р° С€С‚СЂР°С„РѕРІ Рё Р·РѕРЅ (РўРµРє. РјРµСЃСЏС†)</h2>
+                <button onclick="document.getElementById('fines-modal').classList.remove('active')" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="ovn-matrix-container" style="padding: 0; flex: 1; overflow-y: auto; border-radius: 20px; background: #222;">
+                <table id="fines-table">
+                    <thead style="position: sticky; top: 0; background: #333; z-index: 10;">
+                        <tr>
+                            <th>РњРµСЃСЏС† / Р“РѕРґ</th>
+                            <th>РњР°СЃС‚РµСЂ</th>
+                            <th>Р—РѕРЅР°</th>
+                            <th>РќР°СЂСѓС€РµРЅРёР№ (РўРµРє. РЅРµРґ)</th>
+                            <th>РћР±С‰РёР№ РЁС‚СЂР°С„</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fines-table-body">
+                        <!-- Data rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <h3 style="margin-top:30px; font-size:16px; margin-bottom: 10px;">РЎРїРёСЃРѕРє СЂСѓС‡РЅС‹С… С€С‚СЂР°С„РѕРІ</h3>
+            <div class="ovn-matrix-container" style="padding: 0; overflow: hidden; border-radius: 20px;">
+                <table id="manual-fines-table">
+                    <thead>
+                        <tr>
+                            <th>Р”Р°С‚Р°</th>
+                            <th>Р¤РёР»РёР°Р»</th>
+                            <th>РњР°СЃС‚РµСЂ</th>
+                            <th>РљРѕРјРјРµРЅС‚Р°СЂРёР№</th>
+                            <th>РЎСѓРјРјР° (в‚Ѕ)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manual-fines-table-body">
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:20px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                * Р Р°СЃС‡РµС‚ С€С‚СЂР°С„РѕРІ РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РЅР° РѕСЃРЅРѕРІРµ Р¶СѓСЂРЅР°Р»Р° РћР’Рќ. Р—РѕРЅР° РїРµСЂРµСЃС‡РёС‚С‹РІР°РµС‚СЃСЏ РїРѕ РѕРєРѕРЅС‡Р°РЅРёРё РєР°Р¶РґРѕР№ РєР°Р»РµРЅРґР°СЂРЅРѕР№ РЅРµРґРµР»Рё.<br>
+                РћРїРѕР·РґР°РЅРёСЏ, РЅРµРІС‹С…РѕРґ РЅР° СЃРјРµРЅСѓ Рё РІРѕСЂРѕРІСЃС‚РІРѕ С€С‚СЂР°С„СѓСЋС‚СЃСЏ РІ Р»СЋР±РѕР№ Р·РѕРЅРµ. Р’ Р¶РµР»С‚РѕР№ Р·РѕРЅРµ С€С‚СЂР°С„СѓРµС‚СЃСЏ 1 СЃР°РјРѕРµ С‡Р°СЃС‚РѕРµ РЅР°СЂСѓС€РµРЅРёРµ, РІ РєСЂР°СЃРЅРѕР№ вЂ” РІСЃРµ РЅР°СЂСѓС€РµРЅРёСЏ.
+            </div>
+        </div>
+    </div>
+
+    <div id="manual-fine-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <h2 style="font-size: 24px; font-weight: 800; color: #FF3B30;">рџљЁ Р СѓС‡РЅРѕР№ С€С‚СЂР°С„</h2>
+                <button onclick="closeManualFineModal()" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="manual-fine-form" onsubmit="submitManualFine(event)">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>РЎР°Р»РѕРЅ</label>
+                        <select id="mf-location" onchange="updateMFMastersDropdown()" required>
+                            <option value="">Р’С‹Р±РµСЂРёС‚Рµ СЃР°Р»РѕРЅ</option>
+                            <option value="РђР»РµРєСЃРµРµРІСЃРєР°СЏ">РђР»РµРєСЃРµРµРІСЃРєР°СЏ</option>
+                            <option value="РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ">РџР°СЂС‚РёР·Р°РЅСЃРєР°СЏ</option>
+                            <option value="Р’Р°СЂС€Р°РІСЃРєР°СЏ">Р’Р°СЂС€Р°РІСЃРєР°СЏ</option>
+                            <option value="Р СЏР·Р°РЅСЃРєРёР№">Р СЏР·Р°РЅСЃРєРёР№</option>
+                            <option value="РЎРѕРєРѕР»">РЎРѕРєРѕР»</option>
+                            <option value="РўРµРєСЃС‚РёР»СЊС‰РёРєРё">РўРµРєСЃС‚РёР»СЊС‰РёРєРё</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>РњР°СЃС‚РµСЂ</label>
+                        <select id="mf-barber" required>
+                            <option value="">Р’С‹Р±РµСЂРёС‚Рµ РјР°СЃС‚РµСЂР°</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Р”Р°С‚Р° РЅР°СЂСѓС€РµРЅРёСЏ</label>
+                        <input type="date" id="mf-date" required>
+                    </div>
+                    <div class="form-field">
+                        <label>РЎСѓРјРјР° С€С‚СЂР°С„Р° (в‚Ѕ)</label>
+                        <input type="number" id="mf-cost" placeholder="РќР°РїСЂРёРјРµСЂ: 5000" required>
+                    </div>
+                    <div class="form-field" style="grid-column: span 2;">
+                        <label>РџСЂРёС‡РёРЅР° / РўРёРї РЅР°СЂСѓС€РµРЅРёСЏ</label>
+                        <select id="mf-violation" required style="width: 100%;" onchange="updateManualFineAmount()">
+                            <option value="">Р’С‹Р±РµСЂРёС‚Рµ РїСЂРёС‡РёРЅСѓ</option>
+                            <option value="РћРїРѕР·РґР°РЅРёРµ">вЏ° РћРїРѕР·РґР°РЅРёРµ (РЅР° СЃРјРµРЅСѓ / СЃ РїРµСЂРµСЂС‹РІР°)</option>
+                            <option value="РќРµРІС‹С…РѕРґ">вќЊ РќРµРІС‹С…РѕРґ РЅР° СЃРјРµРЅСѓ Р±РµР· РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ</option>
+                            <option value="Р’РѕСЂРѕРІСЃС‚РІРѕ">рџ’ё РќРµРѕРїР»Р°С‡РµРЅРЅР°СЏ СЃС‚СЂРёР¶РєР° / Р’РѕСЂРѕРІСЃС‚РІРѕ</option>
+                            <option value="Р“СЂСЏР·РЅРѕРµ РјРµСЃС‚Рѕ">рџ§№ Р“СЂСЏР·РЅРѕРµ СЂР°Р±РѕС‡РµРµ РјРµСЃС‚Рѕ (РІ РєРѕРЅС†Рµ СЃРјРµРЅС‹)</option>
+                            <option value="Р‘РµР· С„РѕСЂРјС‹">рџ‘• РќРµРѕРїСЂСЏС‚РЅС‹Р№ РІРЅРµС€РЅРёР№ РІРёРґ (Р±РµР· С„РѕСЂРјС‹)</option>
+                            <option value="Р Р°Р·РіРѕРІРѕСЂ РЅР° РЅР°С†. СЏР·С‹РєРµ">рџ—ЈпёЏ Р Р°Р·РіРѕРІРѕСЂ РЅР° РЅР°С†. СЏР·С‹РєРµ</option>
+                            <option value="РћС‚РєР°Р· РєР»РёРµРЅС‚Сѓ">рџљ« РћС‚РєР°Р· РєР»РёРµРЅС‚Сѓ</option>
+                            <option value="Р–Р°Р»РѕР±Р°">рџ¤¬ РќР°СЂСѓС€РµРЅРёРµ СЃСѓР±РѕСЂРґРёРЅР°С†РёРё / Р–Р°Р»РѕР±Р° РєР»РёРµРЅС‚Р°</option>
+                            <option value="РџРѕР»РѕРјРєР°">рџ”§ РџРѕР»РѕРјРєР° / РџРѕСЂС‡Р° РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ</option>
+                            <option value="Р”СЂСѓРіРѕРµ">рџ“ќ РРЅРѕРµ (СѓРєР°Р·Р°С‚СЊ РІ РєРѕРјРјРµРЅС‚Р°СЂРёРё)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-field" style="margin-bottom: 30px;">
+                    <label>Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Р№ РєРѕРјРјРµРЅС‚Р°СЂРёР№</label>
+                    <textarea id="mf-notes" rows="3" placeholder="РџРѕРґСЂРѕР±РЅРѕСЃС‚Рё РЅР°СЂСѓС€РµРЅРёСЏ..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit" style="background: #FF3B30; color: #fff;">РќР°С‡РёСЃР»РёС‚СЊ С€С‚СЂР°С„</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- HANDBOOK MODAL -->
+    <div id="handbook-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <h2 style="font-size: 24px; font-weight: 800; color: var(--accent);">рџ“ РЎРїСЂР°РІРѕС‡РЅРёРє С€С‚СЂР°С„РѕРІ</h2>
+                <button onclick="closeHandbookModal()" style="background:none; border:none; color:var(--text-muted); font-size: 30px; cursor:pointer;">&times;</button>
+            </div>
+            <div id="handbook-editor-container" style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="text-align: center; color: var(--text-muted);">Р—Р°РіСЂСѓР·РєР°...</div>
+            </div>
+            <div style="margin-top: 30px; display: flex; gap: 10px;">
+                <button class="btn-submit" onclick="saveHandbook()" style="flex: 1;">РЎРѕС…СЂР°РЅРёС‚СЊ СЃРїСЂР°РІРѕС‡РЅРёРє</button>
+                <button class="btn-refresh" onclick="closeHandbookModal()" style="flex: 1; border: 1px solid #444;">РћС‚РјРµРЅР°</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <script src="mainscript.js"></script>
+</body>
+</html>
+
+
+
+
+
+
