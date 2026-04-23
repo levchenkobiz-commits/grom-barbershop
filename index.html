@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -709,36 +709,44 @@
                     <button class="btn-refresh" onclick="openSalaryModal(false)" style="padding: 4px 12px; font-size: 12px; border-radius: 8px; border: 1px solid #FF9F0A; color: #FF9F0A;">рџ’° РњРѕСЏ Р—Р°СЂРїР»Р°С‚Р°</button>
                 </div>
             </div>
-            </div>
             <div class="metrics-grid">
-                <!-- Card 1: Отработка -->
-                <div class="card" onclick="window.location.hash='#analytics'" style="cursor: pointer; position: relative;">
-                    <i class="fas fa-sync sync-icon" onclick="event.stopPropagation(); syncDashboard(this);" style="position: absolute; top: 15px; right: 15px; color: #888;"></i>
-                    <div class="card-icon" style="background: rgba(232, 255, 56, 0.1); color: var(--accent);">📊</div>
-                    <div class="card-title">ЗАПОЛНЯЕМОСТЬ СМЕНЫ</div>
-                    <div class="card-value" id="master-occupancy" style="display: flex; align-items: baseline; gap: 8px;">0</div>
+                <!-- Card 1: Заполняемость -->
+                <div class="card" onclick="window.location.hash='#analytics'" style="cursor:pointer;position:relative;">
+                    <div class="card-label">ЗАПОЛНЯЕМОСТЬ СМЕНЫ</div>
+                    <div class="card-value" id="master-occupancy">0</div>
                     <div class="card-subtext" style="text-transform:none">Ср. чеков в рабочий день</div>
                 </div>
-                
+
                 <!-- Card 2: Качество сервиса -->
-                <div class="card" onclick="switchTab('ovn', document.getElementById('tab-ovn'))" style="cursor: pointer; position: relative;">
-                    <i class="fas fa-sync sync-icon" onclick="event.stopPropagation(); syncDashboard(this);" style="position: absolute; top: 15px; right: 15px; color: #888;"></i>
-                    <div class="card-icon" style="background: rgba(52, 199, 89, 0.1); color: #34C759;">✓</div>
-                    <div class="card-title">КАЧЕСТВО СЕРВИСА (ОВН)</div>
-                    <div class="card-value" id="master-ovn-score" style="display: flex; align-items: baseline; gap: 8px;">0%</div>
+                <div class="card" onclick="switchTab('ovn', document.getElementById('tab-ovn'))" style="cursor:pointer;position:relative;">
+                    <div class="card-label">КАЧЕСТВО СЕРВИСА (ОВН)</div>
+                    <div class="card-value" id="master-ovn-score">0%</div>
                     <div class="card-subtext" style="text-transform:none">Нет проверок</div>
                 </div>
 
                 <!-- Card 3: Возвращаемость -->
-                <div class="card" style="position: relative;">
-                    <i class="fas fa-sync sync-icon" onclick="event.stopPropagation(); syncDashboard(this);" style="position: absolute; top: 15px; right: 15px; color: #888;"></i>
-                    <div class="card-icon" style="background: rgba(255, 159, 10, 0.1); color: #FF9F0A;">🔄</div>
-                    <div class="card-title">RETURN RATE</div>
-                    <div class="card-value" id="master-rr" style="display: flex; align-items: baseline; gap: 8px;">0%</div>
+                <div class="card" style="position:relative;">
+                    <div class="card-label">RETURN RATE</div>
+                    <div class="card-value" id="master-rr">0%</div>
                     <div class="card-subtext" id="master-rr-sub" style="text-transform:none">Загрузка...</div>
                 </div>
             </div>
+
+            <!-- 7-day Schedule Block -->
+            <div style="margin-top:30px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:24px;padding:25px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                    <h3 style="font-size:18px;font-weight:700;margin:0;">📅 Расписание на неделю</h3>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <input type="date" id="master-sched-start"
+                               style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:10px;font-size:13px;">
+                        <button onclick="loadMasterSchedule()" class="btn-refresh" style="padding:8px 16px;font-size:13px;border-radius:10px;">Обновить</button>
+                    </div>
+                </div>
+                <div id="master-sched-container" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+                <div id="master-sched-empty" style="color:var(--text-muted);font-size:14px;display:none;">Расписание пока не загружено</div>
+            </div>
         </div>
+
 
 <div id="manager-section" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
@@ -1361,7 +1369,23 @@
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
 
-    <script src="mainscript.js"></script>
+    <!-- =====================================================
+         GROME Dashboard — Modular JS (replaces mainscript.js)
+         Load order: config → ui → fines → analytics →
+                     ovn → lates → schedule → salary →
+                     salary_compat → manager → app
+    ===================================================== -->
+    <script src="public/js/config.js"></script>
+    <script src="public/js/ui.js"></script>
+    <script src="public/js/fines.js"></script>
+    <script src="public/js/analytics.js"></script>
+    <script src="public/js/ovn.js"></script>
+    <script src="public/js/lates.js"></script>
+    <script src="public/js/schedule.js"></script>
+    <script src="public/js/salary.js"></script>
+    <script src="public/js/salary_compat.js"></script>
+    <script src="public/js/manager.js"></script>
+    <script src="public/js/app.js"></script>
 </body>
 </html>
 

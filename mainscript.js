@@ -1905,8 +1905,6 @@ window.saveAdapter = saveAdapter;
             let maxFine = 0;
 
             for (const raw of violations) {
-                  if (v.includes('пробит')) return true;
-                  
                 const v = (raw || '').toLowerCase();
                 const n = (notesRaw || '').toLowerCase();
                 let currentFine = 0;

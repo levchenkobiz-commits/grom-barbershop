@@ -1,6 +1,7 @@
-﻿{
-  "476578323": { "role": "ovn", "name": "Nikita (Admin)" },
+{
+  "476578323":    { "role": "ovn",     "name": "Nikita (Admin)" },
   "MASTER_ID_EXAMPLE": { "role": "master", "name": "Marat M.", "rank": "Barber" },
-  "filinngay": { "role": "ovn", "name": "Oksana" },
-  "manager_test": { "role": "manager", "name": "Manager Test" }
+  "filinngay":   { "role": "ovn",     "name": "Oksana" },
+  "manager_test":{ "role": "manager", "name": "Manager Test" },
+  "777777777":   { "role": "master",  "name": "Шохназар Д.", "rank": "Barber", "location": "Алексеевская" }
 }

@@ -1,0 +1,43 @@
+# === Зависимости ===
+node_modules/
+
+# === Данные (хранятся только на сервере, не в git) ===
+data.json
+ovn_reports.json
+schedule.json
+manager_checks.json
+weekly_salary_rev.json
+yc_ls.json
+rr_results.json
+sync_status.json
+
+# === Секреты (НЕ коммитим в git!) ===
+# roles.json содержит Telegram ID — добавь вручную на каждом сервере
+# adapter.js содержит токены
+
+# === Скрипты-инструменты (одноразовые) ===
+deploy.js
+setup_ssl.js
+emergency_restore.js
+fix_*.js
+patch_*.js
+check_*.js
+run_*.js
+get_logs.js
+trigger_*.js
+update_production.js
+calc_*.js
+add_*.js
+server.backup.js
+elkassa_scraper.js
+agent.js
+
+# === Логи и временные файлы ===
+*.log
+npm-debug.log*
+.env
+.env.local
+
+# === OS ===
+.DS_Store
+Thumbs.db
