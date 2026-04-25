@@ -315,7 +315,10 @@ async function loadOVNHistory() {
 
         // --- TODAY's checks counter ---
         const todayStr     = dayjs().format('YYYY-MM-DD');
-        const todayReports = reports.filter(r => dayjs(r.createdAt).format('YYYY-MM-DD') === todayStr);
+        const todayReports = reports.filter(r =>
+            dayjs(r.createdAt).format('YYYY-MM-DD') === todayStr &&
+            !(r.violation || '').toLowerCase().includes('мастер опоздал')
+        );
         const remaining    = Math.max(0, 35 - todayReports.length);
         const counterEl    = document.getElementById('ovn-remaining-count');
         if (counterEl) {
@@ -349,8 +352,9 @@ async function loadOVNHistory() {
 
         const tblToday = document.getElementById('ovn-today-history');
         if (tblToday) {
-            tblToday.innerHTML = todayReports.length
-                ? todayReports.map(renderRow).join('')
+            const nonLateToday = todayReports.filter(r => !(r.violation || '').toLowerCase().includes('мастер опоздал'));
+            tblToday.innerHTML = nonLateToday.length
+                ? nonLateToday.map(renderRow).join('')
                 : '<tr><td colspan="6" style="text-align:center;padding:40px;opacity:0.5">Сегодня проверок еще не было</td></tr>';
         }
 
@@ -415,6 +419,8 @@ window.renderOvnJournal = function() {
 
     const list = res.filter(r => {
         if (!r.createdAt) return false;
+        // Exclude lateness records — they belong to the Опоздания tab
+        if ((r.violation || '').toLowerCase().includes('мастер опоздал')) return false;
         const recDay = dayjs(r.createdAt);
         if (startD && recDay.isBefore(dayjs(startD), 'day')) return false;
         if (endD   && recDay.isAfter(dayjs(endD), 'day'))   return false;

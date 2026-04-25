@@ -1,4 +1,4 @@
-
+﻿
 // ==== TOAST NOTIFICATIONS ====
 window.showToast = function(msg, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -43,15 +43,27 @@ window.showToast = function(msg, type = 'success') {
         window.CURRENT_MASTER = "Шохназар Д.";
 
         let GLOBAL_HANDBOOK = {
-            "Опоздание": 300,
+            "Опоздание до 10 мин": 300,
+            "Опоздание до 20 мин": 500,
+            "Опоздание 30 мин и более": 1000,
+            "Опоздание 2го мастера до 10 мин": 200,
+            "Опоздание 2го мастера до 20 мин": 400,
+            "Опоздание 2го мастера 30 мин и более": 900,
             "Невыход": 5000,
             "Воровство": 5000,
-            "Грязное место": 500,
+            "Услуга не проведена через терминал": 5000,
+            "Неоплаченная стрижка": 5000,
+            "Грязное рабочее место": 500,
             "Без формы": 500,
-            "Отказ клиенту": 1000,
+            "Еда / напитки на рабочем месте": 500,
+            "Не обработан инструмент": 300,
             "Разговор на нац. языке": 500,
+            "Отказ клиенту": 1000,
+            "Не показал зеркало заднего вида": 300,
             "Жалоба": 1000,
             "Поломка": 0,
+            "Про акцию не сказал": 0,
+            "Телефон при клиенте": 0,
             "Другое": 0
         };
 
@@ -247,7 +259,7 @@ window.showToast = function(msg, type = 'success') {
                     if (myChecks.length > 0) {
                         const passed = myChecks.filter(r => {
                             const v = (r.violation||"").toLowerCase();
-                            return v.includes("замечаний нет") || v.includes("✅") || v.includes('р—р°рјрµс') || !v || v.includes('согласованное') || v.includes('рїрѕрґ');
+                            return v.includes("замечаний нет") || v.includes("✅") || v.includes('рјс') || !v || v.includes('согласованное') || v.includes('рїрѕрґ');
                         }).length;
                         const ovnScore = Math.round((passed / myChecks.length) * 100);
                         document.getElementById('master-ovn-score').innerText = ovnScore + '%';
@@ -268,15 +280,15 @@ window.showToast = function(msg, type = 'success') {
                     
                     const zoneBadgeEl = document.getElementById('master-zone-badge');
                     if (myFines.state === 'Green') {
-                        zoneBadgeEl.innerHTML = '🟢 ЗЕЛЕНАЯ';
+                        zoneBadgeEl.innerHTML = ' ЗЕЛЕНАЯ';
                         zoneBadgeEl.style.color = '#34C759';
                         zoneBadgeEl.style.background = 'rgba(52, 199, 89, 0.15)';
                     } else if (myFines.state === 'Yellow') {
-                        zoneBadgeEl.innerHTML = '🟡 ЖЕЛТАЯ';
+                        zoneBadgeEl.innerHTML = ' ЖЕЛТАЯ';
                         zoneBadgeEl.style.color = '#FF9F0A';
                         zoneBadgeEl.style.background = 'rgba(255, 159, 10, 0.15)';
                     } else if (myFines.state === 'Red') {
-                        zoneBadgeEl.innerHTML = '🔴 КРАСНАЯ';
+                        zoneBadgeEl.innerHTML = ' КРАСНАЯ';
                         zoneBadgeEl.style.color = '#FF3B30';
                         zoneBadgeEl.style.background = 'rgba(255, 59, 48, 0.15)';
                     }
@@ -889,7 +901,7 @@ window.showToast = function(msg, type = 'success') {
 
           window.triggerSync = async function() {
               const btn = document.getElementById('refresh-btn');
-              if (btn) { btn.innerHTML = '🔄 Загрузка...'; btn.disabled = true; }
+              if (btn) { btn.innerHTML = ' Загрузка...'; btn.disabled = true; }
               await fetch('/api/sync', { method: 'POST', body: JSON.stringify({}) });
               
               const check = setInterval(async () => {
@@ -898,7 +910,7 @@ window.showToast = function(msg, type = 'success') {
                       const data = await res.json();
                       if (!data.isSyncing) {
                           clearInterval(check);
-                          if (btn) { btn.innerHTML = '🔄 Обновить сейчас'; btn.disabled = false; }
+                          if (btn) { btn.innerHTML = ' Обновить сейчас'; btn.disabled = false; }
                           loadData();
                       }
                   } catch(e) {}
@@ -907,7 +919,7 @@ window.showToast = function(msg, type = 'success') {
 
         async function loadLatesHistory() {
             try {
-                console.log('🔄 Loading Lates... Database check...');
+                console.log(' Loading Lates... Database check...');
                 const [ovnRes, schedRes] = await Promise.all([
                     fetch('/api/ovn').then(r => r.json()).catch(() => []),
                     fetch('/api/schedule').then(r => r.json()).catch(() => [])
@@ -1007,7 +1019,7 @@ window.showToast = function(msg, type = 'success') {
                 }
                 
             } catch(e) { 
-                console.error('🔴 Lates critical error:', e); 
+                console.error(' Lates critical error:', e); 
                 document.getElementById('lates-history').innerHTML = '<tr><td colspan="7" style="color:red">Ошибка загрузки данных</td></tr>';
             }
         }
@@ -1077,16 +1089,16 @@ window.showToast = function(msg, type = 'success') {
                 
                 if (r.schedTime) return true;
                 const v = (r.violation || "").toLowerCase();
-                return v.includes('опоздал') || v.includes('рѕрїрѕр·рґ');
+                return v.includes('опоздал') || v.includes('рѕрїрѕрґ');
             }).sort((a,b) => dayjs(b.date || b.createdAt).valueOf() - dayjs(a.date || a.createdAt).valueOf());
             
             tbody.innerHTML = list.map(r => {
                 const lowV = (r.violation || "").toLowerCase();
-                const isOk = lowV === "замечаний нет" || lowV.includes('р—р°рјрµс') || !lowV;
+                const isOk = lowV === "замечаний нет" || lowV.includes('рјс') || !lowV;
 
                 let badgeStyles = 'background: rgba(255,255,255,0.05); color: #888;';
                 if (lowV.includes('согласованное') || lowV.includes('рїрѕрґс‚рі')) badgeStyles = 'background: rgba(52,199,89,0.1); color: #34C759;';
-                else if (lowV.includes('опоздал') || lowV.includes('рѕрїрѕр·рґ') || (r.schedTime && r.time > r.schedTime)) {
+                else if (lowV.includes('опоздал') || lowV.includes('рѕрїрѕрґ') || (r.schedTime && r.time > r.schedTime)) {
                      badgeStyles = 'background: rgba(255,59,48,0.1); color: #FF3B30; font-weight:700;';
                 }
 
@@ -1119,7 +1131,13 @@ window.showToast = function(msg, type = 'success') {
 
             const diff = dayjs(`2000-01-01 ${fact}`).diff(dayjs(`2000-01-01 ${plan}`), 'minute');
             const violation = diff > 0 ? 'Мастер опоздал' : 'Замечаний нет';
-            const fine = diff > 0 ? 500 : 0;
+            // Штраф при записи считается по реальным минутам опоздания
+                    let fine = 0;
+                    if (diff > 0) {
+                        if (diff >= 30)      fine = (window.GLOBAL_HANDBOOK && window.GLOBAL_HANDBOOK["Опоздание 30 мин и более"]) || 1000;
+                        else if (diff >= 20) fine = (window.GLOBAL_HANDBOOK && window.GLOBAL_HANDBOOK["Опоздание до 20 мин"]) || 500;
+                        else                 fine = (window.GLOBAL_HANDBOOK && window.GLOBAL_HANDBOOK["Опоздание до 10 мин"]) || 300;
+                    }
 
             const report = {
                 location: document.getElementById('lates-audit-loc').value,
@@ -1464,7 +1482,7 @@ window.showToast = function(msg, type = 'success') {
                         if (urlId) {
                             // Show welcome animation ONLY for fresh login
                             const welcomeScreen = document.getElementById('welcome-screen');
-                            document.getElementById('welcome-msg').innerText = `Привет, ${user.name} 👋`;
+                            document.getElementById('welcome-msg').innerText = `Привет, ${user.name} `;
                             welcomeScreen.classList.remove('hidden');
                             
                             setTimeout(() => {
@@ -1809,14 +1827,13 @@ window.saveAdapter = saveAdapter;
         // ================= MANAGER CABINET LOGIC =================
         const MANAGER_CHECK_FIELDS = [
             { id: 1, label: 'Рамки с ценами, светильники в зале исправны, включены и выглядят опрятно.', photo: 'optional' },
-            { id: 2, label: 'Инструмент мастера в исправном состоянии (нет сломанных машинок/гребней).', photo: 'optional' },
+            { id: 2, label: 'Шейвер, триммер, машинка не цепляют волосы и не царапают кожу.', photo: 'optional' },
             { id: 3, label: 'В салоне поддерживается комфортная температура в диапазоне 19-23 градуса.', photo: 'optional' },
             { id: 4, label: 'В зале на видных местах не хранятся коробки промоутеров, вода и другой хозяйственный инвентарь.', photo: 'optional' },
             { id: 5, label: 'Музыка играет строго из согласованного плей-листа, поддерживается оптимальная фоновая громкость.', photo: 'optional' },
-            { id: 6, label: 'Проверка технической части: работают все розетки, терминал, нет протечек воды, в туалете есть бумага и мыло.', photo: 'optional' },
-            { id: 7, label: 'Каждый мастер обязательно проводит детальную консультацию с клиентом перед началом стрижки.', photo: 'optional' },
-            { id: 8, label: 'Цветные бутылочки и косметика, не входящая в нашу официальную рабочую матрицу, полностью отсутствуют на рабочих местах.', photo: 'optional' },
-            { id: 9, label: 'Все зафиксированные нарушения из таблицы (ОВН) за последние 48 часов проработаны на месте с мастерами.', photo: 'optional' }
+            { id: 6, label: 'Проверка технической части: работают все розетки, терминал, нет протечек воды.', photo: 'optional' },
+                        { id: 7, label: 'Цветные бутылочки и косметика, не входящая в нашу официальную рабочую матрицу, полностью отсутствуют на рабочих местах.', photo: 'optional' },
+            { id: 8, label: 'Все зафиксированные нарушения из таблицы (ОВН) за последние 48 часов проработаны на месте с мастерами.', photo: 'optional' }
         ];
 
         
@@ -1928,18 +1945,43 @@ window.saveAdapter = saveAdapter;
 
                 // fallback/special logic for variants
                 if (currentFine === 0) {
-                     if (v.includes('опоздал') || n.includes('опоздани')) currentFine = GLOBAL_HANDBOOK["Опоздание"] || 300;
+                     if (v.includes('опоздал') || n.includes('опоздани')) currentFine = GLOBAL_HANDBOOK["Опоздание до 10 мин"] || 300;
                      else if (v.includes('не выход') || v.includes('невыход')) currentFine = GLOBAL_HANDBOOK["Невыход"] || 5000;
                      else if (v.includes('воровство') || v.includes('неоплаченная')) currentFine = GLOBAL_HANDBOOK["Воровство"] || 5000;
                 }
 
-                // Minutes logic
+                // Minutes logic — тарифы по справочнику ГРОМ
+                // до 10 мин: 300₽ | до 20 мин: 500₽ | 30+ мин: 1000₽
+                // 2й мастер: 200 / 400 / 900₽ | повторное в неделю: ×2
                 if (v.includes('опоздал') || n.includes('опоздани')) {
                     let minutes = 0;
-                    const match = n.match(/на\s+(\d+)\s+мин/);
-                    if (match) minutes = parseInt(match[1]);
-                    if (minutes >= 30) currentFine = Math.max(currentFine, 1000);
-                    else if (minutes >= 20) currentFine = Math.max(currentFine, 500);
+                    const matchMin = n.match(/на\s+(\d+)\s+мин/);
+                    if (matchMin) minutes = parseInt(matchMin[1]);
+
+                    const isSecondMaster = (r.slot === '2' || (n||'').toLowerCase().includes('второй') || (v||'').toLowerCase().includes('вторая смена'));
+
+                    let baseFine;
+                    if (isSecondMaster) {
+                        if (minutes >= 30)      baseFine = GLOBAL_HANDBOOK['Опоздание 2го мастера 30 мин и более'] || 900;
+                        else if (minutes >= 20) baseFine = GLOBAL_HANDBOOK['Опоздание 2го мастера до 20 мин'] || 400;
+                        else                    baseFine = GLOBAL_HANDBOOK['Опоздание 2го мастера до 10 мин'] || 200;
+                    } else {
+                        if (minutes >= 30)      baseFine = GLOBAL_HANDBOOK['Опоздание 30 мин и более'] || 1000;
+                        else if (minutes >= 20) baseFine = GLOBAL_HANDBOOK['Опоздание до 20 мин'] || 500;
+                        else                    baseFine = GLOBAL_HANDBOOK['Опоздание до 10 мин'] || 300;
+                    }
+
+                    // Повторное опоздание в ту же неделю → ×2
+                    const rDate = dayjs(r.date || r.createdAt);
+                    const rWId = rDate.isoWeek() + '-' + rDate.year();
+                    const prevLatesThisWeek = (weeks[rWId] || []).filter(prev =>
+                        prev !== r &&
+                        dayjs(prev.date || prev.createdAt).valueOf() < rDate.valueOf() &&
+                        (prev.violation || '').toLowerCase().includes('опоздал')
+                    );
+                    if (prevLatesThisWeek.length >= 1) baseFine = baseFine * 2;
+
+                    currentFine = Math.max(currentFine, baseFine);
                 }
                 
                 if (currentFine > maxFine) maxFine = currentFine;
@@ -2141,9 +2183,9 @@ window.saveAdapter = saveAdapter;
                 const currentMonth = dayjs().format('MM / YYYY');
                 let html = '';
                 const zoneBadge = {
-                    'Green': '<span style="color:#34C759; background:rgba(52,199,89,0.15); padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;">🟢 ЗЕЛЕНАЯ</span>',
-                    'Yellow': '<span style="color:#FF9F0A; background:rgba(255,159,10,0.15); padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;">🟡 ЖЕЛТАЯ</span>',
-                    'Red': '<span style="color:#FF3B30; background:rgba(255,59,48,0.15); padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;">🔴 КРАСНАЯ</span>'
+                    'Green': '<span style="color:#34C759; background:rgba(52,199,89,0.15); padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;"> ЗЕЛЕНАЯ</span>',
+                    'Yellow': '<span style="color:#FF9F0A; background:rgba(255,159,10,0.15); padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;"> ЖЕЛТАЯ</span>',
+                    'Red': '<span style="color:#FF3B30; background:rgba(255,59,48,0.15); padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;"> КРАСНАЯ</span>'
                 };
                 for (const m in results) {
                     const data = results[m];
@@ -2816,7 +2858,7 @@ window.openManagerModal = function() {
                     <div style="display:flex; align-items:center; justify-content:center; min-height: 200px; padding: 20px; position:relative;">
                         <div id="btn-camera-${zone.id}" onclick="openCamera('${zone.id}')" 
                              style="cursor: pointer; background: rgba(255,255,255,0.05); border: 1px dashed var(--accent); border-radius: 12px; padding: 25px; width: 100%; text-align: center; color: var(--accent); font-size: 14px; font-weight: bold; transition: all 0.2s;">
-                            📷 Сделать фото факта<br>
+                             Сделать фото факта<br>
                             <span style="font-weight: 400; font-size: 12px; opacity: 0.7; color: #fff; display:block; margin-top:5px;">Строго через камеру (Live)</span>
                         </div>
                         
@@ -2824,7 +2866,7 @@ window.openManagerModal = function() {
                         
                         <button type="button" id="retake-${zone.id}" onclick="openCamera('${zone.id}')" 
                                 style="display:none; position:absolute; bottom:15px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:#fff; border:1px solid #444; padding:8px 16px; border-radius:8px; font-size:12px; cursor:pointer;">
-                            🔄 Переснять
+                             Переснять
                         </button>
                     </div>
                 </div>
@@ -2921,7 +2963,7 @@ window.openCamera = async function(zoneId) {
     closeBtn.style.padding = '15px 30px'; closeBtn.style.fontSize = '16px'; closeBtn.style.borderRadius = '50px'; closeBtn.style.background = '#333'; closeBtn.style.color = '#fff'; closeBtn.style.border = 'none'; closeBtn.style.cursor = 'pointer';
 
     const snapBtn = document.createElement('button');
-    snapBtn.innerText = '📸 Сделать фото';
+    snapBtn.innerText = ' Сделать фото';
     snapBtn.style.padding = '15px 30px'; snapBtn.style.fontSize = '16px'; snapBtn.style.borderRadius = '50px'; snapBtn.style.background = 'var(--accent)'; snapBtn.style.color = '#000'; snapBtn.style.border = 'none'; snapBtn.style.fontWeight = 'bold'; snapBtn.style.cursor = 'pointer';
 
     controls.appendChild(closeBtn); controls.appendChild(snapBtn);
@@ -2966,113 +3008,51 @@ window.openCamera = async function(zoneId) {
 window.submitManagerCheck = async function(e) {
     e.preventDefault();
     const btn = document.getElementById('manager-submit-btn');
-    btn.innerHTML = 'Нейросеть проверяет и сохраняет данные... ⏳';
+    const origText = btn.innerHTML;
+    btn.innerHTML = '⌛ Сохранение...';
     btn.disabled = true;
 
     try {
+        const location = document.getElementById('manager-location').value;
+        if (!location) {
+            showToast('Выберите салон', 'error');
+            return;
+        }
+
+        const user = window.USER;
         const checkData = {
-            location: document.getElementById('manager-location').value,
+            location: location,
             date: new Date().toISOString().split('T')[0],
+            time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+            status: 'ok',
+            submittedBy: user ? user.name : 'Менеджер',
             items: [],
             visionResults: []
         };
 
-        // 1. Check AI Zones
-        const zones = ['reception', 'workstation', 'coffee', 'facade'];
-        for (const zone of zones) {
-            const preview = document.getElementById('preview-' + zone);
-            if (preview && preview.src && preview.src.startsWith('data:image')) {
-                const res = await fetch('/api/vision', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ zoneId: zone, images: [preview.src] })
-                });
-                if (!res.ok) {
-                    const errPayload = await res.json();
-                    throw new Error(errPayload.error || 'Server error');
-                }
-                const data = await res.json();
-                checkData.visionResults.push({ zone, data });
-            }
-        }
-        
-        if (checkData.visionResults.length === 0) {
-            throw new Error("Нет фотографий факта для проверки. Сделайте минимум одно AI-фото.");
-        }
-
-        const failed = checkData.visionResults.filter(r => r.data && r.data.approved === false);
-        if (failed.length > 0) {
-            const errText = failed.map(f => `❌ Ракурс "${f.zone}": ${f.data.comment}`).join('\n\n');
-            showToast("⚠️ ИИ-Аудитор отклонил проверку из-за нарушения стандартов!\n\n" + errText + "\n\nПожалуйста, наведите порядок и переснимите отклоненные фото!", "success");
-            throw new Error("AI Validation Failed");
-        }
-
-        // 2. Iterate Checklist Items
-        if (typeof fileToBase64 === 'undefined') {
-            window.fileToBase64 = async function(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            }
-        }
-
-        if (typeof MANAGER_CHECK_FIELDS !== 'undefined') {
-            for (const f of MANAGER_CHECK_FIELDS) {
-                const radios = document.getElementsByName(`check_${f.id}`);
-                let statusVal = '';
-                radios.forEach(r => { if(r.checked) statusVal = r.value; });
-                
-                const commentVal = document.getElementById(`comment_${f.id}`).value;
-                const fileInput = document.getElementById(`photo_${f.id}`);
-                
-                let photoUrl = null;
-                if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                    const base64 = await fileToBase64(fileInput.files[0]);
-                    const upRes = await fetch('/api/upload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ base64 })
-                    });
-                    if (upRes.ok) {
-                        const upData = await upRes.json();
-                        photoUrl = upData.url;
-                    }
-                }
-
-                checkData.items.push({
-                    id: f.id,
-                    label: f.label,
-                    status: statusVal,
-                    comment: commentVal,
-                    photo: photoUrl
-                });
-            }
-        }
-
-        // 3. Save Master Data
-        checkData.status = 'approved_by_ai';
-        const postRes = await fetch('/api/manager_checks', {
+        const res = await fetch('/api/manager_checks', {
             method: 'POST',
-            headers: {'Content-Type':'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(checkData)
         });
-        
-        if (!postRes.ok) throw new Error("Не удалось сохранить инспекцию на сервере");
 
-        showToast("✅ Инспекция успешно пройдена и сохранена! ИИ подтвердил идеальную чистоту и классический чек-лист сохранен.", "success");
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Ошибка сервера');
+        }
+
+        showToast('✅ Проверка сохранена!', 'success');
         document.getElementById('manager-form').reset();
         closeManagerModal();
-        
+
+        // Обновляем счётчик проверок
+        if (window.loadManagerDashboard) window.loadManagerDashboard();
+
     } catch(err) {
-        if (err.message !== "AI Validation Failed") {
-            console.error(err);
-            showToast("Ошибка: " + err.message, "error");
-        }
+        console.error(err);
+        showToast('Ошибка: ' + err.message, 'error');
     } finally {
-        btn.innerHTML = 'Отправить проверку';
+        btn.innerHTML = origText;
         btn.disabled = false;
     }
 };
@@ -3137,7 +3117,7 @@ window.renderHandbookEditor = function() {
                     <input type="number" class="handbook-val-input" data-key="${key}" value="${val}" style="width: 80px; background: rgba(255,255,255,0.1); border:none; color:white; padding:8px; border-radius:6px; font-weight:bold; outline:none; text-align:right;">
                     <span style="color:var(--text-muted); margin-left:8px; margin-right:15px; font-size:14px;">₽</span>
                     <button onclick="deleteHandbookItem('${key}')" title="Удалить" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:16px;">
-                        🗑️
+                        ️
                     </button>
                 </div>
             </div>
@@ -3304,3 +3284,17 @@ if (settingsTabBtn) {
     // Hidden by default, unhide in appInit
     settingsTabBtn.style.display = 'none';
 }
+
+// ============================================================
+// ALIASES - functions called from HTML buttons
+// ============================================================
+
+// Close handbook fines modal
+window.closeHandbookModal = function() {
+    if (window.closeHandbookConfigModal) window.closeHandbookConfigModal();
+};
+
+// Save handbook (alias for saveHandbookConfig)
+window.saveHandbook = function() {
+    if (window.saveHandbookConfig) window.saveHandbookConfig(true);
+};

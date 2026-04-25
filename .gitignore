@@ -13,7 +13,11 @@ sync_status.json
 
 # === Секреты (НЕ коммитим в git!) ===
 # roles.json содержит Telegram ID — добавь вручную на каждом сервере
-# adapter.js содержит токены
+adapter.js
+roles.json
+bot_config.json
+*.backup
+*.encoding_backup
 
 # === Скрипты-инструменты (одноразовые) ===
 deploy.js
@@ -28,9 +32,24 @@ trigger_*.js
 update_production.js
 calc_*.js
 add_*.js
+read_*.js
+apply_*.js
+verify_*.js
+pre_patch_*.js
+find_*.js
+set_tg_*.js
+ssl_*.js
+setup_https*.js
+update_miniapp*.js
+deploy_miniapp*.js
+remove_*.js
+refactor_*.js
+audit_*.js
+health_check.js
 server.backup.js
 elkassa_scraper.js
 agent.js
+downloads/
 
 # === Логи и временные файлы ===
 *.log

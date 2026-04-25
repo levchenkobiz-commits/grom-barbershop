@@ -40,7 +40,10 @@ const server = http.createServer((req, res) => {
   const ext      = String(path.extname(filePath)).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-  fs.readFile(filePath, (err, content) => {
+  const TEXT_EXTS = new Set(['.html', '.js', '.css', '.json', '.txt', '.md']);
+  const readOpts  = TEXT_EXTS.has(ext) ? 'utf-8' : null; // null = binary Buffer
+
+  fs.readFile(filePath, readOpts, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') { res.writeHead(404); return res.end('File not found'); }
       if (err.code === 'EISDIR') { res.writeHead(403); return res.end('Directory listing not allowed'); }
@@ -52,7 +55,8 @@ const server = http.createServer((req, res) => {
       'Pragma': 'no-cache',
       'Expires': '0',
     });
-    res.end(content, 'utf-8');
+    // For text files: content is already a string (utf-8). For binary: it's a Buffer.
+    res.end(content);
   });
 });
 

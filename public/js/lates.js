@@ -75,24 +75,50 @@ async function loadLatesHistory() {
             }).join('') || `<div style="grid-column:span 3;color:var(--text-muted);text-align:center;padding:40px">График пуст.</div>`;
         }
 
-        // 2. GLOBAL COUNTER
+        // 2. GLOBAL COUNTER with breakdown
         let totalMastersGlobal = 0, checkedMastersGlobal = 0;
-        const checksForSelectedDayGlobal = ovnRes.filter(r => dayjs(r.date || r.createdAt).format('YYYY-MM-DD') === date);
+        const todayChecks = ovnRes.filter(r => dayjs(r.date || r.createdAt).format('YYYY-MM-DD') === date);
+        const missingList = []; // { location, name }
 
         schedRes.filter(s => s.date === date).forEach(s => {
             const branchMasters = s.masters || [];
-            totalMastersGlobal  += branchMasters.length;
-            checkedMastersGlobal += branchMasters.filter(m =>
-                checksForSelectedDayGlobal.some(r => r.barber === m.name && r.location === s.location)
-            ).length;
+            const sLoc = (s.location || '').trim().toLowerCase();
+            totalMastersGlobal += branchMasters.length;
+            branchMasters.forEach(m => {
+                const found = todayChecks.some(r =>
+                    r.barber === m.name &&
+                    (r.location || '').trim().toLowerCase() === sLoc
+                );
+                if (found) {
+                    checkedMastersGlobal++;
+                } else {
+                    missingList.push({ location: s.location, name: m.name });
+                }
+            });
         });
 
-        const remaining  = totalMastersGlobal - checkedMastersGlobal;
+        console.log(`[Lates Counter] total=${totalMastersGlobal}, checked=${checkedMastersGlobal}, remaining=${missingList.length}`);
+        console.log(`[Lates Counter] todayChecks:`, todayChecks.map(r => `${r.barber}@${r.location}`));
+        console.log(`[Lates Counter] MISSING:`, missingList);
+
+        const remaining  = missingList.length;
         const counterEl  = document.getElementById('lates-remaining-count');
         if (counterEl) {
-            if (remaining > 0)              { counterEl.innerText = `Осталось проверить всего: ${remaining}`; counterEl.style.color = '#FF9F0A'; }
-            else if (totalMastersGlobal > 0){ counterEl.innerText = 'Все точки проверены ✅'; counterEl.style.color = '#34C759'; }
-            else                            { counterEl.innerText = 'График не составлен'; counterEl.style.color = 'var(--text-muted)'; }
+                counterEl.innerText = 'Осталось: ' + remaining;
+                counterEl.style.color = '#FF9F0A';
+                counterEl.title = '';
+                counterEl.style.cursor = 'default';
+            } else if (totalMastersGlobal > 0) {
+                counterEl.innerText = 'Все точки проверены ✅';
+                counterEl.style.color = '#34C759';
+                counterEl.title = '';
+                counterEl.style.cursor = 'default';
+            } else {
+                counterEl.innerText = 'График не составлен';
+                counterEl.style.color = 'var(--text-muted)';
+                counterEl.title = '';
+                counterEl.style.cursor = 'default';
+            }
         }
 
         // 3. POPULATE MASTER DROPDOWN

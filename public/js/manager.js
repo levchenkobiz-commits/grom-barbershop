@@ -15,15 +15,15 @@
 // ==== MANAGER INSPECTION CHECKLIST ====
 const MANAGER_CHECK_FIELDS = [
     { id: 1,  label: 'Рамки с ценами, светильники в зале исправны, включены и выглядят опрятно.', photo: 'optional' },
-    { id: 2,  label: 'Инструмент мастера в исправном состоянии (нет сломанных машинок/гребней).', photo: 'optional' },
+    { id: 2,  label: 'Шейвер, триммер, машинка не цепляют волосы и не царапают кожу.', photo: 'optional' },
     { id: 3,  label: 'В салоне поддерживается комфортная температура в диапазоне 19-23 градуса.', photo: 'optional' },
     { id: 4,  label: 'В зале на видных местах не хранятся коробки промоутеров, вода и другой хозяйственный инвентарь.', photo: 'optional' },
     { id: 5,  label: 'Музыка играет строго из согласованного плей-листа, поддерживается оптимальная фоновая громкость.', photo: 'optional' },
-    { id: 6,  label: 'Проверка технической части: работают все розетки, терминал, нет протечек воды, в туалете есть бумага и мыло.', photo: 'optional' },
-    { id: 7,  label: 'Каждый мастер обязательно проводит детальную консультацию с клиентом перед началом стрижки.', photo: 'optional' },
-    { id: 8,  label: 'Цветные бутылочки и косметика, не входящая в нашу официальную рабочую матрицу, полностью отсутствуют на рабочих местах.', photo: 'optional' },
-    { id: 9,  label: 'Все зафиксированные нарушения из таблицы (ОВН) за последние 48 часов проработаны на месте с мастерами.', photo: 'optional' }
+    { id: 6,  label: 'Проверка технической части: работают все розетки, терминал, нет протечек воды.', photo: 'optional' },
+    { id: 7,  label: 'Цветные бутылочки и косметика, не входящая в нашу официальную рабочую матрицу, полностью отсутствуют на рабочих местах.', photo: 'optional' },
+    { id: 8,  label: 'Все зафиксированные нарушения из таблицы (ОВН) за последние 48 часов проработаны на месте с мастерами.', photo: 'optional' }
 ];
+
 
 // ==== LOAD MANAGER CHECKS ====
 async function loadManagerChecks() {
@@ -191,6 +191,279 @@ window.addAdapterMaster = function(btn) {
 
 window.closeAdapterModal = function() {
     document.getElementById('adapter-modal').classList.remove('active');
+};
+
+// ==== MANAGER CHECK MODAL (AI INSPECTION) ====
+
+window.openManagerModal = function() {
+    const modal = document.getElementById('manager-modal');
+    if (!modal) return;
+
+    // Заполняем список салонов из ADAPTER если select пустой
+    const locSelect = document.getElementById('manager-location');
+    if (locSelect && locSelect.options.length <= 1 && typeof ADAPTER !== 'undefined') {
+        locSelect.innerHTML = '<option value="">Выберите салон</option>';
+        Object.keys(ADAPTER).forEach(loc => {
+            const opt = document.createElement('option');
+            opt.value = loc;
+            opt.textContent = loc;
+            locSelect.appendChild(opt);
+        });
+    }
+
+    // Шаг 1: Зоны AI-фото
+    const container = document.getElementById('manager-fields-container');
+    let html = '';
+
+    const zones = [
+        { id: 'reklama', title: 'Наружная реклама',         desc: 'Реклама исправна и чистая.',                      img: 'https://dummyimage.com/600x400/111/E8FF38&text=Реклама' },
+        { id: 'forma',   title: 'Мастера в форме',           desc: 'Чистая форма, закрытая обувь.',                   img: 'https://dummyimage.com/600x400/111/E8FF38&text=Мастера' },
+        { id: 'kreslo',  title: 'Кресло развернуто ко входу', desc: 'Кресло направлено ко входу, есть пеньюар.',       img: 'https://dummyimage.com/600x400/111/E8FF38&text=Кресло' },
+        { id: 'tv',      title: 'Телевизор',                  desc: 'Телевизор включен и работает.',                   img: 'https://dummyimage.com/600x400/111/E8FF38&text=Телевизор' },
+        { id: 'shkaf',   title: 'Шкафы',                      desc: 'На шкафах нет волос и личных вещей.',             img: 'https://dummyimage.com/600x400/111/E8FF38&text=Шкафы' },
+        { id: 'moyka',   title: 'Мойка',                      desc: 'Раковина чистая, нет тряпок на виду.',            img: 'https://dummyimage.com/600x400/111/E8FF38&text=Мойка' }
+    ];
+
+    html += '<h3 style="font-size:18px;margin:0 0 15px 0;">Шаг 1: Фото-проверка ИИ</h3>';
+    html += zones.map(zone => `
+        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;margin-bottom:20px;">
+            <div style="padding:15px 20px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:16px;margin:0;color:#fff;">${zone.title}</h3>
+                    <p style="font-size:12px;color:var(--text-muted);margin:4px 0 0 0;">${zone.desc}</p>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;">
+                <div style="flex:1;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div style="background:#000;padding:8px;text-align:center;font-size:11px;color:var(--accent);font-weight:bold;text-transform:uppercase;">Эталон</div>
+                    <img src="${zone.img}" style="width:100%;height:200px;object-fit:cover;display:block;">
+                </div>
+                <div style="flex:1;position:relative;background:#161616;">
+                    <div style="background:rgba(0,0,0,0.5);padding:8px;text-align:center;font-size:11px;color:#fff;font-weight:bold;text-transform:uppercase;">Текущее состояние (Факт)</div>
+                    <div style="display:flex;align-items:center;justify-content:center;min-height:200px;padding:20px;position:relative;">
+                        <div id="btn-camera-${zone.id}" onclick="openCamera('${zone.id}')"
+                             style="cursor:pointer;background:rgba(255,255,255,0.05);border:1px dashed var(--accent);border-radius:12px;padding:25px;width:100%;text-align:center;color:var(--accent);font-size:14px;font-weight:bold;transition:all 0.2s;">
+                             Сделать фото факта<br>
+                            <span style="font-weight:400;font-size:12px;opacity:0.7;color:#fff;display:block;margin-top:5px;">Строго через камеру (Live)</span>
+                        </div>
+                        <img id="preview-${zone.id}" style="width:100%;height:200px;object-fit:cover;display:none;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.5);">
+                        <button type="button" id="retake-${zone.id}" onclick="openCamera('${zone.id}')"
+                                style="display:none;position:absolute;bottom:15px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;border:1px solid #444;padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;">
+                             Переснять
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:12px;background:rgba(52,199,89,0.05);color:#34C759;font-size:12px;text-align:center;">
+                Вы уверены, что факт идентичен эталону? Если отправить фото с бардаком, ИИ вернет проверку.
+            </div>
+        </div>
+    `).join('');
+
+    // Шаг 2: Чек-лист
+    html += `<style>
+        .ios-segmented-control { display:flex;gap:8px;margin-bottom:15px;background:rgba(0,0,0,0.4);padding:5px;border-radius:12px; }
+        .ios-radio { flex:1;text-align:center;cursor:pointer;position:relative; }
+        .ios-radio input[type="radio"] { display:none; }
+        .ios-radio-inner { padding:12px 6px;font-size:13px;font-weight:700;border-radius:10px;transition:all 0.25s;color:var(--text-muted);border:1px solid transparent; }
+        .ios-radio input[type="radio"]:checked + .ios-radio-inner { box-shadow:0 4px 10px rgba(0,0,0,0.3);transform:scale(1.02);background:#333;color:#fff; }
+        .ios-radio input[value="yes"]:checked + .ios-radio-inner { background:rgba(52,199,89,0.15);color:#34C759!important;border:1px solid rgba(52,199,89,0.4); }
+        .ios-radio input[value="no"]:checked  + .ios-radio-inner { background:rgba(255,69,58,0.15);color:#FF453A!important;border:1px solid rgba(255,69,58,0.4); }
+        .manager-check-field { background:rgba(255,255,255,0.02);padding:20px;border-radius:16px;border:1px solid rgba(255,255,255,0.05);margin-bottom:15px; }
+    </style>`;
+    html += '<h3 style="font-size:18px;margin:30px 0 15px 0;">Шаг 2: Чек-лист</h3>';
+    MANAGER_CHECK_FIELDS.forEach(f => {
+        html += `
+            <div class="form-field manager-check-field">
+                <label style="font-size:14px;margin-bottom:15px;display:block;font-weight:500;line-height:1.4;">${f.id}. ${f.label}</label>
+                <div class="ios-segmented-control">
+                    <label class="ios-radio"><input type="radio" name="check_${f.id}" value="yes" required><div class="ios-radio-inner">✅ Норма</div></label>
+                    <label class="ios-radio"><input type="radio" name="check_${f.id}" value="no"><div class="ios-radio-inner">❌ Нарушение</div></label>
+                </div>
+                <input type="text" id="comment_${f.id}" placeholder="Комментарий..." required
+                    style="width:100%;border-radius:12px;padding:14px 16px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:14px;outline:none;box-sizing:border-box;"
+                    onfocus="this.style.border='1px solid var(--accent)'" onblur="this.style.border='1px solid rgba(255,255,255,0.1)'">
+            </div>`;
+    });
+
+    container.innerHTML = html;
+    modal.classList.add('active');
+};
+
+// ==== CAMERA CAPTURE ====
+window.openCamera = async function(zoneId) {
+    // Helper: apply captured photo to the UI
+    function applyPhoto(dataUrl) {
+        const btn = document.getElementById('btn-camera-' + zoneId);
+        if (btn) btn.style.display = 'none';
+        const preview = document.getElementById('preview-' + zoneId);
+        if (preview) { preview.src = dataUrl; preview.style.display = 'block'; }
+        const retake = document.getElementById('retake-' + zoneId);
+        if (retake) retake.style.display = 'block';
+    }
+
+    // Camera requires HTTPS — guide user to the secure URL
+    const isSecure = location.protocol === 'https:' || location.hostname === 'localhost';
+    if (!isSecure) {
+        if (window.showToast) showToast('Камера работает только по HTTPS. Открой app.grome.pro', 'error');
+        return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (window.showToast) showToast('Камера недоступна. Разреши доступ в настройках браузера.', 'error');
+        return;
+    }
+
+    // Build fullscreen camera overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:999999;display:flex;flex-direction:column;';
+    const video = document.createElement('video');
+    video.autoplay = true; video.playsInline = true;
+    video.style.cssText = 'flex:1;width:100%;object-fit:cover;';
+    const controls = document.createElement('div');
+    controls.style.cssText = 'padding:30px;display:flex;justify-content:space-around;background:#111;';
+    const closeBtn = document.createElement('button');
+    closeBtn.innerText = 'Отмена';
+    closeBtn.style.cssText = 'padding:15px 30px;font-size:16px;border-radius:50px;background:#333;color:#fff;border:none;cursor:pointer;';
+    const snapBtn = document.createElement('button');
+    snapBtn.innerText = '📸 Сделать фото';
+    snapBtn.style.cssText = 'padding:15px 30px;font-size:16px;border-radius:50px;background:var(--accent);color:#000;border:none;font-weight:bold;cursor:pointer;';
+    controls.appendChild(closeBtn); controls.appendChild(snapBtn);
+    overlay.appendChild(video); overlay.appendChild(controls);
+    document.body.appendChild(overlay);
+
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = stream;
+    } catch(err) {
+        document.body.removeChild(overlay);
+        if (window.showToast) showToast('Нет доступа к камере. Разреши в настройках браузера.', 'error');
+        return;
+    }
+
+    closeBtn.onclick = () => {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        document.body.removeChild(overlay);
+    };
+    snapBtn.onclick = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 1080;
+        canvas.height = video.videoHeight || 1920;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        document.body.removeChild(overlay);
+        applyPhoto(dataUrl);
+    };
+};
+
+window.closeManagerModal = function() {
+    const modal = document.getElementById('manager-modal');
+    if (modal) modal.classList.remove('active');
+};
+
+window.submitManagerCheck = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('manager-submit-btn');
+    const origText = btn.innerHTML;
+    btn.innerHTML = '⌛ Сохранение...';
+    btn.disabled = true;
+
+    try {
+        const location = document.getElementById('manager-location').value;
+        if (!location) {
+            if (window.showToast) showToast('Выберите салон', 'error');
+            else alert('Выберите салон');
+            return;
+        }
+
+        const user = window.USER;
+        const now  = new Date();
+
+        // Шаг 1: Отправляем фото зон в OpenAI Vision
+        const zones = ['reklama', 'forma', 'kreslo', 'tv', 'shkaf', 'moyka'];
+        const visionResults = [];
+
+        btn.innerHTML = '🤖 ИИ проверяет фото...';
+        for (const zoneId of zones) {
+            const preview = document.getElementById('preview-' + zoneId);
+            if (preview && preview.src && preview.src.startsWith('data:image')) {
+                const res = await fetch('/api/vision', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ zoneId, images: [preview.src] })
+                });
+                if (!res.ok) {
+                    const errPayload = await res.json().catch(() => ({}));
+                    throw new Error(errPayload.error || 'Ошибка Vision API');
+                }
+                const data = await res.json();
+                visionResults.push({ zone: zoneId, data });
+            }
+        }
+
+        // Блокируем если ИИ отклонил хотя бы одну зону
+        const failed = visionResults.filter(r => r.data && r.data.approved === false);
+        if (failed.length > 0) {
+            const errText = failed.map(f => `❌ ${f.zone}: ${f.data.comment}`).join('\n');
+            showToast('⚠️ ИИ-Аудитор отклонил проверку!\n\n' + errText + '\n\nУстраните нарушения и переснимите фото.', 'error');
+            throw new Error('AI_REJECTED');
+        }
+
+        // Шаг 2: Собираем чек-лист
+        btn.innerHTML = '💾 Сохранение...';
+        const items = [];
+        for (const f of (MANAGER_CHECK_FIELDS || [])) {
+            const radios = document.getElementsByName('check_' + f.id);
+            let statusVal = 'yes';
+            radios.forEach(r => { if (r.checked) statusVal = r.value; });
+            const commentEl = document.getElementById('comment_' + f.id);
+            items.push({ id: f.id, label: f.label, status: statusVal, comment: commentEl ? commentEl.value.trim() : '' });
+        }
+
+        const hasViolations = items.some(i => i.status === 'no');
+        const overallStatus = hasViolations ? 'has_violations' : 'ok';
+
+        const checkData = {
+            location:    location,
+            date:        now.toISOString().split('T')[0],
+            time:        now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+            status:      overallStatus,
+            submittedBy: user ? (user.name || user.tg_id) : 'Менеджер',
+            items:       items,
+            visionResults
+        };
+
+        const res = await fetch('/api/manager_checks', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(checkData)
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Ошибка сервера ' + res.status);
+        }
+
+        const msg = hasViolations
+            ? '⚠️ Проверка сохранена — обнаружены нарушения!'
+            : '✅ Проверка пройдена — всё в норме!';
+        if (window.showToast) showToast(msg, 'success');
+        document.getElementById('manager-form').reset();
+        window.closeManagerModal();
+        loadManagerChecks();
+
+    } catch(err) {
+        if (err.message !== 'AI_REJECTED') {
+            console.error('[Manager] submit error:', err);
+            if (window.showToast) showToast('Ошибка: ' + err.message, 'error');
+            else alert('Ошибка: ' + err.message);
+        }
+    } finally {
+        btn.innerHTML = origText;
+        btn.disabled  = false;
+    }
 };
 
 window.saveAdapter = async function() {

@@ -7,7 +7,33 @@
  * Зависимости: config.js (window.LOCATIONS, window.USER)
  */
 
+// ==== CARD-ICONS LAYOUT PATCH ====
+// Separates the ⚠ error icon (bottom-right) from the 🔄 refresh button (top-right)
+(function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .card-icons {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            bottom: 12px;
+            width: auto;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 5;
+            gap: 0;
+            pointer-events: none;
+        }
+        .card-icons > * { pointer-events: auto; }
+        .err-icon { color: #FFCC00; font-size: 16px; cursor: help; }
+    `;
+    document.head.appendChild(style);
+})();
+
 // ==== TOAST NOTIFICATIONS ====
+
 window.showToast = function(msg, type = 'success') {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -42,7 +68,8 @@ window.showToast = function(msg, type = 'success') {
 window.switchTab = function(target, btn) {
     document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(target + '-section').classList.add('active');
+    const section = document.getElementById(target + '-section');
+    if (section) section.classList.add('active');
 
     if (target === 'master-cabinet') {
         // Загружаем 7-дневное расписание

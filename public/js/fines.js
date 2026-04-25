@@ -51,7 +51,7 @@ function getViolationFine(violationRaw, notesRaw, r) {
         if (currentFine === 0) {
             if (v.includes('опоздал') || n.includes('опоздани')) currentFine = (window.GLOBAL_HANDBOOK || {})['Опоздание'] || 300;
             else if (v.includes('не выход') || v.includes('невыход')) currentFine = (window.GLOBAL_HANDBOOK || {})['Невыход'] || 5000;
-            else if (v.includes('воровство') || v.includes('неоплаченная')) currentFine = (window.GLOBAL_HANDBOOK || {})['Воровство'] || 5000;
+            else if (v.includes('воровство') || v.includes('неоплаченная') || v.includes('терминал')) currentFine = (window.GLOBAL_HANDBOOK || {})['Услуга не проведена через терминал'] || 5000;
         }
 
         // Lateness duration escalation
@@ -79,8 +79,7 @@ function isMandatoryFine(vRaw, nRaw, r) {
         const n = (nRaw || '').toLowerCase();
         if (v.includes('пробит'))    return true;
         if (v.includes('опоздал') || n.includes('опоздани')) return true;
-        if (v.includes('воровство')) return true;
-        if (v.includes('неоплаченная') || v.includes('терминал')) return true;
+        if (v.includes('воровство') || v.includes('неоплаченная') || v.includes('терминал')) return true;
         if (v.includes('не выход') || v.includes('невыход')) return true;
     }
     return false;
@@ -312,10 +311,11 @@ window.renderHandbookEditor = function() {
     const hb = window.GLOBAL_HANDBOOK || {};
 
     // Auto-seed commonly used keys
-    ['Опоздание','Невыход','Воровство','Грязное место','Без формы',
-     'Разговор на нац. языке','Отказ клиенту','Жалоба','Поломка',
-     'Про акцию не сказал','Телефон при клиенте','Неоплаченная стрижка',
-     'Не показал зеркало заднего вида','Не обработал инструмент','Другое'
+    ['Опоздание 11-20 мин','Опоздание 21-30 мин','Опоздание 31-60 мин','Опоздание 61+ мин (Невыход)',
+     'Невыход','Услуга не проведена через терминал','Грязное рабочее место','Без формы',
+     'Еда / напитки на рабочем месте','Разговор на нац. языке','Отказ клиенту','Поломка',
+     'Про акцию не сказал','Телефон при клиенте',
+     'Не показал зеркало заднего вида','Не обработан инструмент','Другое'
     ].forEach(k => { if (hb[k] === undefined) hb[k] = 0; });
 
     let html = Object.entries(hb).map(([key, val]) => `

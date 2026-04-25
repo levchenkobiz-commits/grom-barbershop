@@ -18,7 +18,7 @@ function handleGetSchedule(req, res) {
 // POST /api/schedule — сохранить/обновить смены
 function handlePostSchedule(req, res) {
   let body = '';
-  req.on('data', chunk => { body += chunk.toString(); });
+  req.on('data', chunk => { body += chunk.toString('utf-8'); });
   req.on('end', () => {
     try {
       const entry = JSON.parse(body);
@@ -29,11 +29,18 @@ function handlePostSchedule(req, res) {
 
       const entries = Array.isArray(entry) ? entry : [entry];
       entries.forEach(e => {
+        // Guard: reject entries with mojibake in location (non-standard Cyrillic range)
+        const loc = e.location || '';
+        const isMojibake = loc.length > 0 && !/^[\u0400-\u04FF\u0020\-\.0-9A-Za-z]+$/.test(loc);
+        if (isMojibake) {
+          console.warn('[Schedule] Rejected mojibake location:', JSON.stringify(loc));
+          return;
+        }
         data = data.filter(s => !(s.date === e.date && s.location === e.location));
         if (e.masters && e.masters.length > 0) data.push(e);
       });
 
-      fs.writeFileSync(PATHS.schedule, JSON.stringify(data, null, 2));
+      fs.writeFileSync(PATHS.schedule, JSON.stringify(data, null, 2), 'utf-8');
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'success' }));
     } catch (e) {

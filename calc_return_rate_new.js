@@ -9,6 +9,17 @@ const DOWNLOAD_DIR = path.join(__dirname, 'downloads');
 const CLIENTS_PATH = path.join(DOWNLOAD_DIR, 'clients_NEW_CLIENTS.xlsx');
 const SALES_PATH = path.join(DOWNLOAD_DIR, 'orders_CUR_90D.xlsx');
 
+// Terminal → Branch mapping (el-kassa exports terminal ID, not branch name)
+const TERMINAL_MAP = {
+    25307: 'Сокол',
+    35248: 'Текстильщики',
+    56972: 'Рязанский',
+    62837: 'Варшавская',
+    64963: 'Алексеевская',
+    98439: 'Партизанская',
+};
+
+
 const normPhone = (raw) => {
     if (!raw) return null;
     let s = String(raw).replace(/\D/g, ''); // only digits
@@ -73,9 +84,10 @@ function run() {
     const visitsMap = {};
 
     rawSales.forEach(r => {
-        const phone = normPhone(r['Клиент']);
+        const phone  = normPhone(r['Клиент']);
         const master = String(r['Сотрудник'] || r['Мастер'] || '').trim();
-        const loc = String(r['Филиал'] || r['Салон'] || '').trim() || 'Алексеевская';
+        const termId = Number(r['Терминал (номер)']);
+        const loc    = TERMINAL_MAP[termId] || `Терминал_${termId || 'unknown'}`;
         const dateStr = r['Дата'];
 
         if (!phone || !dateStr || (master.toLowerCase().includes('логин')) || !master) return;
