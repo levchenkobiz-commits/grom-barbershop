@@ -409,7 +409,11 @@
         </div>
         <div id="location-buttons" class="location-chips scroll-reveal delay-1 mobile-only" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
 
-        <div id="map" class="desktop-map desktop-only" style="width: 100%; height: 500px; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
+        <!-- Locations board + map wrapper (desktop only) -->
+        <div class="locations-layout desktop-only">
+            <div class="locations-board" id="locations-board"></div>
+            <div id="map" style="flex:1; min-width:0; height:100%; transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
+        </div>
         <style>
             /* Yandex Map Native Dark Mode Overlay - Keeps markers their original neon color! */
             #map [class*="-ground-pane"] {
@@ -442,6 +446,126 @@
             #map ymaps[class*="-balloon__close-button"]:hover {
                 filter: invert(1) opacity(1) !important;
             }
+            /* ── Locations Layout ── */
+            .locations-layout {
+                display: flex;
+                height: 520px;
+                border-radius: 20px 20px 0 0;
+                overflow: hidden;
+                box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            }
+            .locations-board {
+                width: 296px;
+                flex-shrink: 0;
+                background: #070707;
+                border-right: 1px solid rgba(255,255,255,0.06);
+                overflow-y: auto;
+                padding: 18px 12px 18px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255,255,255,0.08) transparent;
+            }
+            .locations-board::-webkit-scrollbar { width: 3px; }
+            .locations-board::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+            .lb-header {
+                font-family: 'Unbounded', sans-serif;
+                font-size: 9px;
+                font-weight: 600;
+                letter-spacing: 0.22em;
+                color: rgba(255,255,255,0.18);
+                text-transform: uppercase;
+                padding: 0 4px 14px;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                margin-bottom: 10px;
+            }
+            .lb-card {
+                padding: 12px 12px 12px 14px;
+                border-radius: 11px;
+                border: 1px solid transparent;
+                background: transparent;
+                cursor: pointer;
+                transition: background 0.2s, border-color 0.2s, transform 0.15s;
+                text-align: left;
+                position: relative;
+            }
+            .lb-card:hover {
+                background: rgba(255,255,255,0.03);
+                border-color: rgba(255,255,255,0.09);
+            }
+            .lb-card.active {
+                background: rgba(198,255,0,0.05);
+                border-color: rgba(198,255,0,0.3);
+            }
+            .lb-card.active::before {
+                content: '';
+                position: absolute;
+                left: 0; top: 50%;
+                transform: translateY(-50%);
+                width: 3px; height: 60%;
+                background: #C6FF00;
+                border-radius: 0 2px 2px 0;
+            }
+            .lb-metro {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 5px;
+            }
+            .lb-metro-dot {
+                width: 16px; height: 16px;
+                border-radius: 50%;
+                background: #C6FF00;
+                color: #000;
+                font-family: 'Unbounded', sans-serif;
+                font-size: 8px;
+                font-weight: 700;
+                display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0;
+            }
+            .lb-metro-name {
+                font-family: 'Unbounded', sans-serif;
+                font-size: 10px;
+                font-weight: 300;
+                color: rgba(255,255,255,0.35);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .lb-name {
+                font-family: 'Unbounded', sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                color: rgba(255,255,255,0.88);
+                margin-bottom: 4px;
+                line-height: 1.3;
+            }
+            .lb-addr {
+                font-family: 'Inter', sans-serif;
+                font-size: 11px;
+                font-weight: 400;
+                color: rgba(255,255,255,0.3);
+                line-height: 1.4;
+            }
+            .lb-route {
+                display: inline-block;
+                margin-top: 8px;
+                font-family: 'Inter', sans-serif;
+                font-size: 10px;
+                font-weight: 500;
+                color: #C6FF00;
+                text-decoration: none;
+                opacity: 0;
+                transition: opacity 0.2s;
+                pointer-events: none;
+            }
+            .lb-card:hover .lb-route,
+            .lb-card.active .lb-route {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
         </style>
 
         <div class="section-cta" style="border-radius: 0;">
@@ -781,12 +905,12 @@
 
         // LOCATIONS DATA (Decoupled from Map API)
         const locations = [
-            { id: "alx", coords: [55.807794, 37.638531], name: "ГРОМ - Алексеевская", label: "м. Алексеевская", link: "https://yandex.ru/maps/-/CPV2Z8Ps" },
-            { id: "tex", coords: [55.708811, 37.732789], name: "ГРОМ - Текстильщики", label: "м. Текстильщики", link: "https://yandex.ru/maps/-/CPV2ZPzu" },
-            { id: "rzp", coords: [55.716616, 37.792823], name: "ГРОМ - Рязанский проспект", label: "м. Рязанский проспект", link: "https://yandex.ru/maps/-/CPV26EZI" },
-            { id: "var", coords: [55.653537, 37.625522], name: "ГРОМ - Варшавская", label: "м. Варшавская", link: "https://yandex.ru/maps/-/CPB8AD87" },
-            { id: "par", coords: [55.789234, 37.749557], name: "ГРОМ - Партизанская", label: "м. Партизанская", link: "https://yandex.ru/maps/-/CPV26BKW" },
-            { id: "sok", coords: [55.805175, 37.514867], name: "ГРОМ - Сокол", label: "м. Сокол, Ленинградский проспект 78к1", link: "https://yandex.ru/maps/-/CPRV5AOd" }
+            { id: "alx", coords: [55.807794, 37.638531], name: "ГРОМ - Алексеевская", label: "м. Алексеевская", address: "просп. Мира, 114", link: "https://yandex.ru/maps/-/CPV2Z8Ps" },
+            { id: "tex", coords: [55.708811, 37.732789], name: "ГРОМ - Текстильщики", label: "м. Текстильщики", address: "Волгоградский просп., 55", link: "https://yandex.ru/maps/-/CPV2ZPzu" },
+            { id: "rzp", coords: [55.716616, 37.792823], name: "ГРОМ - Рязанский проспект", label: "м. Рязанский проспект", address: "Рязанский просп., 46", link: "https://yandex.ru/maps/-/CPV26EZI" },
+            { id: "var", coords: [55.653537, 37.625522], name: "ГРОМ - Варшавская", label: "м. Варшавская", address: "Каширский проезд, 25к2", link: "https://yandex.ru/maps/-/CPB8AD87" },
+            { id: "par", coords: [55.789234, 37.749557], name: "ГРОМ - Партизанская", label: "м. Партизанская", address: "Измайловское шоссе, 69Б", link: "https://yandex.ru/maps/-/CPV26BKW" },
+            { id: "sok", coords: [55.805175, 37.514867], name: "ГРОМ - Сокол", label: "м. Сокол", address: "Ленинградский просп., 78к1", link: "https://yandex.ru/maps/-/CPRV5AOd" }
         ];
 
         // 1. RENDER CHIPS IMMEDIATELY (Fallback logic)
@@ -873,6 +997,33 @@
             if (mapEl) mapEl.remove();
         }
 
+
+        // DESKTOP BRANCH BOARD
+        const board = document.getElementById('locations-board');
+        if (board) {
+            board.innerHTML = '<div class="lb-header">Филиалы</div>';
+            locations.forEach(loc => {
+                const finalLink = loc.link || \`https://yandex.ru/maps/?pt=\${loc.coords[1]},\${loc.coords[0]}&z=17&l=map\`;
+                const card = document.createElement('div');
+                card.className = 'lb-card';
+                card.dataset.id = loc.id;
+                const metroName = loc.label.split(',')[0];
+                card.innerHTML = \`
+                    <div class="lb-metro">
+                        <span class="lb-metro-dot">М</span>
+                        <span class="lb-metro-name">\${metroName}</span>
+                    </div>
+                    <div class="lb-name">\${loc.name.replace('ГРОМ - ', '')}</div>
+                    <div class="lb-addr">\${loc.address || ''}</div>
+                    <a href="\${finalLink}" class="lb-route" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 Маршрут →</a>
+                \`;
+                // Store reference for map binding
+                card._loc = loc;
+                card._link = finalLink;
+                board.appendChild(card);
+            });
+        }
+
         // 2. YANDEX MAP INIT (Enhancement)
         if (typeof ymaps !== 'undefined' && window.innerWidth > 1024) {
             ymaps.ready(function () {
@@ -929,6 +1080,23 @@
                     });
                     
                     myMap.geoObjects.add(placemark);
+
+                    // Bind DESKTOP BOARD CARD to this placemark
+                    const boardCard = board && board.querySelector('[data-id="' + loc.id + '"]');
+                    if (boardCard) {
+                        boardCard.addEventListener('click', () => {
+                            document.querySelectorAll('.lb-card').forEach(c => c.classList.remove('active'));
+                            boardCard.classList.add('active');
+                            placemark.properties.set('myOpacity', '1');
+                            const mapEl = document.getElementById('map');
+                            mapEl.style.opacity = '0';
+                            setTimeout(() => {
+                                myMap.setCenter(loc.coords, 15, { checkZoomRange: true, duration: 500 });
+                                setTimeout(() => { mapEl.style.opacity = '1'; }, 300);
+                                setTimeout(() => { placemark.balloon.open(); }, 600);
+                            }, 100);
+                        });
+                    }
                     
                     // Upgrade button logic since map loaded successfully
                     const btn = renderedButtons[loc.id];
