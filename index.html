@@ -185,7 +185,7 @@
         </div>
         <div class="container">
             <div class="section-head scroll-reveal">
-                <h2 class="section-title scroll-reveal">ПОЧЕМУ GROME?</h2>
+                <h2 class="section-title">ПОЧЕМУ GROME?</h2>
                 <p class="section-sub">Алгоритм идеальной стрижки отточен до секунд.</p>
             </div>
             
@@ -233,7 +233,7 @@
     <section class="section-layout" id="pricing">
         <div class="container container-sm">
             <div class="section-head text-center">
-                <h2 class="section-title scroll-reveal">ПРАЙС</h2>
+                <h2 class="section-title">ПРАЙС</h2>
             </div>
             
             <div class="pricing-list">
@@ -296,7 +296,7 @@
     <section class="section-layout" id="gallery" style="position: relative; overflow: hidden; padding: 100px 0 16px 0;">
         <div class="container">
             <div class="section-head text-center" style="margin-bottom: 4rem;">
-                <h2 class="section-title scroll-reveal">АТМОСФЕРА</h2>
+                <h2 class="section-title">АТМОСФЕРА</h2>
                 <p class="section-sub desktop-only">Скролльте галерею, чтобы вращать</p>
                 <p class="section-sub mobile-only">Пространство для тех, кто ценит эстетику</p>
             </div>
@@ -1002,22 +1002,21 @@
         const board = document.getElementById('locations-board');
         if (board) {
             board.innerHTML = '<div class="lb-header">Филиалы</div>';
-            locations.forEach(loc => {
-                const finalLink = loc.link || \`https://yandex.ru/maps/?pt=\${loc.coords[1]},\${loc.coords[0]}&z=17&l=map\`;
-                const card = document.createElement('div');
+            locations.forEach(function(loc) {
+                var finalLink = loc.link || ('https://yandex.ru/maps/?pt=' + loc.coords[1] + ',' + loc.coords[0] + '&z=17&l=map');
+                var card = document.createElement('div');
                 card.className = 'lb-card';
                 card.dataset.id = loc.id;
-                const metroName = loc.label.split(',')[0];
-                card.innerHTML = \`
-                    <div class="lb-metro">
-                        <span class="lb-metro-dot">М</span>
-                        <span class="lb-metro-name">\${metroName}</span>
-                    </div>
-                    <div class="lb-name">\${loc.name.replace('ГРОМ - ', '')}</div>
-                    <div class="lb-addr">\${loc.address || ''}</div>
-                    <a href="\${finalLink}" class="lb-route" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 Маршрут →</a>
-                \`;
-                // Store reference for map binding
+                var metroName = loc.label.split(',')[0];
+                var shortName = loc.name.replace('ГРОМ - ', '');
+                card.innerHTML =
+                    '<div class="lb-metro">'
+                    + '<span class="lb-metro-dot">М</span>'
+                    + '<span class="lb-metro-name">' + metroName + '</span>'
+                    + '</div>'
+                    + '<div class="lb-name">' + shortName + '</div>'
+                    + '<div class="lb-addr">' + (loc.address || '') + '</div>'
+                    + '<a href="' + finalLink + '" class="lb-route" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 Маршрут →</a>';
                 card._loc = loc;
                 card._link = finalLink;
                 board.appendChild(card);
