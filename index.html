@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="akony.woff" as="font" type="font/woff" crossorigin="anonymous">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -19,7 +20,7 @@
         @font-face {
             font-family: 'Akony';
             src: url('akony.otf') format('opentype'), url('akony.ttf') format('truetype'), url('akony.woff') format('woff');
-            font-display: swap;
+            font-display: block;
         }
         body { perspective: 1200px; perspective-origin: 50% 40%; }
 
@@ -835,6 +836,7 @@
 
     <!-- HERO SCRIPT -->
     <script>
+    document.fonts.load("1em 'Akony'").then(function() {
     (function() {
         var hero = document.getElementById('hero');
         var DURATION = 1800, DELAY = 200;
@@ -923,6 +925,7 @@
         }
         setTimeout(function(){ setInterval(morphNext, 2800); }, 4200);
     })();
+    }); // end fonts.load
     </script>
 </body>
 </html>
