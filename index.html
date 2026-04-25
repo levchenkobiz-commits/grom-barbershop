@@ -184,6 +184,7 @@
             <div class="bento-grid-4">
                 <!-- Large card -->
                 <div class="bento-card col-span-2 row-span-2 scroll-reveal text-center-bento delay-1">
+                    <div class="bento-ghost-num">30</div>
                     <div class="bento-content">
                         <h3 class="bento-title">30 Минут. Точно.</h3>
                         <p class="bento-text">Наш флагманский формат. Мы убрали все лишнее, оставив только премиальное качество и максимальную скорость. Ваше время стоит дорого.</p>
@@ -192,6 +193,7 @@
                 
                 <!-- Small cards -->
                 <div class="bento-card text-center-bento scroll-reveal delay-2">
+                    <div class="bento-ghost-num" style="font-size:clamp(60px,10vw,120px); bottom:-10px; right:-5px;">01</div>
                     <div class="bento-content">
                         <h3 class="bento-title">1 Минута</h3>
                         <p class="bento-text">От дверей метро до кресла мастера.</p>
@@ -832,6 +834,81 @@
                 mapEl.innerHTML = '<div style="text-align: center;">Для просмотра интерактивной карты необходимо отключить блокировщик рекламы.<br><br>Пожалуйста, выберите локацию выше 👆</div>';
             }
         }
+    </script>
+
+
+    <!-- PREMIUM SECTION ENHANCEMENTS JS -->
+    <script>
+    (function() {
+        // ── 3D TILT on bento cards ──
+        var cards = document.querySelectorAll('.bento-card');
+        cards.forEach(function(card) {
+            card.addEventListener('mousemove', function(e) {
+                var r = card.getBoundingClientRect();
+                var x = (e.clientX - r.left) / r.width  - 0.5;
+                var y = (e.clientY - r.top)  / r.height - 0.5;
+                card.classList.add('tilt-active');
+                card.style.transform = 'perspective(900px) rotateY(' + (x * 7) + 'deg) rotateX(' + (y * -7) + 'deg) translateY(-4px) scale(1.02)';
+            });
+            card.addEventListener('mouseleave', function() {
+                card.classList.remove('tilt-active');
+                card.style.transform = '';
+            });
+        });
+
+        // ── PRICING ROWS stagger scroll-reveal ──
+        var priceRows = document.querySelectorAll('.price-row');
+        if ('IntersectionObserver' in window) {
+            var priceObs = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        var delay = parseInt(entry.target.dataset.rowIndex || 0) * 120;
+                        setTimeout(function() {
+                            entry.target.classList.add('is-visible');
+                        }, delay);
+                        priceObs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+            priceRows.forEach(function(row, i) {
+                row.dataset.rowIndex = i;
+                priceObs.observe(row);
+            });
+        } else {
+            priceRows.forEach(function(row) { row.classList.add('is-visible'); });
+        }
+
+        // ── ANIMATED COUNTER on bento stat numbers ──
+        function animateCounter(el, target, duration) {
+            var start = 0, step = (target / (duration / 16));
+            var iv = setInterval(function() {
+                start = Math.min(start + step, target);
+                el.textContent = Math.round(start);
+                if (start >= target) clearInterval(iv);
+            }, 16);
+        }
+        var bentoCounted = false;
+        var bentoSection = document.getElementById('advantages');
+        if (bentoSection && 'IntersectionObserver' in window) {
+            var bentoObs = new IntersectionObserver(function(entries) {
+                if (entries[0].isIntersecting && !bentoCounted) {
+                    bentoCounted = true;
+                    // find bento title elements containing numbers
+                    document.querySelectorAll('.bento-title').forEach(function(el) {
+                        var txt = el.textContent.trim();
+                        var num = parseInt(txt);
+                        if (!isNaN(num) && num > 1) {
+                            var suffix = txt.replace(/^[\d]+/, '');
+                            el.innerHTML = '<span class="bento-counter">' + num + '</span>' + suffix;
+                            animateCounter(el.querySelector('.bento-counter'), num, 1200);
+                        }
+                    });
+                    bentoObs.disconnect();
+                }
+            }, { threshold: 0.3 });
+            bentoObs.observe(bentoSection);
+        }
+    })();
     </script>
 
     <!-- HERO SCRIPT -->
