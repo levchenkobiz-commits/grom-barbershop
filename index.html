@@ -18,6 +18,37 @@
     <style>
         @font-face { font-family:'Akony'; src:url('akony.otf') format('opentype'),url('akony.ttf') format('truetype'),url('akony.woff') format('woff'); font-display:swap; }
         body { perspective:1200px; perspective-origin:50% 40%; }
+        /* ── HERO ANIMATED TYPOGRAPHY ── */
+        .h-orb{position:absolute;border-radius:50%;pointer-events:none;will-change:transform;z-index:1}
+        .h-orb1{width:700px;height:420px;top:-8%;left:-12%;background:radial-gradient(ellipse at center,rgba(255,255,255,.055) 0%,rgba(255,255,255,.022) 35%,rgba(255,255,255,.005) 60%,transparent 75%);filter:blur(48px);animation:hOrb1 22s ease-in-out infinite}
+        .h-orb2{width:520px;height:380px;top:30%;right:-8%;background:radial-gradient(ellipse at center,rgba(198,255,0,.038) 0%,rgba(198,255,0,.012) 40%,transparent 68%);filter:blur(60px);animation:hOrb2 28s ease-in-out infinite}
+        .h-orb3{width:380px;height:260px;bottom:5%;left:28%;background:radial-gradient(ellipse at center,rgba(255,255,255,.042) 0%,rgba(255,255,255,.014) 42%,transparent 70%);filter:blur(40px);animation:hOrb3 18s ease-in-out infinite}
+        @keyframes hOrb1{0%{transform:translate(0,0) scale(1)}25%{transform:translate(90px,50px) scale(1.08)}55%{transform:translate(140px,-30px) scale(.96)}80%{transform:translate(50px,80px) scale(1.04)}100%{transform:translate(0,0) scale(1)}}
+        @keyframes hOrb2{0%{transform:translate(0,0) scale(1)}30%{transform:translate(-80px,70px) scale(1.06)}60%{transform:translate(-130px,-40px) scale(.93)}85%{transform:translate(-40px,50px) scale(1.02)}100%{transform:translate(0,0) scale(1)}}
+        @keyframes hOrb3{0%{transform:translate(0,0) scale(1)}35%{transform:translate(70px,-60px) scale(1.12)}65%{transform:translate(-50px,40px) scale(.9)}100%{transform:translate(0,0) scale(1)}}
+        .h-scene{position:relative;z-index:10;text-align:center;width:100%;max-width:1200px}
+        .h-eyebrow{font-family:'Akony',sans-serif;font-size:clamp(9px,1vw,12px);letter-spacing:.35em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:23px;opacity:0;animation:hFade .6s ease forwards 1.3s}
+        .h-row{display:inline-flex;justify-content:center;align-items:baseline;gap:.05em;overflow:hidden;line-height:.92;cursor:default}
+        .h-letter{display:inline-block;font-family:'Akony',sans-serif;font-size:clamp(48px,10vw,130px);font-weight:normal;letter-spacing:-.01em;color:#fff;text-transform:uppercase;opacity:0;transform:translateY(110%);transition:color .3s ease;will-change:transform,opacity}
+        .h-letter.sp{width:.28em}.h-letter.dot{font-size:.42em;line-height:2.3;vertical-align:bottom;color:#C6FF00}
+        .h-letter.lit{color:#C6FF00!important}
+        .h-headline{display:flex;flex-direction:column;align-items:center}
+        .h-row:nth-child(3) .h-letter:not(.dot),.h-row:nth-child(5) .h-letter:not(.dot){color:rgba(255,255,255,.5)}
+        .h-divider{width:1px;height:0;margin:3px auto;opacity:0;background:linear-gradient(180deg,transparent,rgba(255,255,255,.12),transparent);animation:hLine .5s ease forwards 2.7s}
+        @keyframes hLine{to{height:36px;opacity:1}}
+        .h-morph{margin-top:18px;height:clamp(20px,2.5vw,32px);overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:hFade .6s ease forwards 3.2s}
+        .h-morph-word{font-family:'Akony',sans-serif;font-size:clamp(16px,2.2vw,30px);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.15);transition:all .65s cubic-bezier(.16,1,.3,1)}
+        .h-btns{display:flex;justify-content:center;flex-wrap:wrap;gap:20px;margin-top:41px;opacity:0;animation:hFade .7s ease forwards 3.4s}
+        .h-btn-p{padding:14px 32px;border-radius:99px;background:#fff;border:1px solid #fff;color:#000;text-decoration:none;font-family:'Unbounded',sans-serif;font-weight:500;font-size:14px;transition:all .3s;white-space:nowrap}
+        .h-btn-p:hover{background:#C6FF00;border-color:#C6FF00;transform:scale(1.03)}
+        .h-btn-s{padding:14px 32px;border-radius:99px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:#fff;text-decoration:none;font-family:'Unbounded',sans-serif;font-weight:500;font-size:14px;backdrop-filter:blur(10px);transition:all .3s;white-space:nowrap}
+        .h-btn-s:hover{background:rgba(255,255,255,.09)}
+        .h-stats{display:flex;align-items:center;justify-content:center;gap:41px;margin-top:28px;flex-wrap:wrap;opacity:0;animation:hFade .7s ease forwards 3.6s}
+        .h-stat{font-family:'Akony',sans-serif;font-size:clamp(9px,1vw,12px);letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.28)}
+        .h-sdot{width:4px;height:4px;border-radius:50%;background:#C6FF00;box-shadow:0 0 6px #C6FF00;flex-shrink:0}
+        @keyframes hFade{to{opacity:1}}
+        @keyframes hLetterIn{0%{opacity:0;transform:translateY(110%)}100%{opacity:1;transform:translateY(0)}}
+        .h-letter.revealed{animation:hLetterIn .55s cubic-bezier(.16,1,.3,1) forwards}.h-letter.dot.revealed{animation:hLetterIn .4s cubic-bezier(.16,1,.3,1) forwards}
     </style>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
@@ -48,37 +79,7 @@
 
     <!-- HERO SECTION (Animated Typography) -->
     <section id="hero" style="position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:#050505;padding:80px 50px 80px;transform-origin:50% 100%;will-change:transform,opacity;">
-        <style>
-            .h-orb{position:absolute;border-radius:50%;pointer-events:none;will-change:transform;z-index:1}
-            .h-orb1{width:700px;height:420px;top:-8%;left:-12%;background:radial-gradient(ellipse at center,rgba(255,255,255,.055) 0%,rgba(255,255,255,.022) 35%,rgba(255,255,255,.005) 60%,transparent 75%);filter:blur(48px);animation:hOrb1 22s ease-in-out infinite}
-            .h-orb2{width:520px;height:380px;top:30%;right:-8%;background:radial-gradient(ellipse at center,rgba(198,255,0,.038) 0%,rgba(198,255,0,.012) 40%,transparent 68%);filter:blur(60px);animation:hOrb2 28s ease-in-out infinite}
-            .h-orb3{width:380px;height:260px;bottom:5%;left:28%;background:radial-gradient(ellipse at center,rgba(255,255,255,.042) 0%,rgba(255,255,255,.014) 42%,transparent 70%);filter:blur(40px);animation:hOrb3 18s ease-in-out infinite}
-            @keyframes hOrb1{0%{transform:translate(0,0) scale(1)}25%{transform:translate(90px,50px) scale(1.08)}55%{transform:translate(140px,-30px) scale(.96)}80%{transform:translate(50px,80px) scale(1.04)}100%{transform:translate(0,0) scale(1)}}
-            @keyframes hOrb2{0%{transform:translate(0,0) scale(1)}30%{transform:translate(-80px,70px) scale(1.06)}60%{transform:translate(-130px,-40px) scale(.93)}85%{transform:translate(-40px,50px) scale(1.02)}100%{transform:translate(0,0) scale(1)}}
-            @keyframes hOrb3{0%{transform:translate(0,0) scale(1)}35%{transform:translate(70px,-60px) scale(1.12)}65%{transform:translate(-50px,40px) scale(.9)}100%{transform:translate(0,0) scale(1)}}
-            .h-scene{position:relative;z-index:10;text-align:center;width:100%;max-width:1200px}
-            .h-eyebrow{font-family:'Akony',sans-serif;font-size:clamp(9px,1vw,12px);letter-spacing:.35em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:23px;opacity:0;animation:hFade .6s ease forwards 1.3s}
-            .h-row{display:inline-flex;justify-content:center;align-items:baseline;gap:.05em;overflow:hidden;line-height:.92;cursor:default}
-            .h-letter{display:inline-block;font-family:'Akony',sans-serif;font-size:clamp(48px,10vw,130px);font-weight:normal;letter-spacing:-.01em;color:#fff;text-transform:uppercase;opacity:0;transform:translateY(110%);transition:color .3s ease;will-change:transform,opacity}
-            .h-letter.sp{width:.28em}.h-letter.dot{font-size:.42em;line-height:2.3;vertical-align:bottom;color:#C6FF00}
-            .h-letter.lit{color:#C6FF00!important}
-            .h-headline{display:flex;flex-direction:column;align-items:center}
-            .h-row:nth-child(3) .h-letter:not(.dot),.h-row:nth-child(5) .h-letter:not(.dot){color:rgba(255,255,255,.5)}
-            .h-divider{width:1px;height:0;margin:3px auto;opacity:0;background:linear-gradient(180deg,transparent,rgba(255,255,255,.12),transparent);animation:hLine .5s ease forwards 2.7s}
-            @keyframes hLine{to{height:36px;opacity:1}}
-            .h-morph{margin-top:18px;height:clamp(20px,2.5vw,32px);overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;animation:hFade .6s ease forwards 3.2s}
-            .h-morph-word{font-family:'Akony',sans-serif;font-size:clamp(16px,2.2vw,30px);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.15);transition:all .65s cubic-bezier(.16,1,.3,1)}
-            .h-btns{display:flex;justify-content:center;flex-wrap:wrap;gap:20px;margin-top:41px;opacity:0;animation:hFade .7s ease forwards 3.4s}
-            .h-btn-p{padding:14px 32px;border-radius:99px;background:#fff;border:1px solid #fff;color:#000;text-decoration:none;font-family:'Unbounded',sans-serif;font-weight:500;font-size:14px;transition:all .3s;white-space:nowrap}
-            .h-btn-p:hover{background:#C6FF00;border-color:#C6FF00;transform:scale(1.03)}
-            .h-btn-s{padding:14px 32px;border-radius:99px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:#fff;text-decoration:none;font-family:'Unbounded',sans-serif;font-weight:500;font-size:14px;backdrop-filter:blur(10px);transition:all .3s;white-space:nowrap}
-            .h-btn-s:hover{background:rgba(255,255,255,.09)}
-            .h-stats{display:flex;align-items:center;justify-content:center;gap:41px;margin-top:28px;flex-wrap:wrap;opacity:0;animation:hFade .7s ease forwards 3.6s}
-            .h-stat{font-family:'Akony',sans-serif;font-size:clamp(9px,1vw,12px);letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.28)}
-            .h-sdot{width:4px;height:4px;border-radius:50%;background:#C6FF00;box-shadow:0 0 6px #C6FF00;flex-shrink:0}
-            @keyframes hFade{to{opacity:1}}
-            @keyframes hLetterIn{0%{opacity:0;transform:translateY(110%)}100%{opacity:1;transform:translateY(0)}}
-        </style>
+        
         <div class="h-orb h-orb1"></div>
         <div class="h-orb h-orb2"></div>
         <div class="h-orb h-orb3"></div>
@@ -114,10 +115,10 @@
                 var row=document.createElement('div');row.className='h-row';
                 line.t.split('').forEach(function(ch,ci){
                     var sp=document.createElement('span');sp.className='h-letter'+(ch===' '?' sp':'');sp.textContent=ch;
-                    if(ch!==' '){var dl=(1.0+li*0.18+ci*0.038).toFixed(3);sp.style.animation='hLetterIn .55s cubic-bezier(.16,1,.3,1) forwards '+dl+'s';}
+                    if(ch!==' '){var dl=(1.0+li*0.18+ci*0.038).toFixed(3);(function(el,d){setTimeout(function(){el.classList.add('revealed');},d*1000);})(sp,parseFloat(dl));}
                     row.appendChild(sp);
                 });
-                if(line.dot){var dot=document.createElement('span');dot.className='h-letter dot';var dd=(1.0+li*0.18+line.t.length*0.038+0.03).toFixed(3);dot.style.animation='hLetterIn .4s cubic-bezier(.16,1,.3,1) forwards '+dd+'s';dot.textContent='.';row.appendChild(dot);}
+                if(line.dot){var dot=document.createElement('span');dot.className='h-letter dot';var dd=(1.0+li*0.18+line.t.length*0.038+0.03).toFixed(3);(function(el,d){setTimeout(function(){el.classList.add('revealed');},d*1000);})(dot,parseFloat(dd));dot.textContent='.';row.appendChild(dot);}
                 hl.appendChild(row);
                 row.addEventListener('mouseenter',function(){swept=true;document.querySelectorAll('.h-letter:not(.dot):not(.sp)').forEach(function(l){l.classList.remove('lit')});row.querySelectorAll('.h-letter:not(.dot):not(.sp)').forEach(function(l){l.classList.add('lit')});});
                 row.addEventListener('mouseleave',function(){row.querySelectorAll('.h-letter').forEach(function(l){l.classList.remove('lit')});swept=false;});
