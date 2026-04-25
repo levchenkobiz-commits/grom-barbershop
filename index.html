@@ -124,7 +124,7 @@
                 <a href="#advantages">Преимущества</a>
                 <a href="#locations">Локации</a>
                 <a href="#pricing">Цены</a>
-                <a href="#barbers">Команда</a>
+                <a href="#gallery">Атмосфера</a>
             </nav>
             <div class="nav-actions">
                 <a href="https://n2015703.yclients.com" target="_top" class="framer-btn primary">Запись</a>
@@ -185,7 +185,7 @@
         </div>
         <div class="container">
             <div class="section-head scroll-reveal">
-                <h2 class="section-title wipe-reveal">ПОЧЕМУ GROME?</h2>
+                <h2 class="section-title scroll-reveal">ПОЧЕМУ GROME?</h2>
                 <p class="section-sub">Алгоритм идеальной стрижки отточен до секунд.</p>
             </div>
             
@@ -233,7 +233,7 @@
     <section class="section-layout" id="pricing">
         <div class="container container-sm">
             <div class="section-head text-center">
-                <h2 class="section-title wipe-reveal">ПРАЙС</h2>
+                <h2 class="section-title scroll-reveal">ПРАЙС</h2>
             </div>
             
             <div class="pricing-list">
@@ -296,7 +296,7 @@
     <section class="section-layout" id="gallery" style="position: relative; overflow: hidden; padding: 100px 0 16px 0;">
         <div class="container">
             <div class="section-head text-center" style="margin-bottom: 4rem;">
-                <h2 class="section-title wipe-reveal">АТМОСФЕРА</h2>
+                <h2 class="section-title scroll-reveal">АТМОСФЕРА</h2>
                 <p class="section-sub desktop-only">Скролльте галерею, чтобы вращать</p>
                 <p class="section-sub mobile-only">Пространство для тех, кто ценит эстетику</p>
             </div>
@@ -463,207 +463,179 @@
             .site-footer {
                 background: #000;
                 border-top: 1px solid rgba(255,255,255,0.07);
-                position: relative;
-                overflow: hidden;
                 font-family: 'Unbounded', sans-serif;
+                position: relative;
             }
+            /* Thin lime accent line at top */
             .site-footer::before {
                 content: '';
                 position: absolute;
                 top: 0; left: 50%;
                 transform: translateX(-50%);
-                width: 40%; height: 1px;
-                background: linear-gradient(90deg, transparent, rgba(198,255,0,0.35), transparent);
+                width: 30%; height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(198,255,0,0.4), transparent);
             }
-            .footer-inner {
-                max-width: 1200px;
+            .footer-wrap {
+                max-width: 1100px;
                 margin: 0 auto;
-                padding: 80px 60px 48px;
+                padding: 72px 48px 44px;
             }
-            .footer-main {
+            /* 3-column: brand | nav | contact+booking */
+            .footer-grid {
                 display: grid;
-                grid-template-columns: 2fr 1fr 1fr 1fr;
-                gap: 60px;
-                padding-bottom: 64px;
+                grid-template-columns: 1.6fr 1fr 1fr;
+                gap: 48px;
+                padding-bottom: 52px;
                 border-bottom: 1px solid rgba(255,255,255,0.07);
-                align-items: start;
             }
-            .footer-brand-name {
+            /* Brand col */
+            .f-brand { }
+            .f-logo {
                 font-family: 'Akony', sans-serif;
-                font-size: clamp(32px, 4vw, 52px);
+                font-size: clamp(28px, 3.5vw, 44px);
                 color: #fff;
                 letter-spacing: 0.02em;
                 line-height: 1;
-                margin: 0 0 18px;
                 font-weight: normal;
+                margin: 0 0 16px;
             }
-            .footer-brand-desc {
+            .f-desc {
                 font-size: 12px;
                 font-weight: 300;
-                color: rgba(255,255,255,0.35);
-                line-height: 1.8;
-                max-width: 240px;
-                margin: 0 0 32px;
+                color: rgba(255,255,255,0.32);
+                line-height: 1.9;
+                max-width: 220px;
+                margin: 0 0 28px;
             }
-            .footer-socials {
-                display: flex;
-                gap: 10px;
-            }
-            .footer-social-btn {
-                width: 40px; height: 40px;
+            .f-socials { display: flex; gap: 10px; }
+            .f-soc {
+                width: 38px; height: 38px;
                 border-radius: 50%;
                 border: 1px solid rgba(255,255,255,0.1);
                 display: flex; align-items: center; justify-content: center;
-                color: rgba(255,255,255,0.45);
+                color: rgba(255,255,255,0.4);
                 text-decoration: none;
-                transition: border-color 0.25s, color 0.25s, transform 0.25s;
+                transition: border-color 0.25s, color 0.25s, transform 0.2s;
             }
-            .footer-social-btn:hover {
-                border-color: #C6FF00;
-                color: #C6FF00;
-                transform: translateY(-2px);
-            }
-            .footer-col-label {
-                font-size: 10px;
+            .f-soc:hover { border-color: #C6FF00; color: #C6FF00; transform: translateY(-2px); }
+            /* Column header */
+            .f-col-head {
+                font-size: 9px;
                 font-weight: 600;
-                letter-spacing: 0.22em;
+                letter-spacing: 0.24em;
                 text-transform: uppercase;
-                color: rgba(255,255,255,0.22);
-                margin: 0 0 22px;
+                color: rgba(255,255,255,0.2);
+                margin: 0 0 20px;
             }
-            .footer-links {
-                display: flex;
-                flex-direction: column;
-                gap: 14px;
-            }
-            .footer-links a {
+            .f-links { display: flex; flex-direction: column; gap: 13px; }
+            .f-links a {
                 font-size: 13px;
                 font-weight: 300;
-                color: rgba(255,255,255,0.5);
+                color: rgba(255,255,255,0.48);
                 text-decoration: none;
-                transition: color 0.22s;
+                transition: color 0.2s;
                 line-height: 1;
             }
-            .footer-links a:hover { color: #fff; }
-            .footer-cta-btn {
+            .f-links a:hover { color: #fff; }
+            /* Contact col: phone + tg + booking link */
+            .f-book-link {
                 display: inline-block;
-                padding: 14px 28px;
-                border-radius: 99px;
-                background: #C6FF00;
-                color: #000;
-                font-family: 'Unbounded', sans-serif;
-                font-weight: 600;
+                margin-top: 20px;
                 font-size: 13px;
+                font-weight: 500;
+                color: #C6FF00;
                 text-decoration: none;
-                white-space: nowrap;
-                transition: background 0.25s, transform 0.25s;
-                margin-bottom: 16px;
+                transition: opacity 0.2s;
             }
-            .footer-cta-btn:hover {
-                background: #d4ff33;
-                transform: translateY(-2px);
-            }
-            .footer-cta-note {
-                font-size: 11px;
-                font-weight: 300;
-                color: rgba(255,255,255,0.2);
-                line-height: 1.7;
-                margin: 0;
-            }
-            .footer-bottom {
+            .f-book-link:hover { opacity: 0.75; }
+            /* Bottom bar */
+            .f-bottom {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding-top: 28px;
+                padding-top: 24px;
                 flex-wrap: wrap;
-                gap: 16px;
+                gap: 12px;
             }
-            .footer-copy {
+            .f-copy {
                 font-size: 11px;
                 font-weight: 300;
-                color: rgba(255,255,255,0.2);
+                color: rgba(255,255,255,0.18);
                 margin: 0;
             }
-            .footer-bottom-links {
-                display: flex;
-                gap: 24px;
-            }
-            .footer-bottom-links a {
+            .f-legal { display: flex; gap: 20px; }
+            .f-legal a {
                 font-size: 11px;
-                color: rgba(255,255,255,0.2);
+                color: rgba(255,255,255,0.18);
                 text-decoration: none;
-                transition: color 0.22s;
+                transition: color 0.2s;
             }
-            .footer-bottom-links a:hover { color: rgba(255,255,255,0.5); }
-            @media (max-width: 900px) {
-                .footer-inner { padding: 60px 32px 40px; }
-                .footer-main {
+            .f-legal a:hover { color: rgba(255,255,255,0.45); }
+            /* Responsive */
+            @media (max-width: 768px) {
+                .footer-wrap { padding: 56px 24px 36px; }
+                .footer-grid {
                     grid-template-columns: 1fr 1fr;
-                    gap: 40px;
-                }
-            }
-            @media (max-width: 560px) {
-                .footer-inner { padding: 48px 20px 32px; }
-                .footer-main {
-                    grid-template-columns: 1fr;
                     gap: 36px;
-                    padding-bottom: 40px;
                 }
-                .footer-brand-desc { max-width: 100%; }
+                .f-brand { grid-column: 1 / -1; }
+                .f-desc { max-width: 100%; }
+            }
+            @media (max-width: 480px) {
+                .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+                .f-brand { grid-column: auto; }
             }
         </style>
 
-        <div class="footer-inner">
-            <div class="footer-main">
+        <div class="footer-wrap">
+            <div class="footer-grid">
+
                 <!-- Brand -->
-                <div>
-                    <h2 class="footer-brand-name">GROME</h2>
-                    <p class="footer-brand-desc">Сеть мужских парикмахерских в Москве. Качество, возведённое в абсолют.</p>
-                    <div class="footer-socials">
-                        <a href="https://t.me/grometeam" target="_blank" class="footer-social-btn" aria-label="Telegram">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.203-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+                <div class="f-brand">
+                    <h2 class="f-logo">GROME</h2>
+                    <p class="f-desc">Сеть мужских парикмахерских в Москве. Качество, возведённое в абсолют.</p>
+                    <div class="f-socials">
+                        <a href="https://t.me/grometeam" target="_blank" class="f-soc" aria-label="Telegram">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.203-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
                         </a>
-                        <a href="tel:+78001012928" class="footer-social-btn" aria-label="Позвонить">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+                        <a href="tel:+78001012928" class="f-soc" aria-label="Телефон">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
                         </a>
-                        <a href="https://n2015703.yclients.com" target="_top" class="footer-social-btn" aria-label="Запись онлайн">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <a href="https://n2015703.yclients.com" target="_top" class="f-soc" aria-label="Запись">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         </a>
                     </div>
                 </div>
 
                 <!-- Navigation -->
                 <div>
-                    <p class="footer-col-label">Навигация</p>
-                    <div class="footer-links">
+                    <p class="f-col-head">Навигация</p>
+                    <div class="f-links">
                         <a href="#advantages">Преимущества</a>
-                        <a href="#locations">Локации</a>
+                        <a href="#gallery">Атмосфера</a>
                         <a href="#pricing">Цены</a>
-                        <a href="#barbers">Команда</a>
+                        <a href="#locations">Локации</a>
                     </div>
                 </div>
 
                 <!-- Contact -->
                 <div>
-                    <p class="footer-col-label">Связь</p>
-                    <div class="footer-links">
+                    <p class="f-col-head">Контакты</p>
+                    <div class="f-links">
                         <a href="tel:+78001012928">8 (800) 101-29-28</a>
                         <a href="https://t.me/grometeam" target="_blank">Telegram</a>
                     </div>
+                    <a href="https://n2015703.yclients.com" target="_top" class="f-book-link">
+                        Записаться онлайн →
+                    </a>
                 </div>
 
-                <!-- CTA -->
-                <div>
-                    <p class="footer-col-label">Запись</p>
-                    <a href="https://n2015703.yclients.com" target="_top" class="footer-cta-btn">Записаться →</a>
-                    <p class="footer-cta-note">Стрижка за 30 минут.<br>Без ожидания.</p>
-                </div>
             </div>
 
-            <!-- Bottom bar -->
-            <div class="footer-bottom">
-                <p class="footer-copy">© 2026 GROME Barbershop. All rights reserved.</p>
-                <div class="footer-bottom-links">
+            <!-- Bottom -->
+            <div class="f-bottom">
+                <p class="f-copy">© 2026 GROME Barbershop. All rights reserved.</p>
+                <div class="f-legal">
                     <a href="#">Privacy</a>
                     <a href="#">Terms</a>
                 </div>
@@ -760,7 +732,7 @@
             const cards = Array.from(carouselSpinner.querySelectorAll('.carousel-card'));
             const numCards = cards.length;
             const theta = 360 / numCards;
-            const radius = Math.round((360 / 2) / Math.tan(Math.PI / numCards)) + 72; 
+            const radius = Math.round((450 / 2) / Math.tan(Math.PI / numCards)) + 90; 
             
             cards.forEach((card, i) => {
                 const angle = theta * i;
