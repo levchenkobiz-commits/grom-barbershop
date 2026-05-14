@@ -105,9 +105,27 @@
         @keyframes gOrb1{0%{transform:translate(0,0) scale(1)}25%{transform:translate(90px,50px) scale(1.08)}55%{transform:translate(140px,-30px) scale(.96)}80%{transform:translate(50px,80px) scale(1.04)}100%{transform:translate(0,0) scale(1)}}
         @keyframes gOrb2{0%{transform:translate(0,0) scale(1)}30%{transform:translate(-80px,70px) scale(1.06)}60%{transform:translate(-130px,-40px) scale(.93)}85%{transform:translate(-40px,50px) scale(1.02)}100%{transform:translate(0,0) scale(1)}}
         @keyframes gOrb3{0%{transform:translate(0,0) scale(1)}35%{transform:translate(70px,-60px) scale(1.12)}65%{transform:translate(-50px,40px) scale(.9)}100%{transform:translate(0,0) scale(1)}}
+        @keyframes heroSmokeRise{0%{opacity:0;transform:translateY(80px)}70%{opacity:1;transform:translateY(-8px)}100%{opacity:1;transform:translateY(0)}}
+        @keyframes heroSmokePulse{0%,100%{opacity:1;transform:scaleX(1)}50%{opacity:0.72;transform:scaleX(1.04)}}
         @keyframes gFadeIn { to { opacity: 1; } }
         @keyframes gGrowLine { to { height: 36px; opacity: 1; } }
         @keyframes gLetterReveal { 0% { opacity: 0; transform: translateY(110%); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* ── Map Train-Slide Entrance (from far left) ── */
+        @keyframes mapPendulumIn {
+            /* Fully off-screen left, invisible */
+            0%   { opacity: 0;   transform: translateX(-110vw) scale(0.96); }
+            /* Appear while still flying in */
+            8%   { opacity: 1;   transform: translateX(-110vw) scale(0.96); }
+            /* Slam through center, overshoot right */
+            60%  { opacity: 1;   transform: translateX(20px)   scale(1.008); }
+            /* Bounce back */
+            76%  { opacity: 1;   transform: translateX(-7px)   scale(1); }
+            /* Tiny forward */
+            89%  { opacity: 1;   transform: translateX(2px)    scale(1); }
+            /* Rest */
+            100% { opacity: 1;   transform: translateX(0)      scale(1); }
+        }
     </style>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
@@ -141,6 +159,20 @@
         <div class="hero-orb hero-orb-1"></div>
         <div class="hero-orb hero-orb-2"></div>
         <div class="hero-orb hero-orb-3"></div>
+        <!-- Lime gradient sweep: Unicorn Lab style radial from bottom -->
+        <div style="
+            position:absolute;
+            bottom:0;
+            left:0;
+            right:0;
+            height:100%;
+            background:
+                radial-gradient(ellipse 90% 55% at 50% 100%, rgba(198,255,0,0.52) 0%, rgba(198,255,0,0.28) 22%, rgba(198,255,0,0.10) 45%, rgba(198,255,0,0.02) 65%, transparent 78%),
+                radial-gradient(ellipse 140% 35% at 50% 100%, rgba(198,255,0,0.18) 0%, rgba(198,255,0,0.06) 40%, transparent 60%);
+            pointer-events:none;
+            z-index:1;
+            animation: heroSmokeRise 3.8s cubic-bezier(0.16, 1, 0.3, 1) 2.6s both, heroSmokePulse 10s ease-in-out 7s infinite;
+        "></div>
         <div class="hero-scene-anim">
             <div class="hero-eyebrow-anim">Мужская парикмахерская · Москва</div>
             <div class="hero-headline-anim" id="gHeadline"></div>
@@ -160,7 +192,7 @@
 
 
     <!-- LOGO TAPE (Subtle) -->
-    <div class="logo-tape scroll-reveal">
+    <div class="logo-tape scroll-reveal" style="background:#000; border-top:none; border-bottom:1px solid rgba(255,255,255,0.07);">
         <div class="tape-track">
             <span>АЛЕКСЕЕВСКАЯ</span> <span class="dot">•</span>
             <span>ТЕКСТИЛЬЩИКИ</span> <span class="dot">•</span>
@@ -175,14 +207,9 @@
 
     <!-- ADVANTAGES (Bento Grid Style) -->
     <section class="section-layout" id="advantages">
-            <div class="sc" style="--left:18%;--dur:24s;--delay:-8s;--sz:36px;--op:0.030;--rot:-12deg"></div>
-            <div class="sc" style="--left:32%;--dur:28s;--delay:-4s;--sz:62px;--op:0.045;--rot:5deg"></div>
-            <div class="sc" style="--left:48%;--dur:26s;--delay:-14s;--sz:42px;--op:0.032;--rot:-20deg"></div>
-            <div class="sc" style="--left:62%;--dur:32s;--delay:-2s;--sz:55px;--op:0.040;--rot:30deg"></div>
-            <div class="sc" style="--left:75%;--dur:22s;--delay:-10s;--sz:38px;--op:0.028;--rot:-8deg"></div>
-            <div class="sc" style="--left:88%;--dur:29s;--delay:-18s;--sz:50px;--op:0.036;--rot:15deg"></div>
-            <div class="sc" style="--left:25%;--dur:27s;--delay:-21s;--sz:44px;--op:0.033;--rot:-25deg"></div>
-        </div>
+            <div class="hero-orb" style="width:600px;height:360px;top:-10%;left:-15%;background:radial-gradient(ellipse at center,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 40%,transparent 70%);filter:blur(55px);animation:gOrb1 26s ease-in-out infinite;z-index:0;"></div>
+            <div class="hero-orb" style="width:440px;height:300px;top:50%;right:-10%;background:radial-gradient(ellipse at center,rgba(198,255,0,.03) 0%,rgba(198,255,0,.01) 45%,transparent 70%);filter:blur(65px);animation:gOrb2 32s ease-in-out infinite;z-index:0;"></div>
+            <div class="hero-orb" style="width:300px;height:220px;bottom:10%;left:35%;background:radial-gradient(ellipse at center,rgba(255,255,255,.032) 0%,transparent 65%);filter:blur(45px);animation:gOrb3 20s ease-in-out infinite;z-index:0;"></div>
         <div class="container">
             <div class="section-head scroll-reveal">
                 <h2 class="section-title">ПОЧЕМУ GROME?</h2>
@@ -217,8 +244,8 @@
                 <div class="bento-card col-span-2 bento-highlight scroll-reveal delay-4">
                     <div class="bento-content horizontal">
                         <div class="promo-text-wrap">
-                            <h3 class="bento-title">5-я Стрижка Бесплатно</h3>
-                            <p class="bento-text">Умная система лояльности. Каждый пятый визит оплачен нами.</p>
+                            <h3 class="bento-title">Кэшбэк 100₽ с каждой стрижки</h3>
+                            <p class="bento-text">Умная система лояльности. Каждый визит — плюс 100₽ на счёт.</p>
                         </div>
                         <div class="bento-action">
                             <a href="https://n2015703.yclients.com" class="framer-btn dark">Активировать</a>
@@ -230,7 +257,9 @@
     </section>
 
     <!-- PRICING -->
-    <section class="section-layout" id="pricing">
+    <section class="section-layout" id="pricing" style="position:relative; overflow:hidden;">
+        <div class="hero-orb" style="width:650px;height:380px;top:-5%;right:-14%;background:radial-gradient(ellipse at center,rgba(198,255,0,.028) 0%,rgba(198,255,0,.009) 45%,transparent 68%);filter:blur(60px);animation:gOrb1 29s ease-in-out infinite;z-index:0;"></div>
+        <div class="hero-orb" style="width:480px;height:300px;bottom:0%;left:-10%;background:radial-gradient(ellipse at center,rgba(255,255,255,.038) 0%,transparent 65%);filter:blur(50px);animation:gOrb3 23s ease-in-out infinite;z-index:0;"></div>
         <div class="container container-sm">
             <div class="section-head text-center">
                 <h2 class="section-title">ПРАЙС</h2>
@@ -294,6 +323,8 @@
             </div>
     <!-- RESPONSIVE GALLERY SECTION -->
     <section class="section-layout" id="gallery" style="position: relative; overflow: hidden; padding: 100px 0 16px 0;">
+        <div class="hero-orb" style="width:700px;height:400px;top:5%;left:-18%;background:radial-gradient(ellipse at center,rgba(255,255,255,.035) 0%,transparent 65%);filter:blur(60px);animation:gOrb2 30s ease-in-out infinite;z-index:0;"></div>
+        <div class="hero-orb" style="width:500px;height:320px;bottom:5%;right:-12%;background:radial-gradient(ellipse at center,rgba(198,255,0,.025) 0%,transparent 60%);filter:blur(70px);animation:gOrb1 24s ease-in-out infinite;z-index:0;"></div>
         <div class="container">
             <div class="section-head text-center" style="margin-bottom: 4rem;">
                 <h2 class="section-title">АТМОСФЕРА</h2>
@@ -402,170 +433,250 @@
         </style>
     </section>
 
-    <!-- HUGE CALL TO ACTION & LOCATIONS MAP -->
-    <section class="section-layout" id="locations" style="padding-top: 3rem; padding-bottom: 0;">
-        <div class="container text-center text-center" style="margin-bottom: 3rem;">
-            <h2 class="section-title scroll-reveal">ЛОКАЦИИ И КОНТАКТЫ</h2>
+    <!-- LOCATIONS MAP SECTION -->
+    <section id="locations" style="padding: 80px 0 0; background: #000; position: relative; overflow: hidden;">
+        
+        <!-- Section heading -->
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 40px 48px;">
+            <p class="scroll-reveal" style="font-family: 'Unbounded', sans-serif; font-size: 11px; letter-spacing: 0.3em; color: rgba(255,255,255,0.2); text-transform: uppercase; margin: 0 0 12px;">6 точек · Москва</p>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
+                <h2 class="section-title scroll-reveal" style="margin: 0;">ЛОКАЦИИ</h2>
+                <a href="https://n2015703.yclients.com" target="_top" class="scroll-reveal delay-2"
+                   style="font-family: 'Unbounded', sans-serif; font-size: 12px; color: #C6FF00; text-decoration: none; border: 1px solid rgba(198,255,0,0.3); padding: 12px 24px; border-radius: 99px; transition: all 0.3s; white-space: nowrap;"
+                   onmouseover="this.style.background='rgba(198,255,0,0.1)'" onmouseout="this.style.background='transparent'">
+                    Записаться →
+                </a>
+            </div>
         </div>
+
+        <!-- Mobile chips -->
         <div id="location-buttons" class="location-chips scroll-reveal delay-1 mobile-only" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
 
-        <!-- Locations board + map wrapper (desktop only) -->
-        <div class="locations-layout desktop-only">
-            <div class="locations-board" id="locations-board"></div>
-            <div id="map" style="flex:1; min-width:0; height:100%; transition: opacity 0.3s ease-in-out; background: #0f0f0f;"></div>
+        <!-- Desktop layout: sidebar + map -->
+        <div class="locations-map-outer desktop-only">
+            <div class="locations-layout">
+                <div class="locations-board" id="locations-board"></div>
+                <div id="map" style="flex:1; min-width:0; width:100%; height:100%; transition: opacity 0.3s ease-in-out; background: #0a0a0a;"></div>
+            </div>
         </div>
+
         <style>
-            /* Yandex Map Native Dark Mode Overlay - Keeps markers their original neon color! */
+            /* === Yandex Map Dark Mode === */
             #map [class*="-ground-pane"] {
-                filter: grayscale(100%) invert(100%) contrast(1.15) brightness(0.85);
+                filter: grayscale(100%) invert(100%) contrast(1.1) brightness(0.8);
             }
-            #map ymaps[class*="-map-bg"] {
-                background: #0f0f0f !important;
+            #map ymaps[class*="-map-bg"] { background: #0a0a0a !important; }
+            #map ymaps[class*="-balloon"] { background: transparent !important; box-shadow: none !important; border: none !important; }
+            #map ymaps[class*="-balloon__layout"] { background: transparent !important; }
+            #map ymaps[class*="-balloon__content"] { background: transparent !important; padding: 0 !important; margin: 0 !important; }
+            #map ymaps[class*="-balloon__tail"] { display: none !important; }
+            #map ymaps[class*="-balloon__close-button"] { filter: invert(1) opacity(0.7) !important; }
+
+            /* === Animated border wrapper === */
+            .locations-map-outer {
+                position: relative;
+                padding: 2px;
+                border-radius: 24px;
+                margin: 0 32px;
+                background: conic-gradient(
+                    from var(--border-angle, 0deg),
+                    rgba(198,255,0,0)       0%,
+                    rgba(198,255,0,0)      30%,
+                    rgba(198,255,0,0.55)   45%,
+                    rgba(198,255,0,0.9)    50%,
+                    rgba(198,255,0,0.55)   55%,
+                    rgba(198,255,0,0)      70%,
+                    rgba(198,255,0,0)     100%
+                );
+                animation: borderRotate 7s linear infinite;
             }
-            
-            /* Glassmorphism overrides for Yandex balloon */
-            #map ymaps[class*="-balloon"] {
-                background: transparent !important;
-                box-shadow: none !important;
-                border: none !important;
+            @property --border-angle {
+                syntax: '<angle>';
+                inherits: false;
+                initial-value: 0deg;
             }
-            #map ymaps[class*="-balloon__layout"] {
-                background: transparent !important;
+            @keyframes borderRotate {
+                to { --border-angle: 360deg; }
             }
-            #map ymaps[class*="-balloon__content"] {
-                background: transparent !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            #map ymaps[class*="-balloon__tail"] {
-                display: none !important;
-            }
-            #map ymaps[class*="-balloon__close-button"] {
-                filter: invert(1) opacity(0.7) !important;
-            }
-            #map ymaps[class*="-balloon__close-button"]:hover {
-                filter: invert(1) opacity(1) !important;
-            }
-            /* ── Locations Layout ── */
+
+            /* === Layout === */
             .locations-layout {
                 display: flex;
-                height: 520px;
-                border-radius: 20px 20px 0 0;
+                width: 100%;
+                height: 680px;
                 overflow: hidden;
-                box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+                border-radius: 22px;
             }
+
+            /* === Sidebar === */
             .locations-board {
-                width: 296px;
+                width: 340px;
+                min-width: 340px;
                 flex-shrink: 0;
-                background: #070707;
+                background: #060606;
                 border-right: 1px solid rgba(255,255,255,0.06);
                 overflow-y: auto;
-                padding: 18px 12px 18px 14px;
+                padding: 24px 14px;
                 display: flex;
                 flex-direction: column;
-                gap: 4px;
+                gap: 6px;
                 scrollbar-width: thin;
-                scrollbar-color: rgba(255,255,255,0.08) transparent;
+                scrollbar-color: rgba(255,255,255,0.06) transparent;
             }
-            .locations-board::-webkit-scrollbar { width: 3px; }
-            .locations-board::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+            .locations-board::-webkit-scrollbar { width: 2px; }
+            .locations-board::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+            /* Sidebar header */
             .lb-header {
                 font-family: 'Unbounded', sans-serif;
                 font-size: 9px;
                 font-weight: 600;
-                letter-spacing: 0.22em;
-                color: rgba(255,255,255,0.18);
+                letter-spacing: 0.28em;
+                color: rgba(255,255,255,0.15);
                 text-transform: uppercase;
-                padding: 0 4px 14px;
+                padding: 0 8px 16px;
                 border-bottom: 1px solid rgba(255,255,255,0.05);
-                margin-bottom: 10px;
+                margin-bottom: 8px;
             }
+
+            /* Location card */
             .lb-card {
-                padding: 12px 12px 12px 14px;
-                border-radius: 11px;
-                border: 1px solid transparent;
-                background: transparent;
+                padding: 16px;
+                border-radius: 14px;
+                border: 1px solid rgba(255,255,255,0.04);
+                background: rgba(255,255,255,0.015);
                 cursor: pointer;
-                transition: background 0.2s, border-color 0.2s, transform 0.15s;
+                transition: all 0.2s ease;
                 text-align: left;
                 position: relative;
+                overflow: hidden;
+            }
+            .lb-card::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(198,255,0,0.04) 0%, transparent 60%);
+                opacity: 0;
+                transition: opacity 0.3s;
             }
             .lb-card:hover {
-                background: rgba(255,255,255,0.03);
-                border-color: rgba(255,255,255,0.09);
+                background: rgba(255,255,255,0.04);
+                border-color: rgba(255,255,255,0.12);
+                transform: translateX(3px);
             }
+            .lb-card:hover::after { opacity: 1; }
             .lb-card.active {
-                background: rgba(198,255,0,0.05);
-                border-color: rgba(198,255,0,0.3);
+                background: rgba(198,255,0,0.06);
+                border-color: rgba(198,255,0,0.28);
+                transform: translateX(0);
             }
+            .lb-card.active::after { opacity: 1; }
             .lb-card.active::before {
                 content: '';
                 position: absolute;
-                left: 0; top: 50%;
-                transform: translateY(-50%);
-                width: 3px; height: 60%;
-                background: #C6FF00;
-                border-radius: 0 2px 2px 0;
+                left: 0; top: 20%; bottom: 20%;
+                width: 3px;
+                background: linear-gradient(180deg, #C6FF00, rgba(198,255,0,0.4));
+                border-radius: 0 3px 3px 0;
             }
+
+            /* Metro badge */
             .lb-metro {
                 display: flex;
                 align-items: center;
-                gap: 6px;
-                margin-bottom: 5px;
+                gap: 8px;
+                margin-bottom: 8px;
             }
             .lb-metro-dot {
-                width: 16px; height: 16px;
+                width: 20px; height: 20px;
                 border-radius: 50%;
                 background: #C6FF00;
                 color: #000;
                 font-family: 'Unbounded', sans-serif;
-                font-size: 8px;
+                font-size: 9px;
                 font-weight: 700;
                 display: flex; align-items: center; justify-content: center;
                 flex-shrink: 0;
+                box-shadow: 0 0 10px rgba(198,255,0,0.3);
             }
             .lb-metro-name {
                 font-family: 'Unbounded', sans-serif;
                 font-size: 10px;
                 font-weight: 300;
-                color: rgba(255,255,255,0.35);
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                color: rgba(255,255,255,0.3);
+                letter-spacing: 0.05em;
             }
+
+            /* Card title */
             .lb-name {
                 font-family: 'Unbounded', sans-serif;
-                font-size: 12px;
-                font-weight: 600;
-                color: rgba(255,255,255,0.88);
-                margin-bottom: 4px;
-                line-height: 1.3;
+                font-size: 14px;
+                font-weight: 700;
+                color: rgba(255,255,255,0.92);
+                margin-bottom: 6px;
+                line-height: 1.2;
+                letter-spacing: -0.01em;
             }
+
+            /* Address */
             .lb-addr {
-                font-family: 'Inter', sans-serif;
-                font-size: 11px;
+                font-family: 'Inter', 'Unbounded', sans-serif;
+                font-size: 12px;
                 font-weight: 400;
-                color: rgba(255,255,255,0.3);
-                line-height: 1.4;
+                color: rgba(255,255,255,0.28);
+                line-height: 1.5;
+                margin-bottom: 0;
             }
+
+            /* Book button inside card */
+            .lb-book {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 12px;
+                font-family: 'Unbounded', sans-serif;
+                font-size: 10px;
+                font-weight: 600;
+                color: #C6FF00;
+                text-decoration: none;
+                background: rgba(198,255,0,0.08);
+                border: 1px solid rgba(198,255,0,0.2);
+                padding: 7px 14px;
+                border-radius: 99px;
+                opacity: 0;
+                transform: translateY(4px);
+                transition: all 0.25s ease;
+                pointer-events: none;
+            }
+            .lb-card:hover .lb-book,
+            .lb-card.active .lb-book {
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+            .lb-book:hover {
+                background: rgba(198,255,0,0.15);
+                border-color: rgba(198,255,0,0.4);
+            }
+
+            /* Route link */
             .lb-route {
                 display: inline-block;
-                margin-top: 8px;
                 font-family: 'Inter', sans-serif;
                 font-size: 10px;
                 font-weight: 500;
-                color: #C6FF00;
+                color: rgba(255,255,255,0.4);
                 text-decoration: none;
                 opacity: 0;
                 transition: opacity 0.2s;
                 pointer-events: none;
+                margin-left: 8px;
             }
             .lb-card:hover .lb-route,
             .lb-card.active .lb-route {
                 opacity: 1;
                 pointer-events: auto;
             }
-
         </style>
 
         <div class="section-cta" style="border-radius: 0;">
@@ -582,11 +693,26 @@
     </section>
 
     <!-- FOOTER -->
-    <footer class="site-footer">
+    <footer class="site-footer" style="position:relative; overflow:hidden;">
+        <!-- Lime gradient sweep footer: exact copy of hero -->
+        <div style="
+            position:absolute;
+            bottom:0;
+            left:0;
+            right:0;
+            height:100%;
+            background:
+                radial-gradient(ellipse 90% 55% at 50% 100%, rgba(198,255,0,0.52) 0%, rgba(198,255,0,0.28) 22%, rgba(198,255,0,0.10) 45%, rgba(198,255,0,0.02) 65%, transparent 78%),
+                radial-gradient(ellipse 140% 35% at 50% 100%, rgba(198,255,0,0.18) 0%, rgba(198,255,0,0.06) 40%, transparent 60%);
+            pointer-events:none;
+            z-index:0;
+            animation: heroSmokeRise 4.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both, heroSmokePulse 12s ease-in-out 5s infinite;
+        "></div>
+        <div class="hero-orb" style="width:700px;height:420px;top:-15%;left:-15%;background:radial-gradient(ellipse at center,rgba(255,255,255,.032) 0%,transparent 65%);filter:blur(65px);animation:gOrb2 35s ease-in-out infinite;z-index:0;"></div>
+        <div class="hero-orb" style="width:500px;height:300px;bottom:0%;right:-10%;background:radial-gradient(ellipse at center,rgba(198,255,0,.022) 0%,transparent 60%);filter:blur(55px);animation:gOrb1 27s ease-in-out infinite;z-index:0;"></div>
         <style>
             .site-footer {
                 background: #000;
-                border-top: 1px solid rgba(255,255,255,0.07);
                 font-family: 'Unbounded', sans-serif;
                 position: relative;
             }
@@ -610,7 +736,6 @@
                 grid-template-columns: 1.6fr 1fr 1fr;
                 gap: 48px;
                 padding-bottom: 52px;
-                border-bottom: 1px solid rgba(255,255,255,0.07);
             }
             /* Brand col */
             .f-brand { }
@@ -768,7 +893,6 @@
     </footer>
 
     <script>
-        // Smooth scroll reveal using Intersection Observer
         const revealElements = document.querySelectorAll('.scroll-reveal');
         
         const revealOptions = {
@@ -786,8 +910,46 @@
         };
         
         const revealObserver = new IntersectionObserver(revealCallback, revealOptions);
-        
         revealElements.forEach(el => revealObserver.observe(el));
+
+        // ── MAP TRAIN-SLIDE ENTRANCE ──
+        (function() {
+            const mapOuter = document.querySelector('.locations-map-outer');
+            const section  = document.getElementById('locations');
+            if (!mapOuter || !section) return;
+
+            // Set initial off-screen state
+            mapOuter.style.opacity   = '0';
+            mapOuter.style.transform = 'translateX(-110vw) scale(0.96)';
+            mapOuter.style.transformOrigin = 'center center';
+            mapOuter.style.willChange = 'transform, opacity';
+
+            // Observe the SECTION (which is visible when scrolled to),
+            // not the block itself (which is clipped off-screen)
+            const obs = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    observer.unobserve(entry.target);
+
+                    // Temporarily allow overflow so block can fly in from outside
+                    section.style.overflow = 'visible';
+                    document.body.style.overflowX = 'hidden'; // prevent page-level scroll
+
+                    setTimeout(() => {
+                        mapOuter.style.animation = 'mapPendulumIn 1.1s cubic-bezier(0.12, 0, 0.2, 1) forwards';
+
+                        // Restore clip after animation ends
+                        setTimeout(() => {
+                            section.style.overflow = 'hidden';
+                            document.body.style.overflowX = '';
+                            mapOuter.style.willChange = 'auto';
+                        }, 1200);
+                    }, 40);
+                });
+            }, { threshold: 0.1 });
+
+            obs.observe(section);
+        })();
         
         // Mobile Menu Toggle Logic
         const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -898,8 +1060,45 @@
                 
                 e.preventDefault(); 
                 const delta = Math.sign(e.deltaY); 
-                targetRotation -= delta * (theta * 0.5); 
+                targetRotation -= delta * (theta * 0.5);
+
+                // Pause auto-rotate for 3s after manual interaction
+                clearTimeout(autoResumeTimer);
+                isUserInteracting = true;
+                autoResumeTimer = setTimeout(() => { isUserInteracting = false; }, 3000);
             }, { passive: false });
+
+            // ── AUTO-ROTATE: 0.12°/frame ≈ slow premium spin ──
+            let isUserInteracting = false;
+            let autoResumeTimer = null;
+            const AUTO_SPEED = 0.12; // degrees per frame
+
+            // Wrap animateCarousel to add auto-advance
+            cancelAnimationFrame(carouselAnimationFrame);
+            function animateCarouselAuto() {
+                if (!isUserInteracting) {
+                    targetRotation += AUTO_SPEED;
+                }
+                currentRotation += (targetRotation - currentRotation) * 0.05;
+                carouselSpinner.style.transform = `translateZ(-${radius}px) rotateY(${currentRotation}deg)`;
+
+                const normalizedRotation = ((currentRotation % 360) + 360) % 360;
+                cards.forEach((card, i) => {
+                    const cardAngle = (numCards - i) * theta % 360;
+                    let diff = Math.abs(normalizedRotation - cardAngle);
+                    if (diff > 180) diff = 360 - diff;
+                    const distFromCenter = diff / 180;
+                    const img = card.querySelector('img');
+                    if (img) {
+                        img.style.filter = `brightness(${1 - distFromCenter}) grayscale(${distFromCenter * 50}%)`;
+                        img.style.opacity = 1 - (distFromCenter * 0.4);
+                    }
+                });
+                requestAnimationFrame(animateCarouselAuto);
+            }
+            if (window.innerWidth >= 1024) {
+                animateCarouselAuto();
+            }
         }
 
 
