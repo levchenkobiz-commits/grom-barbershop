@@ -334,6 +334,1558 @@
         </div>
 
         <style>
+            #gallery { background: #000; }
+            #gallery > .hero-orb { display: none !important; }
+            @media (min-width: 1024px) {
+                .mobile-only { display: none !important; }
+            }
+            @media (max-width: 1023px) {
+                .desktop-only { display: none !important; }
+            }
+            
+            /* Carousel specific */
+            .carousel-card { position: absolute; width: 100%; height: 100%; left: 0; top: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); transition: filter 0.3s; background: transparent; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+            .carousel-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+        </style>
+
+        <!-- DESKTOP 3D CAROUSEL -->
+        <div class="carousel-container desktop-only" id="carouselContainer" style="max-width: 960px; margin: 0 auto; perspective: 1400px; -webkit-perspective: 1400px; height: 750px; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; cursor: grab; touch-action: pan-y;">
+            <div class="carousel-spinner" id="carouselSpinner" style="transform-style: preserve-3d; -webkit-transform-style: preserve-3d; width: 450px; height: 600px; position: relative; transition: transform 0.1s ease-out; -webkit-transition: -webkit-transform 0.1s ease-out;">
+                <div class="carousel-card"><img src="gallery_new_1.jpg" alt="Barber working"></div>
+                <div class="carousel-card"><img src="gallery_new_2.jpg" alt="Interior Details"></div>
+                <div class="carousel-card"><img src="gallery_new_4.jpg" alt="Haircut profile"></div>
+                <div class="carousel-card"><img src="barber_bg.jpg" alt="Barber Master"></div>
+                <div class="carousel-card"><img src="gallery_new_3.jpg" alt="Interior Side"></div>
+                <div class="carousel-card"><img src="gallery_new_5.jpg" alt="Waiting Area"></div>
+            </div>
+        </div>
+        
+        <!-- MOBILE BENTO GRID -->
+        <div class="masonry-gallery mobile-only" style="display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 200px; gap: 12px; padding: 0 16px; max-width: 1100px; margin: 0 auto; width: 100%; grid-auto-flow: dense;">
+            <div class="gallery-item g-large scroll-reveal delay-1">
+                <img src="gallery_new_1.jpg" alt="Barber Master">
+            </div>
+            <div class="gallery-item scroll-reveal delay-2">
+                <img src="gallery_new_2.jpg" alt="Interior Details">
+            </div>
+            <div class="gallery-item g-tall scroll-reveal delay-3">
+                <img src="barber_bg.jpg" alt="Barber working">
+            </div>
+            <div class="gallery-item scroll-reveal delay-4">
+                <img src="gallery_new_4.jpg" alt="Haircut profile">
+            </div>
+            <div class="gallery-item g-wide scroll-reveal delay-2">
+                <img src="gallery_new_3.jpg" alt="Interior Side">
+            </div>
+            <div class="gallery-item scroll-reveal delay-3">
+                <img src="gallery_new_5.jpg" alt="Waiting Area">
+            </div>
+            <div class="gallery-item scroll-reveal delay-4">
+                <img src="gallery_new_6.jpg" alt="Barber Detail">
+            </div>
+        </div>
+        
+        <style>
+            .gallery-item {
+                border-radius: 16px;
+                overflow: hidden;
+                position: relative;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+                border: 1px solid rgba(255,255,255,0.05);
+                transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
+                background: transparent;
+            }
+            .gallery-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+                filter: brightness(0.9) grayscale(20%);
+            }
+            .gallery-item:hover {
+                box-shadow: 0 20px 40px rgba(198,255,0,0.15);
+                border-color: rgba(198,255,0,0.3);
+                z-index: 10;
+            }
+            .gallery-item:hover img {
+                transform: scale(1.05);
+                filter: brightness(1.1) grayscale(0%);
+            }
+
+            /* Responsive Masonry Spanning */
+            .g-tall { grid-row: span 2; }
+            .g-wide { grid-column: span 2; }
+            .g-large { grid-row: span 2; grid-column: span 2; }
+
+            /* Desktop Scale Up */
+            @media (min-width: 768px) {
+                .masonry-gallery {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    grid-auto-rows: 275px !important;
+                    gap: 24px !important;
+                    padding: 0 40px !important;
+                }
+            }
+            /* Very Large Screen Adjusts */
+            @media (min-width: 1200px) {
+                .masonry-gallery {
+                    grid-auto-rows: 325px !important;
+                }
+            }
+        </style>
+    </section>
+
+    <!-- LOCATIONS MAP SECTION -->
+    <section id="locations" style="padding: 80px 0 0; background: #000; position: relative; overflow: hidden;">
+        
+        <!-- Section heading -->
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 40px 48px;">
+            <p class="scroll-reveal" style="font-family: 'Unbounded', sans-serif; font-size: 11px; letter-spacing: 0.3em; color: rgba(255,255,255,0.2); text-transform: uppercase; margin: 0 0 12px;">6 точек · Москва</p>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
+                <h2 class="section-title scroll-reveal" style="margin: 0;">ЛОКАЦИИ</h2>
+                <a href="https://n2015703.yclients.com" target="_top" class="scroll-reveal delay-2"
+                   style="font-family: 'Unbounded', sans-serif; font-size: 12px; color: #C6FF00; text-decoration: none; border: 1px solid rgba(198,255,0,0.3); padding: 12px 24px; border-radius: 99px; transition: all 0.3s; white-space: nowrap;"
+                   onmouseover="this.style.background='rgba(198,255,0,0.1)'" onmouseout="this.style.background='transparent'">
+                    Записаться →
+                </a>
+            </div>
+        </div>
+
+        <!-- Mobile chips -->
+        <div id="location-buttons" class="location-chips scroll-reveal delay-1 mobile-only" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; padding: 0 16px;"></div>
+
+        <!-- Desktop layout: sidebar + map -->
+        <div class="locations-map-outer desktop-only">
+            <div class="locations-layout">
+                <div class="locations-board" id="locations-board"></div>
+                <div id="map" style="flex:1; min-width:0; width:100%; height:100%; transition: opacity 0.3s ease-in-out; background: #0a0a0a;"></div>
+            </div>
+        </div>
+
+        <style>
+            /* === Yandex Map Dark Mode === */
+            #map [class*="-ground-pane"] {
+                filter: grayscale(100%) invert(100%) contrast(1.1) brightness(0.8);
+            }
+            #map ymaps[class*="-map-bg"] { background: #0a0a0a !important; }
+            #map ymaps[class*="-balloon"] { background: transparent !important; box-shadow: none !important; border: none !important; }
+            #map ymaps[class*="-balloon__layout"] { background: transparent !important; }
+            #map ymaps[class*="-balloon__content"] { background: transparent !important; padding: 0 !important; margin: 0 !important; }
+            #map ymaps[class*="-balloon__tail"] { display: none !important; }
+            #map ymaps[class*="-balloon__close-button"] { filter: invert(1) opacity(0.7) !important; }
+
+            /* === Animated border wrapper === */
+            .locations-map-outer {
+                position: relative;
+                padding: 2px;
+                border-radius: 24px;
+                margin: 0 32px;
+                background: conic-gradient(
+                    from var(--border-angle, 0deg),
+                    rgba(198,255,0,0)       0%,
+                    rgba(198,255,0,0)      30%,
+                    rgba(198,255,0,0.55)   45%,
+                    rgba(198,255,0,0.9)    50%,
+                    rgba(198,255,0,0.55)   55%,
+                    rgba(198,255,0,0)      70%,
+                    rgba(198,255,0,0)     100%
+                );
+                animation: borderRotate 7s linear infinite;
+            }
+            @property --border-angle {
+                syntax: '<angle>';
+                inherits: false;
+                initial-value: 0deg;
+            }
+            @keyframes borderRotate {
+                to { --border-angle: 360deg; }
+            }
+
+            /* === Layout === */
+            .locations-layout {
+                display: flex;
+                width: 100%;
+                height: 680px;
+                overflow: hidden;
+                border-radius: 22px;
+            }
+
+            /* === Sidebar === */
+            .locations-board {
+                width: 340px;
+                min-width: 340px;
+                flex-shrink: 0;
+                background: #060606;
+                border-right: 1px solid rgba(255,255,255,0.06);
+                overflow-y: auto;
+                padding: 24px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255,255,255,0.06) transparent;
+            }
+            .locations-board::-webkit-scrollbar { width: 2px; }
+            .locations-board::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+            /* Sidebar header */
+            .lb-header {
+                font-family: 'Unbounded', sans-serif;
+                font-size: 9px;
+                font-weight: 600;
+                letter-spacing: 0.28em;
+                color: rgba(255,255,255,0.15);
+                text-transform: uppercase;
+                padding: 0 8px 16px;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                margin-bottom: 8px;
+            }
+
+            /* Location card */
+            .lb-card {
+                padding: 16px;
+                border-radius: 14px;
+                border: 1px solid rgba(255,255,255,0.04);
+                background: rgba(255,255,255,0.015);
+                cursor: pointer;
+                transition: all 0.2s ease;
+                text-align: left;
+                position: relative;
+                overflow: hidden;
+            }
+            .lb-card::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(198,255,0,0.04) 0%, transparent 60%);
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            .lb-card:hover {
+                background: rgba(255,255,255,0.04);
+                border-color: rgba(255,255,255,0.12);
+                transform: translateX(3px);
+            }
+            .lb-card:hover::after { opacity: 1; }
+            .lb-card.active {
+                background: rgba(198,255,0,0.06);
+                border-color: rgba(198,255,0,0.28);
+                transform: translateX(0);
+            }
+            .lb-card.active::after { opacity: 1; }
+            .lb-card.active::before {
+                content: '';
+                position: absolute;
+                left: 0; top: 20%; bottom: 20%;
+                width: 3px;
+                background: linear-gradient(180deg, #C6FF00, rgba(198,255,0,0.4));
+                border-radius: 0 3px 3px 0;
+            }
+
+            /* Metro badge */
+            .lb-metro {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+            .lb-metro-dot {
+                width: 20px; height: 20px;
+                border-radius: 50%;
+                background: #C6FF00;
+                color: #000;
+                font-family: 'Unbounded', sans-serif;
+                font-size: 9px;
+                font-weight: 700;
+                display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0;
+                box-shadow: 0 0 10px rgba(198,255,0,0.3);
+            }
+            .lb-metro-name {
+                font-family: 'Unbounded', sans-serif;
+                font-size: 10px;
+                font-weight: 300;
+                color: rgba(255,255,255,0.3);
+                letter-spacing: 0.05em;
+            }
+
+            /* Card title */
+            .lb-name {
+                font-family: 'Unbounded', sans-serif;
+                font-size: 14px;
+                font-weight: 700;
+                color: rgba(255,255,255,0.92);
+                margin-bottom: 6px;
+                line-height: 1.2;
+                letter-spacing: -0.01em;
+            }
+
+            /* Address */
+            .lb-addr {
+                font-family: 'Inter', 'Unbounded', sans-serif;
+                font-size: 12px;
+                font-weight: 400;
+                color: rgba(255,255,255,0.28);
+                line-height: 1.5;
+                margin-bottom: 0;
+            }
+
+            /* Book button inside card */
+            .lb-book {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 12px;
+                font-family: 'Unbounded', sans-serif;
+                font-size: 10px;
+                font-weight: 600;
+                color: #C6FF00;
+                text-decoration: none;
+                background: rgba(198,255,0,0.08);
+                border: 1px solid rgba(198,255,0,0.2);
+                padding: 7px 14px;
+                border-radius: 99px;
+                opacity: 0;
+                transform: translateY(4px);
+                transition: all 0.25s ease;
+                pointer-events: none;
+            }
+            .lb-card:hover .lb-book,
+            .lb-card.active .lb-book {
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+            .lb-book:hover {
+                background: rgba(198,255,0,0.15);
+                border-color: rgba(198,255,0,0.4);
+            }
+
+            /* Route link */
+            .lb-route {
+                display: inline-block;
+                font-family: 'Inter', sans-serif;
+                font-size: 10px;
+                font-weight: 500;
+                color: rgba(255,255,255,0.4);
+                text-decoration: none;
+                opacity: 0;
+                transition: opacity 0.2s;
+                pointer-events: none;
+                margin-left: 8px;
+            }
+            .lb-card:hover .lb-route,
+            .lb-card.active .lb-route {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        </style>
+
+        <div class="section-cta" style="border-radius: 0;">
+            <div class="container text-center">
+                <h2 class="cta-heading scroll-reveal">ВРЕМЯ<br>ЗАПИСАТЬСЯ</h2>
+                <div class="scroll-reveal delay-1 mt-4">
+                    <a href="https://n2015703.yclients.com" class="framer-btn primary super">
+                        Запись онлайн
+                        <span class="btn-glow-effect"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer" style="position:relative; overflow:hidden;">
+        <!-- Lime gradient sweep footer: exact copy of hero -->
+        <div style="
+            position:absolute;
+            bottom:0;
+            left:0;
+            right:0;
+            height:100%;
+            background:
+                linear-gradient(180deg, transparent 0%, rgba(198,255,0,0.05) 34%, rgba(198,255,0,0.24) 100%),
+                radial-gradient(ellipse 190% 86% at 50% 110%, rgba(198,255,0,0.52) 0%, rgba(198,255,0,0.26) 34%, rgba(198,255,0,0.08) 62%, transparent 82%);
+            pointer-events:none;
+            z-index:0;
+            animation: heroSmokeRise 4.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both, heroSmokePulse 12s ease-in-out 5s infinite;
+        "></div>
+        <div class="hero-orb" style="width:700px;height:420px;top:-15%;left:-15%;background:radial-gradient(ellipse at center,rgba(255,255,255,.032) 0%,transparent 65%);filter:blur(65px);animation:gOrb2 35s ease-in-out infinite;z-index:0;"></div>
+        <div class="hero-orb" style="width:500px;height:300px;bottom:0%;right:-10%;background:radial-gradient(ellipse at center,rgba(198,255,0,.022) 0%,transparent 60%);filter:blur(55px);animation:gOrb1 27s ease-in-out infinite;z-index:0;"></div>
+        <style>
+            .site-footer {
+                background: #000;
+                font-family: 'Unbounded', sans-serif;
+                position: relative;
+            }
+            /* Thin lime accent line at top */
+            .site-footer::before {
+                content: '';
+                position: absolute;
+                top: 0; left: 50%;
+                transform: translateX(-50%);
+                width: 100%; height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(198,255,0,0.32), transparent);
+            }
+            .footer-wrap {
+                width: 100%;
+                max-width: 1280px;
+                margin: 0 auto;
+                padding: 72px 48px 44px;
+            }
+            /* 3-column: brand | nav | contact+booking */
+            .footer-grid {
+                display: grid;
+                grid-template-columns: 1.6fr 1fr 1fr;
+                gap: 48px;
+                padding-bottom: 52px;
+            }
+            /* Brand col */
+            .f-brand { }
+            .f-logo {
+                font-family: 'Akony', sans-serif;
+                font-size: clamp(28px, 3.5vw, 44px);
+                color: #fff;
+                letter-spacing: 0.02em;
+                line-height: 1;
+                font-weight: normal;
+                margin: 0 0 16px;
+            }
+            .f-desc {
+                font-size: 12px;
+                font-weight: 300;
+                color: rgba(255,255,255,0.32);
+                line-height: 1.9;
+                max-width: 220px;
+                margin: 0 0 28px;
+            }
+            .f-socials { display: flex; gap: 10px; }
+            .f-soc {
+                width: 38px; height: 38px;
+                border-radius: 50%;
+                border: 1px solid rgba(255,255,255,0.1);
+                display: flex; align-items: center; justify-content: center;
+                color: rgba(255,255,255,0.4);
+                text-decoration: none;
+                transition: border-color 0.25s, color 0.25s, transform 0.2s;
+            }
+            .f-soc:hover { border-color: #C6FF00; color: #C6FF00; transform: translateY(-2px); }
+            /* Column header */
+            .f-col-head {
+                font-size: 9px;
+                font-weight: 600;
+                letter-spacing: 0.24em;
+                text-transform: uppercase;
+                color: rgba(255,255,255,0.2);
+                margin: 0 0 20px;
+            }
+            .f-links { display: flex; flex-direction: column; gap: 13px; }
+            .f-links a {
+                font-size: 13px;
+                font-weight: 300;
+                color: rgba(255,255,255,0.48);
+                text-decoration: none;
+                transition: color 0.2s;
+                line-height: 1;
+            }
+            .f-links a:hover { color: #fff; }
+            /* Contact col: phone + tg + booking link */
+            .f-book-link {
+                display: inline-block;
+                margin-top: 20px;
+                font-size: 13px;
+                font-weight: 500;
+                color: #C6FF00;
+                text-decoration: none;
+                transition: opacity 0.2s;
+            }
+            .f-book-link:hover { opacity: 0.75; }
+            /* Bottom bar */
+            .f-bottom {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-top: 24px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .f-copy {
+                font-size: 11px;
+                font-weight: 300;
+                color: rgba(255,255,255,0.18);
+                margin: 0;
+            }
+            .f-legal { display: flex; gap: 20px; }
+            .f-legal a {
+                font-size: 11px;
+                color: rgba(255,255,255,0.18);
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            .f-legal a:hover { color: rgba(255,255,255,0.45); }
+            /* Responsive */
+            @media (max-width: 768px) {
+                .footer-wrap { padding: 56px 24px 36px; }
+                .footer-grid {
+                    grid-template-columns: 1fr 1fr;
+                    gap: 36px;
+                }
+                .f-brand { grid-column: 1 / -1; }
+                .f-desc { max-width: 100%; }
+            }
+            @media (max-width: 480px) {
+                .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+                .f-brand { grid-column: auto; }
+            }
+        </style>
+
+        <div class="footer-wrap">
+            <div class="footer-grid">
+
+                <!-- Brand -->
+                <div class="f-brand">
+                    <h2 class="f-logo">GROME</h2>
+                    <p class="f-desc">Сеть мужских парикмахерских в Москве. Качество, возведённое в абсолют.</p>
+                    <div class="f-socials">
+                        <a href="https://t.me/grometeam" target="_blank" class="f-soc" aria-label="Telegram">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.203-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+                        </a>
+                        <a href="tel:+78001012928" class="f-soc" aria-label="Телефон">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+                        </a>
+                        <a href="https://n2015703.yclients.com" target="_top" class="f-soc" aria-label="Запись">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div>
+                    <p class="f-col-head">Навигация</p>
+                    <div class="f-links">
+                        <a href="#advantages">Преимущества</a>
+                        <a href="#gallery">Атмосфера</a>
+                        <a href="#pricing">Цены</a>
+                        <a href="#locations">Локации</a>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <p class="f-col-head">Контакты</p>
+                    <div class="f-links">
+                        <a href="tel:+78001012928">8 (800) 101-29-28</a>
+                        <a href="https://t.me/grometeam" target="_blank">Telegram</a>
+                    </div>
+                    <a href="https://n2015703.yclients.com" target="_top" class="f-book-link">
+                        Записаться онлайн →
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- Bottom -->
+            <div class="f-bottom">
+                <p class="f-copy">© 2026 GROME Barbershop. All rights reserved.</p>
+                <div class="f-legal">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <a class="telegram-float" href="https://t.me/grometeam" target="_blank" rel="noopener" aria-label="Telegram">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.203-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+    </a>
+    <style>
+        .telegram-float {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #C6FF00;
+            color: #000;
+            box-shadow: 0 18px 42px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.18);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(18px) scale(0.94);
+            transition: opacity .28s ease, transform .28s cubic-bezier(.16,1,.3,1);
+        }
+        .telegram-float.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        @media (max-width: 768px) {
+            .telegram-float { right: 16px; bottom: 16px; width: 52px; height: 52px; }
+        }
+    </style>
+
+    <script>
+        const revealElements = document.querySelectorAll('.scroll-reveal');
+        
+        const revealOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+        
+        const revealCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        };
+        
+        const revealObserver = new IntersectionObserver(revealCallback, revealOptions);
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // ── MAP TRAIN-SLIDE ENTRANCE ──
+        (function() {
+            const mapOuter = document.querySelector('.locations-map-outer');
+            const section  = document.getElementById('locations');
+            if (!mapOuter || !section) return;
+
+            // Set initial off-screen state
+            mapOuter.style.opacity   = '0';
+            mapOuter.style.transform = 'translateX(-110vw) scale(0.96)';
+            mapOuter.style.transformOrigin = 'center center';
+            mapOuter.style.willChange = 'transform, opacity';
+
+            // Observe the SECTION (which is visible when scrolled to),
+            // not the block itself (which is clipped off-screen)
+            const obs = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    observer.unobserve(entry.target);
+
+                    // Temporarily allow overflow so block can fly in from outside
+                    section.style.overflow = 'visible';
+                    document.body.style.overflowX = 'hidden'; // prevent page-level scroll
+
+                    setTimeout(() => {
+                        mapOuter.style.animation = 'mapPendulumIn 1.1s cubic-bezier(0.12, 0, 0.2, 1) forwards';
+
+                        // Restore clip after animation ends
+                        setTimeout(() => {
+                            section.style.overflow = 'hidden';
+                            document.body.style.overflowX = '';
+                            mapOuter.style.willChange = 'auto';
+                        }, 1200);
+                    }, 40);
+                });
+            }, { threshold: 0.1 });
+
+            obs.observe(section);
+        })();
+        
+        // Mobile Menu Toggle Logic
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.querySelector('.nav-links');
+        
+        if (mobileBtn && navLinks) {
+            mobileBtn.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+            
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                });
+            });
+        }
+        
+        // Header transparency on scroll
+        const header = document.querySelector('.header-nav');
+        // Hero Scroll Parallax (Colizeum-style)
+        const heroHeading = document.getElementById('hero-parallax-heading');
+        window.addEventListener('scroll', () => {
+            if (heroHeading) {
+                const scrolled = window.scrollY;
+                if (scrolled < window.innerHeight) {
+                    // Extreme movement: moves down VERY fast and scales up, then fades
+                    const opacity = Math.max(0, 1 - (scrolled / 400));
+                    const translateY = scrolled * 1.5; // moves down out of view very noticeably
+                    const scale = 1 + (scrolled * 0.002); // grows significantly
+                    
+                    heroHeading.style.transform = `translateY(${translateY}px) scale(${scale})`;
+                    heroHeading.style.opacity = opacity;
+                }
+            }
+            
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // ==========================================
+        // CINEMATIC PREMIUM ADDITIONS (Parallax & Reveals)
+        // ==========================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Native Scroll Parallax (Hardware Accelerated)
+            const parallaxElements = document.querySelectorAll('.parallax');
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                parallaxElements.forEach(el => {
+                    const speed = parseFloat(el.getAttribute('data-speed')) || 0.1;
+                    el.style.transform = `translate3d(0, ${-scrollY * speed}px, 0)`;
+                });
+            }, { passive: true });
+        });
+
+
+
+        // 3D Carousel Initialization & Wheel Logic
+        const carouselContainer = document.getElementById('carouselContainer');
+        const carouselSpinner = document.getElementById('carouselSpinner');
+        
+        if (carouselContainer && carouselSpinner) {
+            const cards = Array.from(carouselSpinner.querySelectorAll('.carousel-card'));
+            const numCards = cards.length;
+            const theta = 360 / numCards;
+            const radius = Math.round((450 / 2) / Math.tan(Math.PI / numCards)) + 90; 
+            
+            cards.forEach((card, i) => {
+                const angle = theta * i;
+                card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+            });
+            
+            let targetRotation = 0;
+            let currentRotation = 0;
+            let carouselAnimationFrame;
+            
+            function animateCarousel() {
+                currentRotation += (targetRotation - currentRotation) * 0.05;
+                carouselSpinner.style.transform = `translateZ(-${radius}px) rotateY(${currentRotation}deg)`;
+                
+                const normalizedRotation = ((currentRotation % 360) + 360) % 360;
+                cards.forEach((card, i) => {
+                    const cardAngle = (numCards - i) * theta % 360; 
+                    let diff = Math.abs(normalizedRotation - cardAngle);
+                    if (diff > 180) diff = 360 - diff;
+                    const distFromCenter = diff / 180;
+                    
+                    const img = card.querySelector('img');
+                    if (img) {
+                        img.style.filter = `brightness(${1 - distFromCenter}) grayscale(${distFromCenter * 50}%)`;
+                        img.style.opacity = 1 - (distFromCenter * 0.4);
+                    }
+                });
+                carouselAnimationFrame = requestAnimationFrame(animateCarousel);
+            }
+            
+            // Only start loop if element is visible (e.g. desktop)
+            if (window.innerWidth >= 1024) {
+                animateCarousel();
+            }
+
+            carouselContainer.addEventListener('wheel', (e) => {
+                // Ignore scroll hijack on mobile completely
+                if (window.innerWidth < 1024) return;
+                
+                e.preventDefault(); 
+                const delta = Math.sign(e.deltaY); 
+                targetRotation -= delta * (theta * 0.5);
+
+                // Pause auto-rotate for 3s after manual interaction
+                clearTimeout(autoResumeTimer);
+                isUserInteracting = true;
+                autoResumeTimer = setTimeout(() => { isUserInteracting = false; }, 3000);
+            }, { passive: false });
+
+            // ── AUTO-ROTATE: 0.12°/frame ≈ slow premium spin ──
+            let isUserInteracting = false;
+            let autoResumeTimer = null;
+            const AUTO_SPEED = 0.12; // degrees per frame
+
+            // Wrap animateCarousel to add auto-advance
+            cancelAnimationFrame(carouselAnimationFrame);
+            function animateCarouselAuto() {
+                if (!isUserInteracting) {
+                    targetRotation += AUTO_SPEED;
+                }
+                currentRotation += (targetRotation - currentRotation) * 0.05;
+                carouselSpinner.style.transform = `translateZ(-${radius}px) rotateY(${currentRotation}deg)`;
+
+                const normalizedRotation = ((currentRotation % 360) + 360) % 360;
+                cards.forEach((card, i) => {
+                    const cardAngle = (numCards - i) * theta % 360;
+                    let diff = Math.abs(normalizedRotation - cardAngle);
+                    if (diff > 180) diff = 360 - diff;
+                    const distFromCenter = diff / 180;
+                    const img = card.querySelector('img');
+                    if (img) {
+                        img.style.filter = `brightness(${1 - distFromCenter}) grayscale(${distFromCenter * 50}%)`;
+                        img.style.opacity = 1 - (distFromCenter * 0.4);
+                    }
+                });
+                requestAnimationFrame(animateCarouselAuto);
+            }
+            if (window.innerWidth >= 1024) {
+                animateCarouselAuto();
+            }
+        }
+
+
+        // LOCATIONS DATA (Decoupled from Map API)
+        const locations = [
+            { id: "alx", coords: [55.807794, 37.638531], name: "ГРОМ - Алексеевская", label: "м. Алексеевская", address: "просп. Мира, 114", link: "https://yandex.ru/maps/-/CPV2Z8Ps" },
+            { id: "tex", coords: [55.708811, 37.732789], name: "ГРОМ - Текстильщики", label: "м. Текстильщики", address: "Волгоградский просп., 55", link: "https://yandex.ru/maps/-/CPV2ZPzu" },
+            { id: "rzp", coords: [55.716616, 37.792823], name: "ГРОМ - Рязанский проспект", label: "м. Рязанский проспект", address: "Рязанский просп., 46", link: "https://yandex.ru/maps/-/CPV26EZI" },
+            { id: "var", coords: [55.653537, 37.625522], name: "ГРОМ - Варшавская", label: "м. Варшавская", address: "Каширский проезд, 25к2", link: "https://yandex.ru/maps/-/CPB8AD87" },
+            { id: "par", coords: [55.789234, 37.749557], name: "ГРОМ - Партизанская", label: "м. Партизанская", address: "Измайловское шоссе, 69Б", link: "https://yandex.ru/maps/-/CPV26BKW" },
+            { id: "sok", coords: [55.805175, 37.514867], name: "ГРОМ - Сокол", label: "м. Сокол", address: "Ленинградский просп., 78к1", link: "https://yandex.ru/maps/-/CPRV5AOd" }
+        ];
+
+        // 1. RENDER CHIPS IMMEDIATELY (Fallback logic)
+        const buttonContainer = document.getElementById('location-buttons');
+        const renderedButtons = {}; // Keep track of buttons for map interaction
+        
+        if (buttonContainer) {
+            locations.forEach(loc => {
+                const finalLink = loc.link || `https://yandex.ru/maps/?pt=${loc.coords[1]},${loc.coords[0]}&z=17&l=map`;
+                
+                if (loc.label) {
+                    const btn = document.createElement('a');
+                    btn.href = finalLink;
+                    btn.target = "_blank";
+                    btn.rel = "noopener noreferrer";
+                    
+                    btn.style.display = "block";
+                    btn.style.textDecoration = "none";
+                    btn.style.width = "100%";
+                    btn.style.padding = "20px 24px";
+                    btn.style.borderRadius = "20px";
+                    btn.style.border = "1px solid rgba(198, 255, 0, 0.3)";
+                    btn.style.background = "linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(20,20,20,0.8) 100%)";
+                    btn.style.backdropFilter = "blur(10px)";
+                    btn.style.color = "rgba(255,255,255,0.9)";
+                    btn.style.cursor = "pointer";
+                    btn.style.fontFamily = "inherit";
+                    btn.style.fontSize = "16px";
+                    btn.style.fontWeight = "600";
+                    btn.style.transition = "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
+                    btn.style.marginBottom = "8px";
+                    btn.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
+                    btn.style.textAlign = "left";
+                    
+                    // Create inner flex layout
+                    btn.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="display: block; font-family: 'Unbounded', sans-serif; font-size: 14px; margin-bottom: 4px; color: #C6FF00;">${loc.name.replace('ГРОМ - ', '')}</span>
+                                <span style="display: block; font-size: 13px; color: #aaa; font-weight: 400;">${loc.label}</span>
+                            </div>
+                            <div style="background: rgba(198,255,0,0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #C6FF00;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
+                    `;
+                    
+                    btn.onmouseover = () => {
+                        btn.style.background = "#C6FF00";
+                        btn.style.color = "#000";
+                        btn.style.borderColor = "#C6FF00";
+                        btn.style.transform = "translateY(-4px)";
+                        btn.style.boxShadow = "0 12px 30px rgba(198,255,0,0.4)";
+                        const arrowBox = btn.querySelector('div > div > div:nth-child(2)');
+                        const mainText = btn.querySelector('div > div > div > span:nth-child(1)');
+                        const subText = btn.querySelector('div > div > div > span:nth-child(2)');
+                        if (arrowBox) { arrowBox.style.background = "rgba(0,0,0,0.1)"; arrowBox.style.color = "#000"; }
+                        if (mainText) { mainText.style.color = "#000"; }
+                        if (subText) { subText.style.color = "rgba(0,0,0,0.7)"; }
+                    };
+                    btn.onmouseout = () => {
+                        btn.style.background = "linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(20,20,20,0.8) 100%)";
+                        btn.style.color = "rgba(255,255,255,0.9)";
+                        btn.style.borderColor = "rgba(198, 255, 0, 0.3)";
+                        btn.style.transform = "translateY(0)";
+                        btn.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
+                        const arrowBox = btn.querySelector('div > div > div:nth-child(2)');
+                        const mainText = btn.querySelector('div > div > div > span:nth-child(1)');
+                        const subText = btn.querySelector('div > div > div > span:nth-child(2)');
+                        if (arrowBox) { arrowBox.style.background = "rgba(198,255,0,0.1)"; arrowBox.style.color = "#C6FF00"; }
+                        if (mainText) { mainText.style.color = "#C6FF00"; }
+                        if (subText) { subText.style.color = "#aaa"; }
+                    };
+                    
+                    buttonContainer.appendChild(btn);
+                    renderedButtons[loc.id] = btn;
+                }
+            });
+        }
+        
+        // Mobile Hard-Kill for Map
+        if (window.innerWidth <= 1024) {
+            const mapEl = document.getElementById('map');
+            if (mapEl) mapEl.remove();
+        }
+
+
+        // DESKTOP BRANCH BOARD
+        const board = document.getElementById('locations-board');
+        if (board) {
+            board.innerHTML = '<div class="lb-header">Филиалы</div>';
+            locations.forEach(function(loc) {
+                var finalLink = loc.link || ('https://yandex.ru/maps/?pt=' + loc.coords[1] + ',' + loc.coords[0] + '&z=17&l=map');
+                var card = document.createElement('div');
+                card.className = 'lb-card';
+                card.dataset.id = loc.id;
+                var metroName = loc.label.split(',')[0];
+                var shortName = loc.name.replace('ГРОМ - ', '');
+                card.innerHTML =
+                    '<div class="lb-metro">'
+                    + '<span class="lb-metro-dot">М</span>'
+                    + '<span class="lb-metro-name">' + metroName + '</span>'
+                    + '</div>'
+                    + '<div class="lb-name">' + shortName + '</div>'
+                    + '<div class="lb-addr">' + (loc.address || '') + '</div>'
+                    + '<a href="' + finalLink + '" class="lb-route" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 Маршрут →</a>';
+                card._loc = loc;
+                card._link = finalLink;
+                board.appendChild(card);
+            });
+        }
+
+        // 2. YANDEX MAP INIT (Enhancement)
+        if (typeof ymaps !== 'undefined' && window.innerWidth > 1024) {
+            ymaps.ready(function () {
+                var myMap = new ymaps.Map("map", {
+                    center: [55.753215, 37.622504], // Center of Moscow
+                    zoom: 10,
+                    controls: ['zoomControl']
+                });
+
+                locations.forEach(loc => {
+                    const finalLink = loc.link || `https://yandex.ru/maps/?pt=${loc.coords[1]},${loc.coords[0]}&z=17&l=map`;
+                    
+                    let balloonHtml = `<div style="padding: 24px; text-align: center; border-radius: 16px; background: rgba(15, 15, 15, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.6); min-width: 250px; color: #fff; font-family: 'Inter', sans-serif;">
+                        <b style="color:#fff; font-size: 16px; font-weight: 500; letter-spacing: 0.5px; font-family: 'Unbounded', sans-serif;">${loc.name}</b><br>
+                        <span style="color:#888; font-size: 13px; font-family: 'Inter', sans-serif;">Мужская парикмахерская</span>`;
+                    
+                    if (loc.label.includes(',')) {
+                        balloonHtml += `<br><span style="color:#bbb; font-size: 13px; font-weight: 400; display: inline-block; margin-top: 4px; font-family: 'Inter', sans-serif;">${loc.label.split(',')[1]}</span>`;
+                    }
+                    
+                    balloonHtml += `<br><br><a href="${finalLink}" target="_blank" style="display: inline-block; padding: 12px 24px; background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.2); border-radius: 99px; text-decoration: none; font-weight: 400; font-size: 13px; font-family: 'Inter', sans-serif; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.color='#fff'; this.style.borderColor='rgba(255,255,255,0.4)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(0,0,0,0.6)'; this.style.color='rgba(255,255,255,0.9)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)';">📍 Проложить маршрут</a></div>`;
+
+                    // Custom Sleek Map Pin with Zeus Logo
+                    const logoInnerCSS = "background-size: contain; background-repeat: no-repeat; mix-blend-mode: screen; border: none; box-shadow: none;";
+
+                    var markerHTML = `
+                    <div style="position: relative; width: 44px; height: 60px; cursor: pointer; display: flex; justify-content: center; align-items: flex-start;">
+                        <!-- Narrow SVG Pin Drop -->
+                        <svg width="44" height="60" viewBox="0 0 44 60" style="position: absolute; left: 0; top: 0; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); z-index: 1;">
+                            <path d="M22,1 C11,1 2,10 2,21.5 C2,37 22,58 22,58 C22,58 42,37 42,21.5 C42,10 33,1 22,1 Z" fill="#000" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                        </svg>
+                        <!-- Logo inside -->
+                        <div style="position: absolute; top: 4px; left: 4px; width: 36px; height: 42px; background-color: transparent; background-image: url('zeus_head_only.jpg'); background-position: center; z-index: 2; ${logoInnerCSS}"></div>
+                        <!-- Notification -->
+                        <div style="position: absolute; top: -5px; right: -60px; background: rgba(198, 255, 0, 0.95); color: #000; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; font-family: 'Unbounded', sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.4); opacity: $[properties.myOpacity]; transition: opacity 0.3s; animation: floatNotify 2s ease-in-out infinite; z-index: 3;">нажми на меня</div>
+                    </div>
+                    <style>@keyframes floatNotify { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }</style>
+                    `;
+                    var customMarkerLayout = ymaps.templateLayoutFactory.createClass(markerHTML);
+
+                    var placemark = new ymaps.Placemark(loc.coords, {
+                        hintContent: loc.name,
+                        balloonContent: balloonHtml,
+                        myOpacity: "0" // Hidden by default
+                    }, {
+                        iconLayout: customMarkerLayout,
+                        iconShape: {
+                            type: 'Rectangle',
+                            coordinates: [[0, 0], [44, 60]]
+                        },
+                        balloonPanelMaxMapArea: 0,
+                        iconOffset: [-22, -58], 
+                        balloonOffset: [0, -60]
+                    });
+                    
+                    myMap.geoObjects.add(placemark);
+
+                    // Bind DESKTOP BOARD CARD to this placemark
+                    const boardCard = board && board.querySelector('[data-id="' + loc.id + '"]');
+                    if (boardCard) {
+                        boardCard.addEventListener('click', () => {
+                            document.querySelectorAll('.lb-card').forEach(c => c.classList.remove('active'));
+                            boardCard.classList.add('active');
+                            placemark.properties.set('myOpacity', '1');
+                            const mapEl = document.getElementById('map');
+                            mapEl.style.opacity = '0';
+                            setTimeout(() => {
+                                myMap.setCenter(loc.coords, 15, { checkZoomRange: true, duration: 500 });
+                                setTimeout(() => { mapEl.style.opacity = '1'; }, 300);
+                                setTimeout(() => { placemark.balloon.open(); }, 600);
+                            }, 100);
+                        });
+                    }
+                    
+                    // Upgrade button logic since map loaded successfully
+                    const btn = renderedButtons[loc.id];
+                    if (btn) {
+                        btn.onclick = (e) => {
+                            // On mobile, keep the default logic which opens Yandex Maps directly
+                            if (window.innerWidth < 768) {
+                                return;
+                            }
+                            
+                            e.preventDefault();
+                            placemark.properties.set('myOpacity', "1");
+                            
+                            const mapEl = document.getElementById('map');
+                            mapEl.style.opacity = '0';
+                            
+                            setTimeout(() => {
+                                myMap.setCenter(loc.coords, 16, {
+                                    checkZoomRange: true,
+                                    duration: 0
+                                }).then(() => {
+                                    placemark.balloon.open();
+                                    
+                                    setTimeout(() => {
+                                        mapEl.style.opacity = '1';
+                                    }, 150);
+                                    
+                                    setTimeout(() => {
+                                        placemark.properties.set('myOpacity', "0");
+                                    }, 4000);
+                                });
+                            }, 300);
+                        };
+                    }
+                });
+                
+                myMap.behaviors.disable('scrollZoom');
+            });
+        } else {
+            // Map failed to inject entirely, set fallback map container style block
+            const mapEl = document.getElementById('map');
+            if(mapEl) {
+                mapEl.style.display = 'flex';
+                mapEl.style.justifyContent = 'center';
+                mapEl.style.alignItems = 'center';
+                mapEl.style.color = 'rgba(255,255,255,0.4)';
+                mapEl.style.fontSize = '14px';
+                mapEl.style.padding = '40px';
+                mapEl.innerHTML = '<div style="text-align: center;">Для просмотра интерактивной карты необходимо отключить блокировщик рекламы.<br><br>Пожалуйста, выберите локацию выше 👆</div>';
+            }
+        }
+    </script>
+
+
+    </script>
+
+
+    <!-- PREMIUM UI JS: Aurora · Wipe Reveal · Pricing Stagger -->
+    <script>
+    (function() {
+        // ── AURORA BORDER: mouse-tracking glow on bento cards ──
+        document.querySelectorAll('.bento-card').forEach(function(card) {
+            card.addEventListener('mousemove', function(e) {
+                var r = card.getBoundingClientRect();
+                var x = ((e.clientX - r.left) / r.width  * 100).toFixed(1) + '%';
+                var y = ((e.clientY - r.top)  / r.height * 100).toFixed(1) + '%';
+                card.style.setProperty('--mx', x);
+                card.style.setProperty('--my', y);
+            });
+        });
+
+        // ── WIPE REVEAL: clip-path wipe on section headings ──
+        var wipeEls = document.querySelectorAll('.wipe-reveal');
+        if ('IntersectionObserver' in window && wipeEls.length) {
+            var wipeObs = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        wipeObs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 });
+            wipeEls.forEach(function(el) { wipeObs.observe(el); });
+        } else {
+            wipeEls.forEach(function(el) { el.classList.add('is-visible'); });
+        }
+
+        // ── PRICING STAGGER: rows slide in on scroll ──
+        var priceRows = document.querySelectorAll('.price-row');
+        if ('IntersectionObserver' in window && priceRows.length) {
+            var priceObs = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        priceObs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+            priceRows.forEach(function(row) { priceObs.observe(row); });
+        } else {
+            priceRows.forEach(function(row) { row.classList.add('is-visible'); });
+        }
+
+        // ── BENTO SCROLL REVEAL (supplement existing system) ──
+        var bentoReveal = document.querySelectorAll('.bento-card:not(.scroll-reveal)');
+        bentoReveal.forEach(function(el) { el.classList.add('scroll-reveal'); });
+
+    })();
+    </script>
+
+    <!-- HERO SCRIPT -->
+    <script>
+    document.fonts.load("1em 'Akony'").then(function() {
+    (function() {
+        var hero = document.getElementById('hero');
+        var DURATION = 1800, DELAY = 200;
+        function eob(t) { var c1=1.30158,c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2); }
+        function eoc(t) { return 1-Math.pow(1-t,3); }
+        hero.style.transform = 'rotateX(-75deg) translateY(-60px)';
+        hero.style.opacity = '0';
+        hero.style.transformOrigin = '50% 0%';
+        var start = null;
+        function tick3d(ts) {
+            if (!start) start = ts;
+            var raw = Math.max(0, ts-start-DELAY), t = Math.min(raw/DURATION, 1);
+            hero.style.transform = 'rotateX('+ (-75+eob(t)*75) +'deg) translateY('+ ((1-eoc(t))*-60) +'px)';
+            hero.style.opacity = eoc(Math.min(t*1.5, 1));
+            if (t < 1) requestAnimationFrame(tick3d);
+            else { hero.style.transform = ''; hero.style.opacity = ''; }
+        }
+        requestAnimationFrame(tick3d);
+
+        var sweepPaused = false;
+        var LBDELAY = 1.0;
+        var lines = [{t:'Быстро',dot:true},{t:'Мощно',dot:true},{t:'Точно',dot:true}];
+        var headline = document.getElementById('gHeadline');
+
+        lines.forEach(function(line, li) {
+            if (li > 0) {
+                var dv = document.createElement('div');
+                dv.className = 'hero-divider-line';
+                headline.appendChild(dv);
+            }
+            var row = document.createElement('div');
+            row.className = 'hero-word-row';
+            line.t.split('').forEach(function(ch, ci) {
+                var sp = document.createElement('span');
+                sp.className = 'hero-ltr' + (ch === ' ' ? ' sp' : '');
+                sp.textContent = ch;
+                if (ch !== ' ') {
+                    var d = (LBDELAY + li*0.18 + ci*0.038).toFixed(3);
+                    sp.style.animation = 'gLetterReveal 0.55s cubic-bezier(0.16,1,0.3,1) forwards ' + d + 's';
+                }
+                row.appendChild(sp);
+            });
+            if (line.dot) {
+                var dot = document.createElement('span');
+                dot.className = 'hero-ltr dot';
+                var dd = (LBDELAY + li*0.18 + line.t.length*0.038 + 0.03).toFixed(3);
+                dot.style.animation = 'gLetterReveal 0.4s cubic-bezier(0.16,1,0.3,1) forwards ' + dd + 's';
+                dot.textContent = '.';
+                row.appendChild(dot);
+            }
+            headline.appendChild(row);
+            row.addEventListener('mouseenter', function() {
+                sweepPaused = true;
+                document.querySelectorAll('.hero-ltr:not(.dot):not(.sp)').forEach(function(l){l.classList.remove('lit');});
+                row.querySelectorAll('.hero-ltr:not(.dot):not(.sp)').forEach(function(l){l.classList.add('lit');});
+            });
+            row.addEventListener('mouseleave', function() {
+                row.querySelectorAll('.hero-ltr').forEach(function(l){l.classList.remove('lit');});
+                sweepPaused = false;
+            });
+        });
+
+        function runSweep() {
+            var ls = [].slice.call(document.querySelectorAll('.hero-ltr:not(.dot):not(.sp)')), i = 0;
+            var iv = setInterval(function() {
+                if (sweepPaused) { clearInterval(iv); setTimeout(runSweep, 800); return; }
+                if (i > 0) ls[i-1].classList.remove('lit');
+                if (i >= ls.length) { clearInterval(iv); setTimeout(runSweep, 2600); return; }
+                ls[i].classList.add('lit'); i++;
+            }, 60);
+        }
+        setTimeout(runSweep, 2400);
+
+        var mw = ['Мастерство','Точность','Скорость','Стиль','Характер','Свобода'], mi = 0;
+        var mel = document.getElementById('gMorphWord');
+        function morphNext() {
+            mel.style.transform = 'translateY(-100%)'; mel.style.opacity = '0';
+            setTimeout(function() {
+                mi = (mi+1) % mw.length; mel.textContent = mw[mi];
+                mel.style.transition = 'none'; mel.style.transform = 'translateY(100%)'; mel.style.opacity = '0';
+                requestAnimationFrame(function(){ requestAnimationFrame(function(){
+                    mel.style.transition = 'all 0.7s cubic-bezier(0.16,1,0.3,1)';
+                    mel.style.transform = 'translateY(0)'; mel.style.opacity = '1';
+                });});
+            }, 380);
+        }
+        setTimeout(function(){ setInterval(morphNext, 2800); }, 4200);
+
+        var telegramFloat = document.querySelector('.telegram-float');
+        var telegramReady = false;
+        function updateTelegramFloat() {
+            if (!telegramFloat) return;
+            var threshold = Math.min(hero.offsetHeight * 0.52, window.innerHeight * 0.62);
+            telegramFloat.classList.toggle('is-visible', telegramReady && window.scrollY > threshold);
+        }
+        setTimeout(function() {
+            telegramReady = true;
+            updateTelegramFloat();
+        }, 2600);
+        window.addEventListener('scroll', updateTelegramFloat, { passive: true });
+        window.addEventListener('resize', updateTelegramFloat);
+    })();
+    }); // end fonts.load
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="akony.woff" as="font" type="font/woff" crossorigin="anonymous">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>GROME | Next-Gen Barbershop</title>
+    
+    <!-- Load Unbounded for fallback and body text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=cf21ddbf-8869-42b4-ab98-ec8e3ae134e7&lang=ru_RU" type="text/javascript"></script>
+    <link rel="stylesheet" href="styles_premium.css?v=1.1.1">
+    <style>
+        @font-face {
+            font-family: 'Akony';
+            src: url('akony.otf') format('opentype'), url('akony.ttf') format('truetype'), url('akony.woff') format('woff');
+            font-display: block;
+        }
+        body { perspective: 1200px; perspective-origin: 50% 40%; }
+
+        /* ── HERO ── */
+        .hero-section-anim {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+            padding: 80px 50px 80px;
+            background: #000;
+            transform-origin: 50% 100%;
+            will-change: transform, opacity;
+        }
+        .hero-scene-anim { position: relative; z-index: 10; text-align: center; width: 100%; max-width: 1200px; }
+        .hero-eyebrow-anim {
+            font-family: 'Akony', sans-serif; font-size: clamp(9px,1vw,12px);
+            letter-spacing: 0.35em; text-transform: uppercase;
+            color: rgba(255,255,255,0.25); margin-bottom: 23px;
+            opacity: 0; animation: gFadeIn 0.6s ease forwards 1.3s;
+        }
+        .hero-headline-anim { display: flex; flex-direction: column; align-items: center; }
+        .hero-word-row {
+            display: inline-flex; justify-content: center; align-items: baseline;
+            gap: 0.05em; overflow: hidden; line-height: 0.92; cursor: default;
+        }
+        .hero-ltr {
+            display: inline-block; font-family: 'Akony', sans-serif;
+            font-size: clamp(48px,10vw,130px); font-weight: normal;
+            letter-spacing: -0.01em; color: #fff; text-transform: uppercase;
+            opacity: 0; transform: translateY(110%); transition: color 0.3s ease;
+            will-change: transform, opacity;
+        }
+        .hero-ltr.sp { width: 0.28em; }
+        .hero-ltr.dot { font-size: 0.42em; line-height: 2.3; vertical-align: bottom; color: #C6FF00; }
+        .hero-ltr.lit { color: #C6FF00 !important; }
+        .hero-word-row:nth-child(3) .hero-ltr:not(.dot),
+        .hero-word-row:nth-child(5) .hero-ltr:not(.dot) { color: rgba(255,255,255,0.5); }
+        .hero-divider-line {
+            width: 1px; height: 0; margin: 3px auto; opacity: 0;
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent);
+            animation: gGrowLine 0.5s ease forwards 2.7s;
+        }
+        .hero-morph-wrap {
+            margin-top: 18px; height: clamp(20px,2.5vw,32px);
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            opacity: 0; animation: gFadeIn 0.6s ease forwards 3.2s;
+        }
+        .hero-morph-word {
+            font-family: 'Akony', sans-serif; font-size: clamp(16px,2.2vw,30px);
+            letter-spacing: 0.18em; text-transform: uppercase;
+            color: rgba(255,255,255,0.15); transition: all 0.65s cubic-bezier(0.16,1,0.3,1);
+        }
+        .hero-btns-wrap {
+            display: flex; justify-content: center; flex-wrap: wrap;
+            gap: 20px; margin-top: 41px;
+            opacity: 0; animation: gFadeIn 0.7s ease forwards 3.4s;
+        }
+        .hero-btn-main {
+            padding: 14px 32px; border-radius: 99px; background: #fff; border: 1px solid #fff;
+            color: #000; text-decoration: none; font-family: 'Unbounded', sans-serif;
+            font-weight: 500; font-size: 14px; transition: all 0.3s; white-space: nowrap;
+        }
+        .hero-btn-main:hover { background: #C6FF00; border-color: #C6FF00; transform: scale(1.03); }
+        .hero-btn-sub {
+            padding: 14px 32px; border-radius: 99px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+            color: #fff; text-decoration: none; font-family: 'Unbounded', sans-serif;
+            font-weight: 500; font-size: 14px; backdrop-filter: blur(10px); transition: all 0.3s; white-space: nowrap;
+        }
+        .hero-btn-sub:hover { background: rgba(255,255,255,0.09); }
+        .hero-stats-wrap {
+            display: flex; align-items: center; justify-content: center;
+            gap: 41px; margin-top: 28px; flex-wrap: wrap;
+            opacity: 0; animation: gFadeIn 0.7s ease forwards 3.6s;
+        }
+        .hero-stat-lbl { font-family: 'Akony', sans-serif; font-size: clamp(9px,1vw,12px); letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.28); }
+        .hero-stat-sep { width: 4px; height: 4px; border-radius: 50%; background: #C6FF00; box-shadow: 0 0 6px #C6FF00; flex-shrink: 0; }
+        .hero-orb { position: absolute; border-radius: 50%; pointer-events: none; will-change: transform; z-index: 1; }
+        .hero-orb-1 { width:700px;height:420px;top:-8%;left:-12%;background:radial-gradient(ellipse at center,rgba(255,255,255,.055) 0%,rgba(255,255,255,.022) 35%,rgba(255,255,255,.005) 60%,transparent 75%);filter:blur(48px);animation:gOrb1 22s ease-in-out infinite; }
+        .hero-orb-2 { width:520px;height:380px;top:30%;right:-8%;background:radial-gradient(ellipse at center,rgba(198,255,0,.038) 0%,rgba(198,255,0,.012) 40%,transparent 68%);filter:blur(60px);animation:gOrb2 28s ease-in-out infinite; }
+        .hero-orb-3 { width:380px;height:260px;bottom:5%;left:28%;background:radial-gradient(ellipse at center,rgba(255,255,255,.042) 0%,rgba(255,255,255,.014) 42%,transparent 70%);filter:blur(40px);animation:gOrb3 18s ease-in-out infinite; }
+        @keyframes gOrb1{0%{transform:translate(0,0) scale(1)}25%{transform:translate(90px,50px) scale(1.08)}55%{transform:translate(140px,-30px) scale(.96)}80%{transform:translate(50px,80px) scale(1.04)}100%{transform:translate(0,0) scale(1)}}
+        @keyframes gOrb2{0%{transform:translate(0,0) scale(1)}30%{transform:translate(-80px,70px) scale(1.06)}60%{transform:translate(-130px,-40px) scale(.93)}85%{transform:translate(-40px,50px) scale(1.02)}100%{transform:translate(0,0) scale(1)}}
+        @keyframes gOrb3{0%{transform:translate(0,0) scale(1)}35%{transform:translate(70px,-60px) scale(1.12)}65%{transform:translate(-50px,40px) scale(.9)}100%{transform:translate(0,0) scale(1)}}
+        @keyframes heroSmokeRise{0%{opacity:0;transform:translateY(80px)}70%{opacity:1;transform:translateY(-8px)}100%{opacity:1;transform:translateY(0)}}
+        @keyframes heroSmokePulse{0%,100%{opacity:1;transform:scaleX(1)}50%{opacity:0.72;transform:scaleX(1.04)}}
+        @keyframes gFadeIn { to { opacity: 1; } }
+        @keyframes gGrowLine { to { height: 36px; opacity: 1; } }
+        @keyframes gLetterReveal { 0% { opacity: 0; transform: translateY(110%); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* ── Map Train-Slide Entrance (from far left) ── */
+        @keyframes mapPendulumIn {
+            /* Fully off-screen left, invisible */
+            0%   { opacity: 0;   transform: translateX(-110vw) scale(0.96); }
+            /* Appear while still flying in */
+            8%   { opacity: 1;   transform: translateX(-110vw) scale(0.96); }
+            /* Slam through center, overshoot right */
+            60%  { opacity: 1;   transform: translateX(20px)   scale(1.008); }
+            /* Bounce back */
+            76%  { opacity: 1;   transform: translateX(-7px)   scale(1); }
+            /* Tiny forward */
+            89%  { opacity: 1;   transform: translateX(2px)    scale(1); }
+            /* Rest */
+            100% { opacity: 1;   transform: translateX(0)      scale(1); }
+        }
+    </style>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+</head>
+<body class="framer-theme">
+    
+    <!-- FLOATING GLASS HEADER -->
+    <header class="header-nav load-fade-down" style="animation-delay: 2.2s;">
+        <div class="header-inner">
+            <a href="#" class="logo" style="text-decoration:none; color:inherit; display: flex; align-items: center; gap: 12px;">
+                GROME
+            </a>
+            <nav class="nav-links">
+                <a href="#advantages">Преимущества</a>
+                <a href="#locations">Локации</a>
+                <a href="#pricing">Цены</a>
+                <a href="#gallery">Атмосфера</a>
+            </nav>
+            <div class="nav-actions">
+                <a href="https://n2015703.yclients.com" target="_top" class="framer-btn primary">Запись</a>
+            </div>
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-toggle" id="mobileMenuBtn">
+                <span></span><span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION (Animated Typography) -->
+    <section class="hero-section-anim" id="hero">
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-orb hero-orb-3"></div>
+        <!-- Lime gradient sweep: Unicorn Lab style radial from bottom -->
+        <div style="
+            position:absolute;
+            bottom:0;
+            left:0;
+            right:0;
+            height:100%;
+            background:
+                radial-gradient(ellipse 90% 55% at 50% 100%, rgba(198,255,0,0.52) 0%, rgba(198,255,0,0.28) 22%, rgba(198,255,0,0.10) 45%, rgba(198,255,0,0.02) 65%, transparent 78%),
+                radial-gradient(ellipse 140% 35% at 50% 100%, rgba(198,255,0,0.18) 0%, rgba(198,255,0,0.06) 40%, transparent 60%);
+            pointer-events:none;
+            z-index:1;
+            animation: heroSmokeRise 3.8s cubic-bezier(0.16, 1, 0.3, 1) 2.6s both, heroSmokePulse 10s ease-in-out 7s infinite;
+        "></div>
+        <div class="hero-scene-anim">
+            <div class="hero-eyebrow-anim">Мужская парикмахерская · Москва</div>
+            <div class="hero-headline-anim" id="gHeadline"></div>
+            <div class="hero-morph-wrap"><span class="hero-morph-word" id="gMorphWord">Мастерство</span></div>
+            <div class="hero-btns-wrap">
+                <a href="https://n2015703.yclients.com" target="_top" class="hero-btn-main">Записаться онлайн</a>
+                <a href="#advantages" class="hero-btn-sub">Подробнее</a>
+            </div>
+            <div class="hero-stats-wrap">
+                <span class="hero-stat-lbl">6 Локаций</span><span class="hero-stat-sep"></span>
+                <span class="hero-stat-lbl">30 Минут</span><span class="hero-stat-sep"></span>
+                <span class="hero-stat-lbl">С 2020</span>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- LOGO TAPE (Subtle) -->
+    <div class="logo-tape scroll-reveal" style="background:#000; border-top:none; border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div class="tape-track">
+            <span>АЛЕКСЕЕВСКАЯ</span> <span class="dot">•</span>
+            <span>ТЕКСТИЛЬЩИКИ</span> <span class="dot">•</span>
+            <span>РЯЗАНСКИЙ ПРОСПЕКТ</span> <span class="dot">•</span>
+            <span>ВАРШАВСКАЯ</span> <span class="dot">•</span>
+            <span>ПАРТИЗАНСКАЯ</span> <span class="dot">•</span>
+            <span>СОКОЛ</span> <span class="dot">•</span>
+            <span>АЛЕКСЕЕВСКАЯ</span> <span class="dot">•</span>
+            <span>ТЕКСТИЛЬЩИКИ</span> <span class="dot">•</span>
+        </div>
+    </div>
+
+    <!-- ADVANTAGES (Bento Grid Style) -->
+    <section class="section-layout" id="advantages">
+            <div class="hero-orb" style="width:600px;height:360px;top:-10%;left:-15%;background:radial-gradient(ellipse at center,rgba(255,255,255,.04) 0%,rgba(255,255,255,.015) 40%,transparent 70%);filter:blur(55px);animation:gOrb1 26s ease-in-out infinite;z-index:0;"></div>
+            <div class="hero-orb" style="width:440px;height:300px;top:50%;right:-10%;background:radial-gradient(ellipse at center,rgba(198,255,0,.03) 0%,rgba(198,255,0,.01) 45%,transparent 70%);filter:blur(65px);animation:gOrb2 32s ease-in-out infinite;z-index:0;"></div>
+            <div class="hero-orb" style="width:300px;height:220px;bottom:10%;left:35%;background:radial-gradient(ellipse at center,rgba(255,255,255,.032) 0%,transparent 65%);filter:blur(45px);animation:gOrb3 20s ease-in-out infinite;z-index:0;"></div>
+        <div class="container">
+            <div class="section-head scroll-reveal">
+                <h2 class="section-title">ПОЧЕМУ GROME?</h2>
+                <p class="section-sub">Алгоритм идеальной стрижки отточен до секунд.</p>
+            </div>
+            
+            <div class="bento-grid-4">
+                <!-- Large card -->
+                <div class="bento-card col-span-2 row-span-2 scroll-reveal text-center-bento delay-1">
+                    <div class="bento-content">
+                        <h3 class="bento-title">30 Минут. Точно.</h3>
+                        <p class="bento-text">Наш флагманский формат. Мы убрали все лишнее, оставив только премиальное качество и максимальную скорость. Ваше время стоит дорого.</p>
+                    </div>
+                </div>
+                
+                <!-- Small cards -->
+                <div class="bento-card text-center-bento scroll-reveal delay-2">
+                    <div class="bento-content">
+                        <h3 class="bento-title">1 Минута</h3>
+                        <p class="bento-text">От дверей метро до кресла мастера.</p>
+                    </div>
+                </div>
+                
+                <div class="bento-card text-center-bento scroll-reveal delay-3">
+                    <div class="bento-content">
+                        <h3 class="bento-title">Профи</h3>
+                        <p class="bento-text">Мастера высокого класса. Идеальный срез.</p>
+                    </div>
+                </div>
+
+                <!-- Wide card / Promo -->
+                <div class="bento-card col-span-2 bento-highlight scroll-reveal delay-4">
+                    <div class="bento-content horizontal">
+                        <div class="promo-text-wrap">
+                            <h3 class="bento-title">Кэшбэк 100₽ с каждой стрижки</h3>
+                            <p class="bento-text">Умная система лояльности. Каждый визит — плюс 100₽ на счёт.</p>
+                        </div>
+                        <div class="bento-action">
+                            <a href="https://n2015703.yclients.com" class="framer-btn dark">Активировать</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="section-layout" id="pricing" style="position:relative; overflow:hidden;">
+        <div class="hero-orb" style="width:650px;height:380px;top:-5%;right:-14%;background:radial-gradient(ellipse at center,rgba(198,255,0,.028) 0%,rgba(198,255,0,.009) 45%,transparent 68%);filter:blur(60px);animation:gOrb1 29s ease-in-out infinite;z-index:0;"></div>
+        <div class="hero-orb" style="width:480px;height:300px;bottom:0%;left:-10%;background:radial-gradient(ellipse at center,rgba(255,255,255,.038) 0%,transparent 65%);filter:blur(50px);animation:gOrb3 23s ease-in-out infinite;z-index:0;"></div>
+        <div class="container container-sm">
+            <div class="section-head text-center">
+                <h2 class="section-title">ПРАЙС</h2>
+            </div>
+            
+            <div class="pricing-list">
+                <div class="price-row scroll-reveal">
+                    <div class="price-info">
+                        <h3>Мужская стрижка</h3>
+                        <p>Мытье, стайлинг, 30 минут</p>
+                    </div>
+                    <div class="price-line"></div>
+                    <div class="price-amount">900 ₽</div>
+                    <a href="https://n2015703.yclients.com" class="hover-btn-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                </div>
+                
+                <div class="price-row highlight scroll-reveal delay-1">
+                    <div class="price-info">
+                        <div class="flex-align">
+                            <h3>Стрижка + Борода</h3>
+                            <span class="tag">Выгода</span>
+                        </div>
+                        <p>Полный образ, контуры, опасная бритва</p>
+                    </div>
+                    <div class="price-line"></div>
+                    <div class="price-amount">1600 ₽</div>
+                    <a href="https://n2015703.yclients.com" class="hover-btn-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                </div>
+
+                <div class="price-row scroll-reveal delay-2">
+                    <div class="price-info">
+                        <h3>Моделирование бороды</h3>
+                        <p>Шейвер, контуры</p>
+                    </div>
+                    <div class="price-line"></div>
+                    <div class="price-amount">800 ₽</div>
+                    <a href="https://n2015703.yclients.com" class="hover-btn-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                </div>
+
+                <div class="price-row scroll-reveal delay-3">
+                    <div class="price-info">
+                        <h3>Стрижка машинкой</h3>
+                        <p>1 насадка, мытье</p>
+                    </div>
+                    <div class="price-line"></div>
+                    <div class="price-amount">600 ₽</div>
+                    <a href="https://n2015703.yclients.com" class="hover-btn-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="text-center mt-6 scroll-reveal delay-4">
+                <a href="https://n2015703.yclients.com" target="_top" class="framer-btn secondary lg">Весь прайс-лист</a>
+            </div>
+    <!-- RESPONSIVE GALLERY SECTION -->
+    <section class="section-layout" id="gallery" style="position: relative; overflow: hidden; padding: 100px 0 16px 0;">
+        <div class="hero-orb" style="width:700px;height:400px;top:5%;left:-18%;background:radial-gradient(ellipse at center,rgba(255,255,255,.035) 0%,transparent 65%);filter:blur(60px);animation:gOrb2 30s ease-in-out infinite;z-index:0;"></div>
+        <div class="hero-orb" style="width:500px;height:320px;bottom:5%;right:-12%;background:radial-gradient(ellipse at center,rgba(198,255,0,.025) 0%,transparent 60%);filter:blur(70px);animation:gOrb1 24s ease-in-out infinite;z-index:0;"></div>
+        <div class="container">
+            <div class="section-head text-center" style="margin-bottom: 4rem;">
+                <h2 class="section-title">АТМОСФЕРА</h2>
+                <p class="section-sub desktop-only">Скролльте галерею, чтобы вращать</p>
+                <p class="section-sub mobile-only">Пространство для тех, кто ценит эстетику</p>
+            </div>
+        </div>
+
+        <style>
             @media (min-width: 1024px) {
                 .mobile-only { display: none !important; }
             }
