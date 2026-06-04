@@ -86,25 +86,84 @@ function isMandatoryFine(vRaw, nRaw, r) {
 }
 
 /**
- * Вычисляет состояние зоны (Green/Yellow/Red) и штрафы за месяц для каждого мастера.
+ * Вычисляет штрафы за выбранный период.
+ * @param {Array} reports - все OVN отчёты
+ * @param {Object} targetPeriod - { start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }
+ * @returns {Object} { masterName: { loc, state, weekViolations, monthFines, details: [...] } }
  */
-function calculateFines(reports) {
+function getAdapterMasterCanonical(name) {
+    if (!name || typeof ADAPTER === 'undefined') return null;
+    const n = String(name).toLowerCase().trim();
+    for (const loc in ADAPTER) {
+        if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
+        for (const m of ADAPTER[loc].masters) {
+            const dash = (m.dash || '').toLowerCase().trim();
+            const aliases = (m.el_kassa || []).map(x => String(x).toLowerCase().trim());
+            if (dash === n || aliases.some(a => n.includes(a) || a.includes(n))) return m.dash;
+        }
+    }
+    return null;
+}
+
+function getAdapterMasterLocation(name) {
+    if (!name || typeof ADAPTER === 'undefined') return '';
+    for (const loc in ADAPTER) {
+        if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
+        if (ADAPTER[loc].masters.some(m => m.dash === name)) return loc;
+    }
+    return '';
+}
+
+function normalizeFinesPeriod(targetPeriod) {
+    let start = targetPeriod && targetPeriod.start ? dayjs(targetPeriod.start) : null;
+    let end = targetPeriod && targetPeriod.end ? dayjs(targetPeriod.end) : null;
+
+    if (!start || !start.isValid()) start = dayjs().startOf('month');
+    if (!end || !end.isValid()) end = dayjs().endOf('month');
+    if (end.isBefore(start, 'day')) {
+        const tmp = start;
+        start = end;
+        end = tmp;
+    }
+
+    return {
+        start: start.startOf('day'),
+        end: end.endOf('day'),
+        label: `${start.format('DD.MM.YYYY')} - ${end.format('DD.MM.YYYY')}`
+    };
+}
+
+function isFineReportInPeriod(report, period) {
+    const d = dayjs(report.date || report.createdAt);
+    return d.isValid() && !d.isBefore(period.start) && !d.isAfter(period.end);
+}
+
+function calculateFines(reports, targetPeriod) {
+    const period = normalizeFinesPeriod(targetPeriod);
+
     const masters = {};
+    if (typeof getAdapterMasterNames === 'function') {
+        getAdapterMasterNames().forEach(name => {
+            masters[name] = { reports: [], loc: getAdapterMasterLocation(name) };
+        });
+    }
+
     reports.forEach(r => {
         if (!r.barber) return;
-        const name = r.barber.trim();
+        const name = getAdapterMasterCanonical(r.barber);
+        if (!name) return;
         if (!masters[name]) masters[name] = { reports: [], loc: r.location };
         masters[name].reports.push(r);
     });
 
-    const results      = {};
-    const currentMonth = dayjs().format('YYYY-MM');
+    const results = {};
 
     for (const master in masters) {
         const mReports = masters[master].reports.sort((a, b) => dayjs(a.date || a.createdAt).valueOf() - dayjs(b.date || b.createdAt).valueOf());
         let state              = 'Green';
         let currentMonthFines  = 0;
         const weeks            = {};
+        const details          = []; // детализация штрафов
 
         mReports.forEach(r => {
             const d   = dayjs(r.date || r.createdAt);
@@ -119,16 +178,15 @@ function calculateFines(reports) {
             return wA - wB;
         });
 
-        const currentWeekId = dayjs().isoWeek() + '-' + dayjs().year();
-        let   currentWeekViolationsCount = 0;
+        let periodViolationsCount = 0;
 
         for (const wId of sortedWeeks) {
             const weekReports   = weeks[wId];
             let violationsCount = 0, lateCount = 0;
             const weekViolationsList = [];
-            const isCurrentMonth = weekReports.some(r => dayjs(r.date || r.createdAt).format('YYYY-MM') === currentMonth);
 
             weekReports.forEach(r => {
+                const inPeriod = isFineReportInPeriod(r, period);
                 const vList = Array.isArray(r.violation)
                     ? r.violation
                     : (r.violation ? String(r.violation).split(',').map(v => v.trim()) : []);
@@ -138,7 +196,10 @@ function calculateFines(reports) {
                     const fine        = getViolationFine(vName, r.notes, r);
                     const isMandatory = isMandatoryFine(vName, r.notes, r);
 
-                    if (!vName.toLowerCase().includes('замечаний нет')) violationsCount++;
+                    if (!vName.toLowerCase().includes('замечаний нет')) {
+                        violationsCount++;
+                        if (inPeriod) periodViolationsCount++;
+                    }
 
                     if (isMandatory) {
                         let finalFine = fine;
@@ -146,66 +207,152 @@ function calculateFines(reports) {
                             lateCount++;
                             if (lateCount >= 2) finalFine *= 2;
                         }
-                        if (isCurrentMonth) currentMonthFines += finalFine;
+                        if (inPeriod && finalFine > 0) {
+                            currentMonthFines += finalFine;
+                            details.push({
+                                date: dayjs(r.date || r.createdAt).format('DD.MM.YYYY'),
+                                violation: vName,
+                                notes: r.notes || '',
+                                location: r.location || '',
+                                fine: finalFine,
+                                type: 'mandatory'
+                            });
+                        }
                     } else if (fine > 0) {
-                        weekViolationsList.push({ type: vName.toLowerCase(), fine, r });
+                        weekViolationsList.push({ type: vName.toLowerCase(), fine, r, vName, date: r.date || r.createdAt, location: r.location });
                     }
                 });
             });
 
-            if (wId === currentWeekId) currentWeekViolationsCount = violationsCount;
-
             let zoneFine = 0;
+            const finesApplied = [];
             if (state === 'Green') {
-                if      (violationsCount >= 14) { state = 'Red';    weekViolationsList.forEach(v => { zoneFine += v.fine; }); }
-                else if (violationsCount > 9)   { state = 'Yellow'; if (weekViolationsList.length > 0) { const freq = {}; weekViolationsList.forEach(v => { freq[v.type] = (freq[v.type]||0)+1; }); let topType='', maxF=0; for (let t in freq) { if (freq[t] > maxF) { maxF = freq[t]; topType = t; } } const topV = weekViolationsList.find(x => x.type === topType); if (topV) zoneFine += topV.fine; } }
-                else                            { state = 'Green'; }
+                if (violationsCount >= 14) {
+                    state = 'Red';
+                    weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
+                } else if (violationsCount > 9) {
+                    state = 'Yellow';
+                    if (weekViolationsList.length > 0) {
+                        const freq = {};
+                        weekViolationsList.forEach(v => { freq[v.type] = (freq[v.type]||0)+1; });
+                        let topType='', maxF=0;
+                        for (let t in freq) { if (freq[t] > maxF) { maxF = freq[t]; topType = t; } }
+                        const topV = weekViolationsList.find(x => x.type === topType);
+                        if (topV) { zoneFine += topV.fine; finesApplied.push(topV); }
+                    }
+                }
             } else if (state === 'Yellow') {
-                if      (violationsCount > 9)  { state = 'Red';    weekViolationsList.forEach(v => { zoneFine += v.fine; }); }
-                else if (violationsCount === 0) { state = 'Green'; }
-                else                            { state = 'Yellow'; }
+                if (violationsCount > 9) {
+                    state = 'Red';
+                    weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
+                } else if (violationsCount === 0) { state = 'Green'; }
             } else if (state === 'Red') {
                 if (violationsCount === 0) state = 'Green';
-                else { weekViolationsList.forEach(v => { zoneFine += v.fine; }); }
+                else weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
             }
 
-            if (isCurrentMonth) currentMonthFines += zoneFine;
+            if (zoneFine > 0) {
+                finesApplied.forEach(v => {
+                    if (!isFineReportInPeriod(v.r || { date: v.date }, period)) return;
+                    currentMonthFines += v.fine;
+                    details.push({
+                        date: dayjs(v.date).format('DD.MM.YYYY'),
+                        violation: v.vName || v.type,
+                        notes: v.r ? (v.r.notes || '') : '',
+                        location: v.location || '',
+                        fine: v.fine,
+                        type: 'zone'
+                    });
+                });
+            }
         }
 
         results[master] = {
             loc:            masters[master].loc,
             state,
-            weekViolations: currentWeekViolationsCount,
-            monthFines:     currentMonthFines
+            weekViolations: periodViolationsCount,
+            monthFines:     currentMonthFines,
+            details:        details.sort((a, b) => {
+                const da = a.date.split('.').reverse().join('');
+                const db = b.date.split('.').reverse().join('');
+                return da.localeCompare(db);
+            })
         };
     }
     return results;
 }
 
 // ==== FINES MODAL ====
+// Хранение отчётов для детализации
+let _finesAllReports = [];
+let _finesResults    = {};
+
 window.openFinesModal = function() {
     document.getElementById('fines-modal').classList.add('active');
+    // Устанавливаем текущий месяц по умолчанию
+    const sel = document.getElementById('fines-month-select');
+    if (sel) sel.value = dayjs().format('YYYY-MM');
+    const startEl = document.getElementById('fines-date-start');
+    const endEl   = document.getElementById('fines-date-end');
+    if (startEl && !startEl.value) startEl.value = dayjs().startOf('month').format('YYYY-MM-DD');
+    if (endEl && !endEl.value) endEl.value = dayjs().endOf('month').format('YYYY-MM-DD');
     renderFinesTable();
 };
+
+window.applyFinesMonthPreset = function() {
+    const sel = document.getElementById('fines-month-select');
+    if (!sel || !sel.value) return renderFinesTable();
+    const startEl = document.getElementById('fines-date-start');
+    const endEl   = document.getElementById('fines-date-end');
+    const base = dayjs(sel.value + '-01');
+    if (startEl) startEl.value = base.startOf('month').format('YYYY-MM-DD');
+    if (endEl) endEl.value = base.endOf('month').format('YYYY-MM-DD');
+    renderFinesTable();
+};
+
+function getSelectedFinesPeriod() {
+    const startEl = document.getElementById('fines-date-start');
+    const endEl   = document.getElementById('fines-date-end');
+    return normalizeFinesPeriod({
+        start: startEl ? startEl.value : '',
+        end: endEl ? endEl.value : ''
+    });
+}
 
 async function renderFinesTable() {
     const tbody = document.getElementById('fines-table-body');
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Загрузка...</td></tr>';
+
+    // Скрываем детализацию при обновлении
+    const detailBlock = document.getElementById('fines-detail-block');
+    if (detailBlock) detailBlock.style.display = 'none';
+
     try {
         const res     = await fetch('/api/ovn');
         const reports = await res.json();
-        const results = calculateFines(reports);
+        _finesAllReports = reports;
 
+        // Заполняем доступные месяцы
+        populateMonthSelect(reports);
+
+        const targetPeriod = getSelectedFinesPeriod();
+        const results = calculateFines(reports, targetPeriod);
+        _finesResults = results;
+
+        // Ручные штрафы за выбранный период
         const manualTbody = document.getElementById('manual-fines-table-body');
         if (manualTbody) {
             let mHtml = '';
             reports.forEach(r => {
                 if (!r.isManualFine) return;
-                let d = r.date || r.createdAt || '';
-                if (d.includes('T')) d = d.split('T')[0];
+                const canonicalMaster = getAdapterMasterCanonical(r.barber);
+                if (!canonicalMaster) return;
+                const d = dayjs(r.date || r.createdAt);
+                if (!isFineReportInPeriod(r, targetPeriod)) return;
+                let dateStr = d.format('DD.MM.YYYY');
                 mHtml += `<tr>
-                    <td>${d}</td><td>${r.location||'-'}</td>
-                    <td style="font-weight:700">${r.barber}</td>
+                    <td>${dateStr}</td><td>${r.location||'-'}</td>
+                    <td style="font-weight:700">${canonicalMaster}</td>
                     <td>${r.violation||r.notes}</td>
                     <td style="color:#FF3B30;font-weight:bold;">${r.cost} ₽</td>
                 </tr>`;
@@ -214,23 +361,27 @@ async function renderFinesTable() {
         }
 
         if (Object.keys(results).length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Нет данных</td></tr>'; return;
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Нет данных за этот период</td></tr>';
+            return;
         }
 
-        const currentMonth = dayjs().format('MM / YYYY');
+        const displayPeriod = targetPeriod.label;
         const zoneBadge    = {
             'Green':  `<span style="color:#34C759;background:rgba(52,199,89,0.15);padding:4px 10px;border-radius:6px;font-weight:800;font-size:12px;">🟢 ЗЕЛЕНАЯ</span>`,
             'Yellow': `<span style="color:#FF9F0A;background:rgba(255,159,10,0.15);padding:4px 10px;border-radius:6px;font-weight:800;font-size:12px;">🟡 ЖЕЛТАЯ</span>`,
             'Red':    `<span style="color:#FF3B30;background:rgba(255,59,48,0.15);padding:4px 10px;border-radius:6px;font-weight:800;font-size:12px;">🔴 КРАСНАЯ</span>`
         };
 
-        tbody.innerHTML = Object.entries(results).map(([m, data]) => `
-            <tr>
-                <td>${currentMonth}</td>
-                <td style="font-weight:700">${m}</td>
+        // Сортируем по сумме штрафа (от большего)
+        const sorted = Object.entries(results).sort((a, b) => b[1].monthFines - a[1].monthFines);
+
+        tbody.innerHTML = sorted.map(([m, data]) => `
+            <tr onclick="showFineDetail('${m.replace(/'/g, "\\'")}')" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                <td>${displayPeriod}</td>
+                <td style="font-weight:700;color:#E8FF38;text-decoration:underline;text-underline-offset:3px">${m}</td>
                 <td>${zoneBadge[data.state]}</td>
                 <td><strong style="color:white;font-size:15px;">${data.weekViolations}</strong></td>
-                <td style="color:#FF3B30;font-weight:700;font-size:15px;">${data.monthFines} ₽</td>
+                <td style="color:#FF3B30;font-weight:700;font-size:15px;">${data.monthFines.toLocaleString()} ₽</td>
             </tr>`).join('');
 
     } catch(e) {
@@ -238,6 +389,81 @@ async function renderFinesTable() {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#FF3B30">Ошибка загрузки данных.</td></tr>';
     }
 }
+
+/**
+ * Заполняет select доступными месяцами из данных OVN
+ */
+function populateMonthSelect(reports) {
+    const sel = document.getElementById('fines-month-select');
+    if (!sel) return;
+
+    const months = new Set();
+    reports.forEach(r => {
+        const d = dayjs(r.date || r.createdAt);
+        if (d.isValid()) months.add(d.format('YYYY-MM'));
+    });
+
+    const currentVal = sel.value;
+    const sortedMonths = Array.from(months).sort().reverse();
+
+    // Добавим текущий месяц если нет
+    const curMonth = dayjs().format('YYYY-MM');
+    if (!sortedMonths.includes(curMonth)) sortedMonths.unshift(curMonth);
+
+    sel.innerHTML = sortedMonths.map(m => {
+        const [y, mo] = m.split('-');
+        const label = dayjs(m + '-01').format('MMMM YYYY');
+        const capLabel = label.charAt(0).toUpperCase() + label.slice(1);
+        return `<option value="${m}" ${m === currentVal ? 'selected' : ''}>${capLabel}</option>`;
+    }).join('');
+}
+
+/**
+ * Показать детализацию штрафов для мастера
+ */
+window.showFineDetail = function(masterName) {
+    const data = _finesResults[masterName];
+    if (!data) return;
+
+    const block = document.getElementById('fines-detail-block');
+    const title = document.getElementById('fines-detail-title');
+    const tbody = document.getElementById('fines-detail-tbody');
+    if (!block || !tbody) return;
+
+    title.textContent = `Штрафы: ${masterName}`;
+
+    if (data.details.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:20px;">Штрафов за этот период нет</td></tr>';
+    } else {
+        let total = 0;
+        tbody.innerHTML = data.details.map(d => {
+            total += d.fine;
+            const typeIcon = d.type === 'mandatory' ? '⚠️' : '🔶';
+            const typeLabel = d.type === 'mandatory' ? 'Авто' : 'Зона';
+            return `<tr>
+                <td style="white-space:nowrap">${d.date}</td>
+                <td>${d.location}</td>
+                <td style="max-width:250px">${d.violation}</td>
+                <td><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${d.type === 'mandatory' ? 'rgba(255,59,48,0.15);color:#FF3B30' : 'rgba(255,159,10,0.15);color:#FF9F0A'}">${typeIcon} ${typeLabel}</span></td>
+                <td style="color:#FF3B30;font-weight:700;text-align:right;white-space:nowrap">${d.fine.toLocaleString()} ₽</td>
+            </tr>`;
+        }).join('');
+
+        // Итого
+        tbody.innerHTML += `<tr style="border-top:2px solid #444">
+            <td colspan="4" style="text-align:right;font-weight:700;color:#fff;padding:10px">ИТОГО:</td>
+            <td style="color:#FF3B30;font-weight:800;font-size:16px;text-align:right;padding:10px">${total.toLocaleString()} ₽</td>
+        </tr>`;
+    }
+
+    block.style.display = 'block';
+    block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+window.hideFineDetail = function() {
+    const block = document.getElementById('fines-detail-block');
+    if (block) block.style.display = 'none';
+};
 
 // ==== MANUAL FINE MODAL ====
 window.openManualFineModal = function() {
