@@ -167,6 +167,7 @@ function calculateFines(reports, targetPeriod) {
 
         mReports.forEach(r => {
             const d   = dayjs(r.date || r.createdAt);
+            if (!d.isValid() || d.isAfter(period.end)) return;
             const wId = d.isoWeek() + '-' + d.year();
             if (!weeks[wId]) weeks[wId] = [];
             weeks[wId].push(r);
