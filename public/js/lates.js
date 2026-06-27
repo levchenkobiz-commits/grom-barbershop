@@ -4,6 +4,27 @@
  * Модуль Опоздания (Lates).
  */
 
+function isLatesModuleRecord(r) {
+    if (!r) return false;
+    const text = [
+        r.violation,
+        r.notes,
+        r.forceMajeureType
+    ].map(v => String(v || '').toLowerCase()).join(' ');
+
+    return !!(
+        r.schedTime ||
+        r.isForceMajeure ||
+        r.fineWaived ||
+        r.forceMajeureType ||
+        text.includes('\u043c\u0430\u0441\u0442\u0435\u0440 \u043e\u043f\u043e\u0437\u0434\u0430\u043b') ||
+        text.includes('\u043e\u043f\u043e\u0437\u0434\u0430\u043d') ||
+        text.includes('\u043d\u0435 \u0432\u044b\u0448\u0435\u043b') ||
+        text.includes('\u043d\u0435\u0432\u044b\u0445\u043e\u0434') ||
+        text.includes('\u0444\u043e\u0440\u0441')
+    );
+}
+
 async function loadLatesHistory() {
     try {
         console.log('[Lates] Loading...');
@@ -23,6 +44,7 @@ async function loadLatesHistory() {
             return t !== 'выходной' && t !== 'вых' && t !== 'ыходной';
         });
         const checksForSelectedDay = ovnRes.filter(r =>
+            isLatesModuleRecord(r) &&
             dayjs(r.date || r.createdAt).format('YYYY-MM-DD') === date && r.location === loc
         );
 
@@ -89,7 +111,7 @@ async function loadLatesHistory() {
 
         // 2. GLOBAL COUNTER
         let totalMastersGlobal = 0, checkedMastersGlobal = 0;
-        const todayChecks = ovnRes.filter(r => dayjs(r.date || r.createdAt).format('YYYY-MM-DD') === date);
+        const todayChecks = ovnRes.filter(r => isLatesModuleRecord(r) && dayjs(r.date || r.createdAt).format('YYYY-MM-DD') === date);
 
         schedRes.filter(s => s.date === date).forEach(s => {
             const branchMasters = (s.masters || []).filter(m => {
@@ -289,6 +311,7 @@ window.renderLatesJournal = function() {
 
     // Filter: only lates-module records (have schedTime OR violation = опоздал/замечаний нет)
     const list = res.filter(r => {
+        if (!isLatesModuleRecord(r)) return false;
         const rDateStr = r.date || r.createdAt;
         if (!rDateStr) return false;
         const recDay = dayjs(rDateStr);

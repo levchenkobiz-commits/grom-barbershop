@@ -11,6 +11,27 @@
  * Зависимости: config.js, ui.js (window.BARBER_ROSTER, window.showToast, window.USER)
  */
 
+function isOvnLateRecord(report) {
+    if (!report) return false;
+    const text = [
+        report.violation,
+        report.notes,
+        report.forceMajeureType
+    ].map(v => String(v || '').toLowerCase()).join(' ');
+
+    return !!(
+        report.schedTime ||
+        report.isForceMajeure ||
+        report.fineWaived ||
+        report.forceMajeureType ||
+        text.includes('\u043c\u0430\u0441\u0442\u0435\u0440 \u043e\u043f\u043e\u0437\u0434\u0430\u043b') ||
+        text.includes('\u043e\u043f\u043e\u0437\u0434\u0430\u043d') ||
+        text.includes('\u043d\u0435 \u0432\u044b\u0448\u0435\u043b') ||
+        text.includes('\u043d\u0435\u0432\u044b\u0445\u043e\u0434') ||
+        text.includes('\u0444\u043e\u0440\u0441')
+    );
+}
+
 // ==== FORM: open / close ====
 window.openOVNModal = function(loc = '') {
     document.getElementById('ovn-modal').classList.add('active');
@@ -233,9 +254,10 @@ window.triggerEditOVN = async function(id) {
 // ==== LOAD HISTORY ====
 async function loadOVNHistory() {
     try {
-        const res = await fetch('/api/ovn');
+        const res = await fetch('/api/ovn?video_only=1');
         if (!res.ok) throw new Error('fetch error');
-        const reports = await res.json();
+        const loadedReports = await res.json();
+        const reports = (loadedReports || []).filter(r => !isOvnLateRecord(r));
 
         window.lastOvnVideoRes = reports;
 
@@ -316,6 +338,7 @@ async function loadOVNHistory() {
         // --- TODAY's checks counter ---
         const todayStr     = dayjs().format('YYYY-MM-DD');
         const todayReports = reports.filter(r =>
+            !isOvnLateRecord(r) &&
             dayjs(r.createdAt).format('YYYY-MM-DD') === todayStr &&
             !(r.violation || '').toLowerCase().includes('мастер опоздал')
         );
@@ -418,6 +441,7 @@ window.renderOvnJournal = function() {
     tableContainer.style.display = 'block';
 
     const list = res.filter(r => {
+        if (isOvnLateRecord(r)) return false;
         if (!r.createdAt) return false;
         // Exclude lateness records — they belong to the Опоздания tab
         if ((r.violation || '').toLowerCase().includes('мастер опоздал')) return false;

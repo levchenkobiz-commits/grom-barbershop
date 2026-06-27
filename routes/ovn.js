@@ -15,9 +15,43 @@ function writeReports(reports) {
   fs.writeFileSync(PATHS.ovn, JSON.stringify(reports, null, 2));
 }
 
+function isLatesReport(report) {
+  if (!report) return false;
+  const text = [
+    report.violation,
+    report.notes,
+    report.forceMajeureType
+  ].map(v => String(v || '').toLowerCase()).join(' ');
+
+  return Boolean(
+    report.schedTime ||
+    report.isForceMajeure ||
+    report.fineWaived ||
+    report.forceMajeureType ||
+    text.includes('\u043c\u0430\u0441\u0442\u0435\u0440 \u043e\u043f\u043e\u0437\u0434\u0430\u043b') ||
+    text.includes('\u043e\u043f\u043e\u0437\u0434\u0430\u043d') ||
+    text.includes('\u043d\u0435 \u0432\u044b\u0448\u0435\u043b') ||
+    text.includes('\u043d\u0435\u0432\u044b\u0445\u043e\u0434') ||
+    text.includes('\u0444\u043e\u0440\u0441')
+  );
+}
+
+function hasQueryFlag(req, name) {
+  try {
+    const url = new URL(req.url, 'http://localhost');
+    const value = url.searchParams.get(name);
+    return value === '1' || value === 'true';
+  } catch (_) {
+    return false;
+  }
+}
+
 // GET /api/ovn — вернуть все отчёты
 function handleGet(req, res) {
-  const reports = readReports();
+  let reports = readReports();
+  if (hasQueryFlag(req, 'video_only')) {
+    reports = reports.filter(report => !isLatesReport(report));
+  }
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(reports));
 }
