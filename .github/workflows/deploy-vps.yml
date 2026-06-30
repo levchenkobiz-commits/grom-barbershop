@@ -72,4 +72,4 @@ jobs:
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
-            "cd '$VPS_REMOTE_ROOT' && npm install --omit=dev && pm2 restart grom-server --update-env && pm2 save && curl -fsS http://127.0.0.1:8080/ >/dev/null"
+            "cd '$VPS_REMOTE_ROOT' && npm install --omit=dev && pm2 restart grom-server --update-env && pm2 save && for i in \$(seq 1 30); do curl -fsS http://127.0.0.1:8080/ >/dev/null && exit 0; sleep 1; done; exit 1"
