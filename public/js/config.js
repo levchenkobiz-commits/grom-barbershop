@@ -88,3 +88,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
+// ---- Проверка: есть ли мастер в адаптере ----
+window.isAdapterMaster = function(name) {
+    if (!name || typeof ADAPTER === 'undefined') return false;
+    const n = name.toLowerCase().trim();
+    for (const loc in ADAPTER) {
+        if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
+        for (const m of ADAPTER[loc].masters) {
+            if (m.dash.toLowerCase() === n) return true;
+            if (m.el_kassa && m.el_kassa.some(ek =>
+                n.includes(ek.toLowerCase()) || ek.toLowerCase().includes(n)
+            )) return true;
+        }
+    }
+    return false;
+};
+
+// ---- Получить все имена мастеров из адаптера (Set) ----
+window.getAdapterMasterNames = function() {
+    const names = new Set();
+    if (typeof ADAPTER === 'undefined') return names;
+    for (const loc in ADAPTER) {
+        if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
+        ADAPTER[loc].masters.forEach(m => names.add(m.dash));
+    }
+    return names;
+};

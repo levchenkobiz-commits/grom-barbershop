@@ -16,8 +16,8 @@
 function renderData(data) {
     try {
         const errs = data.errors || {};
-        function applyWarn(cellIndex, hasErr, msg) {
-            const el = document.querySelector(`#analytics-section .metrics-grid .card:nth-child(${cellIndex})`);
+        function applyWarn(labelPart, hasErr, msg) {
+            const el = findAnalyticsCard(labelPart);
             if (!el) return;
             let w = el.querySelector('.err-warn');
             if (hasErr) {
@@ -28,12 +28,27 @@ function renderData(data) {
                 }
             } else if (w) { w.remove(); }
         }
-        applyWarn(1, errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
-        applyWarn(2, errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
-        applyWarn(3, errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
-        applyWarn(4, errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
-        applyWarn(5, errs.yclients || errs.elkassa || errs.general, 'Ошибка ответа YCLIENTS или El.Kassa');
-        applyWarn(6, errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
+        function findAnalyticsCard(labelPart) {
+            const query = String(labelPart || '').toLowerCase();
+            return Array.from(document.querySelectorAll('#analytics-section .metrics-grid .card'))
+                .find(card => {
+                    const label = card.querySelector('.card-label');
+                    return label && label.innerText.toLowerCase().includes(query);
+                });
+        }
+        const ovnCard = document.getElementById('card-ovn-runrate')?.closest('.card');
+        if (ovnCard && !ovnCard.dataset.ovnDrilldownBound) {
+            ovnCard.dataset.ovnDrilldownBound = '1';
+            ovnCard.style.cursor = 'pointer';
+            ovnCard.addEventListener('click', () => {
+                if (typeof window.toggleDrilldown === 'function') window.toggleDrilldown('ovn');
+            });
+        }
+        applyWarn('рост квартала', errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
+        applyWarn('return rate', errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
+        applyWarn('цикл визита', errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
+        applyWarn('онл-запис', errs.yclients || errs.elkassa || errs.general, 'Ошибка ответа YCLIENTS или El.Kassa');
+        applyWarn('заполняемость', errs.elkassa || errs.general, 'Ошибка соед. с El.Kassa/базой');
 
         let nowStr = data.lastUpdate;
         if (!nowStr) nowStr = dayjs().format('HH:mm DD.MM.YYYY');
@@ -50,13 +65,6 @@ function renderData(data) {
                 const curRev  = data.revenue.current  ? data.revenue.current.toLocaleString()  : '0';
                 const prevRev = data.revenue.previous ? data.revenue.previous.toLocaleString() : '0';
                 revCard.querySelector('.card-subtext').innerText = (data.revenue.period ? data.revenue.period + ' | ' : `${startStr}-${endStr} | `) + `(${curRev} vs ${prevRev} ₽)`;
-            } catch(e) {}
-            try {
-                const todayCard = document.querySelector('#analytics-section .metrics-grid .card:nth-child(4)');
-                if (todayCard) {
-                    todayCard.querySelector('.card-value').innerText = (data.revenue.today || 0).toLocaleString() + ' ₽';
-                    todayCard.querySelector('.card-subtext').innerText = 'Сегодня | Чистая (без бонусов)';
-                }
             } catch(e) {}
         }
 
@@ -77,14 +85,14 @@ function renderData(data) {
                 const cycleCard = document.querySelector('#analytics-section .metrics-grid .card:nth-child(3)');
                 if (cycleCard) {
                     cycleCard.querySelector('.card-value').innerText = (data.cycle.value || 0) + 'д';
-                    cycleCard.querySelector('.card-subtext').innerText = (data.cycle.period ? data.cycle.period + ' | ' : '') + 'Дней между стрижками';
+                    cycleCard.querySelector('.card-subtext').innerText = (data.cycle.period ? data.cycle.period + ' | ' : '') + 'Медиана дней между визитами';
                 }
             } catch(e) {}
         }
 
         if (data.appointments) {
             try {
-                const apptCard = document.querySelector('#analytics-section .metrics-grid .card:nth-child(5)');
+                const apptCard = findAnalyticsCard('онл-запис');
                 if (apptCard) {
                     apptCard.querySelector('.card-value').innerText = (data.appointments.percentage || 0) + '%';
                     apptCard.querySelector('.card-subtext').innerText = (data.appointments.period ? data.appointments.period + ' | ' : '') + 'Записи от общего числа услуг';
@@ -94,7 +102,7 @@ function renderData(data) {
 
         if (data.occupancy) {
             try {
-                const occCard = document.querySelector('#analytics-section .metrics-grid .card:nth-child(6)');
+                const occCard = findAnalyticsCard('заполняемость');
                 if (occCard) {
                     occCard.querySelector('.card-value').innerText = (data.occupancy.value || 0);
                     occCard.querySelector('.card-subtext').innerText = (data.occupancy.period ? data.occupancy.period + ' | ' : '') + 'Ср. чеков в раб. день (>2)';
@@ -111,8 +119,77 @@ function renderData(data) {
 }
 
 // ==== MASTER CABINET UPDATE ====
+function getMasterCabinetViolationPeriod() {
+    const start = dayjs().subtract(1, 'week').startOf('isoWeek');
+    const end   = dayjs().subtract(1, 'week').endOf('isoWeek');
+    return { start, end };
+}
+
+function getMasterCabinetCanonicalName(name) {
+    if (typeof getAdapterMasterCanonical === 'function') {
+        const canonical = getAdapterMasterCanonical(name);
+        if (canonical) return canonical;
+    }
+    return String(name || '').trim();
+}
+
+function isSameMasterForCabinet(left, right) {
+    const a = getMasterCabinetCanonicalName(left);
+    const b = getMasterCabinetCanonicalName(right);
+    if (!a || !b) return false;
+    return a === b;
+}
+
+function getMasterCabinetAdapterRecord(name) {
+    if (typeof ADAPTER === 'undefined') return null;
+    for (const [location, branch] of Object.entries(ADAPTER || {})) {
+        for (const master of (branch.masters || [])) {
+            const aliases = [master.dash, ...(master.el_kassa || [])];
+            if (aliases.some(alias => isSameMasterForCabinet(name, alias))) {
+                return { ...master, location };
+            }
+        }
+    }
+    return null;
+}
+
+function renderMasterTopStatus(masterName) {
+    const badge = document.getElementById('master-top-badge');
+    if (!badge) return;
+    const master = getMasterCabinetAdapterRecord(masterName);
+    badge.hidden = !(master && master.topMaster === true);
+}
+
+function getMasterCabinetReportDate(report) {
+    const d = dayjs(report.date || report.createdAt);
+    return d.isValid() ? d : null;
+}
+
+function isMasterCabinetOvnViolation(report) {
+    const text = String((report && report.violation) || '').toLowerCase();
+    if (!text) return false;
+    if (text.includes('замечаний нет') || text.includes('✅')) return false;
+    if (text.includes('мастер опоздал')) return false;
+    if (report && report.isManualFine) return false;
+    return true;
+}
+
+function getMasterCabinetWeeklyViolations(reports) {
+    const period = getMasterCabinetViolationPeriod();
+    return (reports || [])
+        .filter(isMasterCabinetOvnViolation)
+        .filter(r => {
+            const d = getMasterCabinetReportDate(r);
+            return d && !d.isBefore(period.start, 'day') && !d.isAfter(period.end, 'day');
+        })
+        .sort((a, b) => dayjs(b.date || b.createdAt).valueOf() - dayjs(a.date || a.createdAt).valueOf());
+}
+
 async function updateMasterCabinet(data) {
+    ensureMasterCabinetUi();
     const myName = window.CURRENT_MASTER || 'Шохназар Д.';
+    const myCanonicalName = getMasterCabinetCanonicalName(myName);
+    renderMasterTopStatus(myName);
 
     // Occupancy
     let myOcc = '0';
@@ -144,8 +221,8 @@ async function updateMasterCabinet(data) {
     const rrEl   = document.getElementById('master-rr');
     const rrSubEl = document.getElementById('master-rr-sub');
     if (rrEl && rrSubEl) {
-        if (myRr >= avgRr) { rrEl.style.color = '#34C759'; rrSubEl.innerText = `Выше среднего по сети (${avgRr.toFixed(1)}%)`; }
-        else               { rrEl.style.color = '#ff4444'; rrSubEl.innerText = `Ниже среднего по сети (${avgRr.toFixed(1)}%)`; }
+        rrEl.style.color = myRr > 0 ? '#34C759' : '#fff';
+        rrSubEl.innerText = 'Личная возвращаемость клиентов';
     }
 
     // OVN Fetch
@@ -154,7 +231,9 @@ async function updateMasterCabinet(data) {
         const fetchRes = await fetch('/api/ovn');
         if (fetchRes.ok) {
             ovnList = await fetchRes.json();
-            const myChecks = ovnList.filter(o => myName.startsWith(o.barber) || (o.barber && o.barber.startsWith(myName)));
+            const myChecks = ovnList.filter(o => isSameMasterForCabinet(myCanonicalName, o.barber));
+            const weeklyViolations = getMasterCabinetWeeklyViolations(myChecks);
+            renderMasterViolationJournal(weeklyViolations);
             const ovnScoreEl = document.getElementById('master-ovn-score');
             const ovnSubEl   = document.querySelector('#master-cabinet-section .metrics-grid .card:nth-child(2) .card-subtext');
             if (myChecks.length > 0) {
@@ -173,12 +252,13 @@ async function updateMasterCabinet(data) {
     try {
         if (typeof calculateFines === 'function') {
             const allFines = calculateFines(ovnList);
-            const myFines  = allFines[myName];
+            const myFines  = allFines[myCanonicalName] || allFines[myName];
             if (myFines) {
                 const wvEl  = document.getElementById('master-week-violations');
                 const tfEl  = document.getElementById('master-total-fines');
                 const zbEl  = document.getElementById('master-zone-badge');
-                if (wvEl) wvEl.innerText = myFines.weekViolations;
+                const myChecks = ovnList.filter(o => isSameMasterForCabinet(myCanonicalName, o.barber));
+                if (wvEl) wvEl.innerText = getMasterCabinetWeeklyViolations(myChecks).length;
                 if (tfEl) tfEl.innerText = myFines.monthFines + ' ₽';
                 if (zbEl) {
                     const zoneMap = {
@@ -203,6 +283,119 @@ async function updateMasterCabinet(data) {
     }
     const ycEl = document.getElementById('master-yc-percent');
     if (ycEl) ycEl.innerText = myYc;
+    if (typeof window.updateMasterWeeklySalary === 'function') window.updateMasterWeeklySalary();
+}
+
+function ensureMasterCabinetUi() {
+    const section = document.getElementById('master-cabinet-section');
+    if (!section) return;
+    if (!document.getElementById('master-top-style')) {
+        const style = document.createElement('style');
+        style.id = 'master-top-style';
+        style.textContent = `
+            @keyframes topMasterStarPulse {
+                0%, 100% { transform: scale(1) rotate(-5deg); filter: drop-shadow(0 0 5px rgba(255,213,74,.65)); }
+                50% { transform: scale(1.2) rotate(5deg); filter: drop-shadow(0 0 14px rgba(255,244,166,1)); }
+            }
+            @keyframes topMasterBadgeShine {
+                0% { background-position: 180% 50%; box-shadow: 0 0 8px rgba(255,213,74,.25); }
+                50% { box-shadow: 0 0 24px rgba(255,213,74,.65), inset 0 0 15px rgba(255,255,255,.14); }
+                100% { background-position: -80% 50%; box-shadow: 0 0 8px rgba(255,213,74,.25); }
+            }
+            #master-top-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-left: 14px;
+                padding: 7px 13px;
+                border: 1px solid rgba(255,213,74,.72);
+                border-radius: 999px;
+                color: #FFF2A8;
+                background: linear-gradient(110deg, rgba(87,57,0,.55) 20%, rgba(255,224,100,.28) 42%, rgba(87,57,0,.55) 64%);
+                background-size: 260% 100%;
+                font-size: 12px;
+                font-weight: 900;
+                letter-spacing: .8px;
+                vertical-align: middle;
+                animation: topMasterBadgeShine 2.4s linear infinite;
+            }
+            #master-top-badge[hidden] { display: none; }
+            #master-top-badge .top-master-star {
+                color: #FFD54A;
+                font-size: 20px;
+                line-height: 1;
+                animation: topMasterStarPulse 1.35s ease-in-out infinite;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    const title = section.querySelector('.section-title');
+    if (title && !document.getElementById('master-top-badge')) {
+        title.insertAdjacentHTML('beforeend',
+            '<span id="master-top-badge" hidden aria-label="Топ мастер"><span class="top-master-star">★</span> ТОП МАСТЕР</span>');
+    }
+    const cards = section.querySelectorAll('.metrics-grid .card');
+    if (cards[0]) {
+        cards[0].removeAttribute('onclick');
+        cards[0].style.cursor = 'default';
+        const sub = cards[0].querySelector('.card-subtext');
+        if (sub) sub.textContent = 'Только ваши рабочие дни';
+    }
+    if (cards[1]) {
+        cards[1].removeAttribute('onclick');
+        cards[1].style.cursor = 'default';
+        const sub = cards[1].querySelector('.card-subtext');
+        if (sub && sub.textContent === 'Нет проверок') sub.textContent = 'Только ваши проверки';
+    }
+
+    const grid = section.querySelector('.metrics-grid');
+    if (grid && !document.getElementById('master-week-salary')) {
+        const salaryCard = document.createElement('div');
+        salaryCard.className = 'card';
+        salaryCard.style.cursor = 'default';
+        salaryCard.innerHTML = `
+            <div class="card-label">ЗАРПЛАТА ЗА ЭТУ НЕДЕЛЮ</div>
+            <div class="card-value" id="master-week-salary">0 ₽</div>
+            <div class="card-subtext" id="master-week-salary-sub" style="text-transform:none">По завершённым дням</div>`;
+        grid.appendChild(salaryCard);
+    }
+
+    if (!document.getElementById('master-violation-journal')) {
+        const journal = document.createElement('div');
+        journal.style.cssText = 'margin-top:30px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:24px;padding:25px;overflow-x:auto;';
+        journal.innerHTML = `
+            <h3 style="font-size:18px;font-weight:700;margin:0 0 18px;">Мои нарушения</h3>
+            <table class="journal-table">
+                <thead><tr><th>Нарушение</th><th>Время</th></tr></thead>
+                <tbody id="master-violation-journal">
+                    <tr><td colspan="2" style="text-align:center;padding:30px;color:var(--text-muted)">Загрузка...</td></tr>
+                </tbody>
+            </table>`;
+        const scheduleBlock = document.getElementById('master-sched-container');
+        const scheduleCard = scheduleBlock ? scheduleBlock.closest('div[style*="margin-top:30px"]') : null;
+        section.insertBefore(journal, scheduleCard || null);
+    }
+}
+
+function renderMasterViolationJournal(reports) {
+    const tbody = document.getElementById('master-violation-journal');
+    if (!tbody) return;
+    const period = getMasterCabinetViolationPeriod();
+    const violations = (reports || [])
+        .filter(r => {
+            const created = getMasterCabinetReportDate(r);
+            return created
+                && !created.isBefore(period.start, 'day')
+                && !created.isAfter(period.end, 'day')
+                && isMasterCabinetOvnViolation(r);
+        })
+        .sort((a, b) => dayjs(b.date || b.createdAt).valueOf() - dayjs(a.date || a.createdAt).valueOf());
+    tbody.innerHTML = violations.length ? violations.map(r => `
+        <tr>
+            <td data-label="НАРУШЕНИЕ"><span class="badge-status badge-no">${r.violation}</span></td>
+            <td data-label="ВРЕМЯ">${dayjs(r.date || r.createdAt).format('DD.MM')}</td>
+        </tr>`).join('')
+        : '<tr><td colspan="2" style="text-align:center;padding:30px;color:var(--text-muted)">За прошлую неделю нарушений нет</td></tr>';
 }
 
 // ==== DRILLDOWN ====
@@ -213,7 +406,23 @@ window.toggleDrilldown = function(type) {
         if (!window.OVN_DRILLDOWN) return;
         container.style.display = 'block';
         document.getElementById('drilldown-title').innerText = 'Детализация: Качество ОВН (За месяц)';
-        document.getElementById('drilldown-table').innerHTML = `
+        const topData = window.OVN_TOPS || { violators: [], violations: [] };
+        const renderTopList = (items, emptyText) => items.length
+            ? items.map((item, idx) => `<tr><td>${idx + 1}. ${item.name}</td><td style="font-weight:800;color:var(--accent);text-align:right">${item.count}</td></tr>`).join('')
+            : `<tr><td colspan="2" style="color:var(--text-muted);text-align:center">${emptyText}</td></tr>`;
+        const topHtml = `
+            <tbody><tr><td colspan="3" style="padding:0 0 22px;border-bottom:none;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;">
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--card-border);border-radius:16px;padding:18px;">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;font-weight:800;margin-bottom:10px;">Топ-3 нарушителя</div>
+                    <table><tbody>${renderTopList(topData.violators || [], 'Нарушений нет')}</tbody></table>
+                </div>
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--card-border);border-radius:16px;padding:18px;">
+                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;font-weight:800;margin-bottom:10px;">Топ-3 частых нарушений</div>
+                    <table><tbody>${renderTopList(topData.violations || [], 'Нарушений нет')}</tbody></table>
+                </div>
+            </div></td></tr></tbody>`;
+        document.getElementById('drilldown-table').innerHTML = topHtml + `
             <thead><tr>
                 <th>Филиал / Мастер</th><th>Показатель</th><th>Тренд</th>
             </tr></thead>
@@ -222,7 +431,7 @@ window.toggleDrilldown = function(type) {
                 <tr class="branch-row" onclick="this.classList.toggle('active'); document.querySelectorAll('.m-${idx}').forEach(m => m.classList.toggle('active'))">
                     <td><span class="chevron">›</span>${item.name}</td><td>${item.value}</td><td class="trend-${item.trend}">${item.trend === 'up' ? '↗' : '↘'}</td>
                 </tr>
-                ${item.masters.map(m => `<tr class="master-row m-${idx}"><td>${m.name}</td><td>${m.v}</td><td>-</td></tr>`).join('')}
+                ${item.masters.filter(m => isAdapterMaster(m.name)).map(m => `<tr class="master-row m-${idx}"><td>${m.name}</td><td>${m.v}</td><td>-</td></tr>`).join('')}
             `).join('') + `</tbody>`;
         window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
         return;
@@ -236,6 +445,37 @@ window.toggleDrilldown = function(type) {
     const labels = { revenue: 'Выручка / Рост', returns: 'Возвращаемость (RR)', intervals: 'Цикл визита', appointments: 'Онлайн-записи', occupancy: 'Заполняемость' };
     container.style.display = 'block';
     document.getElementById('drilldown-title').innerText = 'Детализация: ' + (labels[type] || type);
+
+    // Special two-tab layout for intervals (cycle) drilldown — by branch + by month
+    if (type === 'intervals' && data.drilldown && data.drilldown.length >= 2) {
+        if (!window.switchDrillTab) {
+            window.switchDrillTab = function(tabName, btn) {
+                document.querySelectorAll('.drill-tab').forEach(b => { b.style.color = '#888'; b.style.borderBottom = 'none'; });
+                btn.style.color = '#E8FF38'; btn.style.borderBottom = '2px solid #E8FF38';
+                document.getElementById('drill-masters-body').style.display  = tabName === 'masters'  ? 'table-row-group' : 'none';
+                document.getElementById('drill-branches-body').style.display = tabName === 'branches' ? 'table-row-group' : 'none';
+            };
+        }
+        document.getElementById('drilldown-table').innerHTML = `
+            <thead>
+                <tr><td colspan="2" style="padding:0;border:none;">
+                    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:15px;font-size:14px;font-weight:600;">
+                        <div class="drill-tab" onclick="switchDrillTab('masters',this)" style="padding:15px 25px;cursor:pointer;color:#E8FF38;border-bottom:2px solid #E8FF38;">По филиалам</div>
+                        <div class="drill-tab" onclick="switchDrillTab('branches',this)" style="padding:15px 25px;cursor:pointer;color:#888;">По месяцам</div>
+                    </div>
+                </td></tr>
+                <tr><th>Объект</th><th>Мед. цикл</th></tr>
+            </thead>
+            <tbody id="drill-masters-body">
+                ${data.drilldown[0].masters.map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
+            </tbody>
+            <tbody id="drill-branches-body" style="display:none;">
+                ${data.drilldown[1].masters.map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
+            </tbody>
+        `;
+        window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
+        return;
+    }
 
     // Special RR two-tab layout
     if (type === 'returns' && data.drilldown && data.drilldown.length >= 2) {
@@ -258,7 +498,7 @@ window.toggleDrilldown = function(type) {
                 <tr><th>Объект детализации</th><th>Возвращаемость (RR)</th><th></th></tr>
             </thead>
             <tbody id="drill-masters-body">
-                ${data.drilldown[0].masters.map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td colspan="2" style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
+                ${data.drilldown[0].masters.filter(m => isAdapterMaster(m.name)).map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td colspan="2" style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
             </tbody>
             <tbody id="drill-branches-body" style="display:none;">
                 ${data.drilldown[1].masters.map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td colspan="2" style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
@@ -276,7 +516,7 @@ window.toggleDrilldown = function(type) {
             <tr class="branch-row" onclick="this.classList.toggle('active'); document.querySelectorAll('.m-${idx}').forEach(m => m.classList.toggle('active'))">
                 <td><span class="chevron">›</span>${item.name}</td><td>${item.value}</td><td class="trend-${item.trend}">${item.trend === 'up' ? '↗' : '↘'}</td>
             </tr>
-            ${item.masters.map(m => `<tr class="master-row m-${idx}"><td>${m.name}</td><td>${m.v}</td><td>-</td></tr>`).join('')}
+            ${item.masters.filter(m => isAdapterMaster(m.name)).map(m => `<tr class="master-row m-${idx}"><td>${m.name}</td><td>${m.v}</td><td>-</td></tr>`).join('')}
         `).join('') + `</tbody>`;
     window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
 };

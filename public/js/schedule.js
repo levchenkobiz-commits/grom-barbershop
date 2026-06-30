@@ -16,15 +16,103 @@
 let currentContextCell    = null;
 let pendingReplacementMaster = null;
 
+function isScheduleOffDay(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    return normalized === 'выходной' || normalized === 'вых' || normalized === 'ыходной';
+}
+
+function normalizeScheduleText(value) {
+    return String(value || '').trim().toLowerCase() === 'ыходной' ? 'выходной' : value;
+}
+
+function setupScheduleFloatingHeader() {
+    const wrapper = document.querySelector('#schedule-section .sched-table-wrapper');
+    const table = wrapper ? wrapper.querySelector('.sched-table') : null;
+    const thead = table ? table.querySelector('thead') : null;
+    if (!wrapper || !table || !thead || !thead.firstElementChild) return;
+
+    let floating = document.getElementById('sched-floating-header');
+    if (!floating) {
+        floating = document.createElement('div');
+        floating.id = 'sched-floating-header';
+        floating.style.cssText = [
+            'position:fixed', 'top:0', 'display:none', 'overflow:hidden',
+            'z-index:900', 'background:#171717',
+            'box-shadow:0 8px 24px rgba(0,0,0,0.45),0 1px 0 rgba(232,255,56,0.25)'
+        ].join(';');
+        document.body.appendChild(floating);
+    }
+
+    const headerTable = document.createElement('table');
+    headerTable.className = 'sched-table';
+    headerTable.style.cssText = `width:${table.scrollWidth}px;table-layout:fixed;margin:0;border-collapse:collapse;background:#171717;`;
+    const headerHead = thead.cloneNode(true);
+    headerTable.appendChild(headerHead);
+    floating.replaceChildren(headerTable);
+
+    const sourceCells = Array.from(thead.querySelectorAll('th'));
+    const floatingCells = Array.from(headerHead.querySelectorAll('th'));
+    sourceCells.forEach((cell, index) => {
+        const width = cell.getBoundingClientRect().width;
+        const clone = floatingCells[index];
+        if (!clone) return;
+        clone.style.width = width + 'px';
+        clone.style.minWidth = width + 'px';
+        clone.style.maxWidth = width + 'px';
+        clone.style.background = '#171717';
+    });
+
+    const update = () => {
+        const section = document.getElementById('schedule-section');
+        const rect = wrapper.getBoundingClientRect();
+        const headerHeight = thead.getBoundingClientRect().height;
+        const isActive = section && section.classList.contains('active');
+        const shouldShow = isActive && rect.top < 0 && rect.bottom > headerHeight;
+
+        floating.style.display = shouldShow ? 'block' : 'none';
+        if (!shouldShow) return;
+
+        floating.style.left = rect.left + 'px';
+        floating.style.width = rect.width + 'px';
+        headerTable.style.transform = `translateX(${-wrapper.scrollLeft}px)`;
+        if (floatingCells[0]) {
+            floatingCells[0].style.position = 'relative';
+            floatingCells[0].style.zIndex = '2';
+            floatingCells[0].style.transform = `translateX(${wrapper.scrollLeft}px)`;
+        }
+    };
+
+    window._scheduleFloatingHeaderUpdate = update;
+    if (!window._scheduleFloatingHeaderListenersAdded) {
+        window.addEventListener('scroll', () => {
+            if (window._scheduleFloatingHeaderUpdate) window._scheduleFloatingHeaderUpdate();
+        }, { passive: true });
+        window.addEventListener('resize', () => setupScheduleFloatingHeader());
+        document.addEventListener('click', () => {
+            setTimeout(() => {
+                if (window._scheduleFloatingHeaderUpdate) window._scheduleFloatingHeaderUpdate();
+            }, 0);
+        });
+        window._scheduleFloatingHeaderListenersAdded = true;
+    }
+    if (!wrapper.dataset.floatingHeaderSynced) {
+        wrapper.addEventListener('scroll', () => {
+            if (window._scheduleFloatingHeaderUpdate) window._scheduleFloatingHeaderUpdate();
+        }, { passive: true });
+        wrapper.dataset.floatingHeaderSynced = 'true';
+    }
+    update();
+}
+
 // ==== CONTEXT MENU ====
 window.showContextMenu = function(e, date, location, masterName) {
-    if (window.USER && window.USER.role === 'ovn') return;
     e.preventDefault(); e.stopPropagation();
     closeTimePicker();
     const menu = document.getElementById('sched-context-menu');
+    menu.style.position = 'fixed';
     menu.style.display = 'block';
-    menu.style.left = e.pageX + 'px';
-    menu.style.top  = e.pageY + 'px';
+    menu.style.left = Math.min(e.clientX, window.innerWidth  - 220) + 'px';
+    menu.style.top  = Math.min(e.clientY, window.innerHeight - 200) + 'px';
 
     currentContextCell       = { date, location, masterName, el: e.target };
     pendingReplacementMaster = null;
@@ -42,43 +130,47 @@ window.prepareReplacement = function(masterName, e) {
     e.stopPropagation();
     pendingReplacementMaster = masterName;
     const picker = document.getElementById('time-picker');
+    const menuLeft = parseInt(document.getElementById('sched-context-menu').style.left) || 0;
+    const menuTop  = parseInt(document.getElementById('sched-context-menu').style.top)  || 0;
+    picker.style.position = 'fixed';
     picker.style.display = 'block';
-    picker.style.left = (parseInt(document.getElementById('sched-context-menu').style.left) + 180) + 'px';
-    picker.style.top  = document.getElementById('sched-context-menu').style.top;
+    picker.style.left = Math.min(menuLeft + 180, window.innerWidth  - 160) + 'px';
+    picker.style.top  = menuTop + 'px';
 };
 
 window.showRowTimePicker = function(e, loc, master) {
-    if (window.USER && window.USER.role === 'ovn') return;
     e.stopPropagation();
     closeContextMenu();
     const picker = document.getElementById('time-picker');
+    picker.style.position = 'fixed';
     picker.style.display = 'block';
-    picker.style.left = e.pageX + 'px';
-    picker.style.top  = e.pageY + 'px';
+    picker.style.left = Math.min(e.clientX, window.innerWidth  - 160) + 'px';
+    picker.style.top  = Math.min(e.clientY, window.innerHeight - 180) + 'px';
     currentContextCell       = { isRow: true, loc, master };
     pendingReplacementMaster = null;
 };
 
 window.showTimePicker = function(e, cell) {
-    if (window.USER && window.USER.role === 'ovn') return;
     e.stopPropagation();
     closeContextMenu();
     const picker = document.getElementById('time-picker');
+    picker.style.position = 'fixed';
     picker.style.display = 'block';
-    picker.style.left = e.pageX + 'px';
-    picker.style.top  = e.pageY + 'px';
+    picker.style.left = Math.min(e.clientX, window.innerWidth  - 160) + 'px';
+    picker.style.top  = Math.min(e.clientY, window.innerHeight - 180) + 'px';
     currentContextCell       = { el: cell };
     pendingReplacementMaster = null;
 };
 
 window.applyTime = function(timeText) {
     if (!currentContextCell) { closeTimePicker(); closeContextMenu(); return; }
+    timeText = normalizeScheduleText(timeText);
 
     if (currentContextCell.isRow) {
         const selector = `.sched-cell[data-loc="${currentContextCell.loc}"][data-master="${currentContextCell.master}"]`;
         document.querySelectorAll(selector).forEach(cell => {
             cell.innerText = timeText;
-            if (timeText === 'выходной' || timeText === 'вых') cell.classList.remove('work', 'replacement');
+            if (isScheduleOffDay(timeText)) cell.classList.remove('work', 'replacement');
             else { cell.classList.add('work'); cell.classList.remove('replacement'); }
         });
     } else {
@@ -88,7 +180,7 @@ window.applyTime = function(timeText) {
             currentContextCell.el.classList.add('replacement');
         }
         currentContextCell.el.innerText = finalVal;
-        if (timeText === 'выходной' || timeText === 'вых') currentContextCell.el.classList.remove('work', 'replacement');
+        if (isScheduleOffDay(timeText)) currentContextCell.el.classList.remove('work', 'replacement');
         else currentContextCell.el.classList.add('work');
     }
     closeTimePicker();
@@ -171,9 +263,11 @@ async function loadSchedule() {
                 const masterData = entryM.find(x => x.name === m);
                 let val = 'выходной', cls = '';
                 if (masterData) {
-                    val = masterData.text || (masterData.startTime === '10:00' ? 'С 10 до 22' : (masterData.startTime === '09:00' ? 'С 09 до 22' : 'раб'));
-                    cls = 'work';
-                    if (masterData.isReplacement) cls += ' replacement';
+                    val = normalizeScheduleText(masterData.text || (masterData.startTime === '10:00' ? 'С 10 до 22' : (masterData.startTime === '09:00' ? 'С 09 до 22' : 'раб')));
+                    if (!isScheduleOffDay(val)) {
+                        cls = 'work';
+                        if (masterData.isReplacement) cls += ' replacement';
+                    }
                 }
                 bodyHtml += `<td><div class="sched-cell ${cls}"
                     onclick="showTimePicker(event,this)"
@@ -214,6 +308,7 @@ async function loadSchedule() {
             wrapper.addEventListener('scroll', () => { tScroll.scrollLeft = wrapper.scrollLeft; });
             tScroll.dataset.synced = 'true';
         }
+        setupScheduleFloatingHeader();
     }, 50);
 }
 
@@ -231,17 +326,25 @@ async function saveScheduleAll() {
         const text   = cell.innerText.trim();
         const key    = `${date}|${loc}`;
         if (!gridData[key]) gridData[key] = [];
-        if (!text || text.toLowerCase() === 'выходной' || text.toLowerCase() === 'вых') return;
+        if (!text || isScheduleOffDay(text)) return;
 
         if (master === 'NEW') {
             text.split(',').forEach(m => {
                 gridData[key].push({ name: m.replace('(ЗАМЕНА)', '').trim(), isReplacement: true, startTime: '10:00', text: m.trim() });
             });
         } else {
+            // Извлекаем реальное время начала из текста ячейки
+            let parsedStart = '10:00';
+            const timeMatch = text.match(/(\d{1,2})\s*(?:до|-)\s*\d{1,2}/);
+            if (timeMatch) {
+                parsedStart = timeMatch[1].padStart(2, '0') + ':00';
+            } else if (/^\d{1,2}:\d{2}/.test(text)) {
+                parsedStart = text.match(/^(\d{1,2}:\d{2})/)[1];
+            }
             gridData[key].push({
                 name: master,
                 isReplacement: text.includes('(ЗАМЕНА)'),
-                startTime: text.includes('09') ? '09:00' : '10:00',
+                startTime: parsedStart,
                 text
             });
         }
@@ -260,6 +363,8 @@ async function saveScheduleAll() {
         if (!resp.ok) throw new Error('Bad server response');
         btn.innerText = '✅ Сохранено';
         setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
+        // Обновляем вкладку опозданий чтобы подтянулся новый график
+        if (typeof loadLatesHistory === 'function') setTimeout(loadLatesHistory, 500);
     } catch (e) {
         showToast('Ошибка сохранения', 'error');
         btn.innerText = originalText; btn.disabled = false;

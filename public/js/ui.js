@@ -94,47 +94,48 @@ window.switchTab = function(target, btn) {
     if (target === 'ovn')      typeof loadOVNHistory    === 'function' && loadOVNHistory();
     if (target === 'lates')    typeof loadLatesHistory  === 'function' && loadLatesHistory();
     if (target === 'schedule') typeof loadSchedule      === 'function' && loadSchedule();
+    if (target === 'schedule') typeof window.renderMgmtGrid === 'function' && window.renderMgmtGrid();
     if (target === 'settings') typeof window.renderSettingsSchedule === 'function' && window.renderSettingsSchedule();
 };
 
 // ==== ROLE-BASED UI CONSTRAINTS ====
+// Использует PERM.can() из permissions.js — единственный источник правды о правах.
+// НЕ ДОБАВЛЯЙ сюда if (role === ...) — меняй таблицу в permissions.js.
 window.applyRoleConstraints = function() {
-    const role = window.USER && window.USER.role;
-    if (!role) return;
+    if (!window.USER || !window.USER.role) return;
 
-    if (role === 'owner' || role === 'manager') {
-        const ab = document.getElementById('adapter-btn');
-        const tm = document.getElementById('tab-manager');
-        const tma = document.getElementById('tab-master');
-        if (ab)  ab.style.display  = 'block';
-        if (tm)  tm.style.display  = 'inline-block';
-        if (tma) tma.style.display = 'none';
+    // ── Видимость вкладок ──
+    const TAB_MAP = {
+        'tab-analytics':  'tabAnalytics',
+        'tab-ovn':        'tabOvn',
+        'tab-lates':      'tabLates',
+        'tab-schedule':   'tabSchedule',
+        'tab-manager':    'tabManager',
+        'tab-master':     'tabMasterCabinet',
+    };
+    Object.entries(TAB_MAP).forEach(([tabId, perm]) => {
+        const el = document.getElementById(tabId);
+        if (el) el.style.display = PERM.can(perm) ? 'inline-block' : 'none';
+    });
 
-    } else if (role === 'ovn') {
-        ['tab-analytics', 'tab-master', 'tab-manager'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-        ['tab-ovn', 'tab-lates', 'tab-schedule'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'inline-block';
-        });
-        const saveBtn = document.querySelector('#schedule-section .btn-submit');
-        if (saveBtn) saveBtn.style.display = 'none';
-        const hintEl = document.getElementById('schedule-hint-text');
-        if (hintEl) hintEl.style.display = 'none';
+    // ── Кнопка YC адаптер ──
+    const ab = document.getElementById('adapter-btn');
+    if (ab) ab.style.display = PERM.can('showAdapterBtn') ? 'block' : 'none';
 
-    } else if (role === 'master') {
-        ['tab-analytics', 'tab-ovn', 'tab-lates', 'tab-schedule', 'tab-manager'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-        const tma = document.getElementById('tab-master');
-        if (tma) tma.style.display = 'inline-block';
+    // ── Настройки (целиком скрываем кнопку для мастеров) ──
+    if (!PERM.can('showSettingsMenu')) {
+        const settingsDropdown = document.querySelector('.settings-dropdown');
+        if (settingsDropdown) settingsDropdown.style.display = 'none';
+    }
 
-    } else {
-        const tma = document.getElementById('tab-master');
-        if (tma) tma.style.display = 'inline-block';
+    // ── Кнопка «+ Проверка» в секции ОВН ──
+    if (!PERM.can('createOvnCheck')) {
+        const ovnSection = document.getElementById('ovn-section');
+        if (ovnSection) {
+            ovnSection.querySelectorAll('button[onclick*="openOVNModal"]').forEach(btn => {
+                btn.style.display = 'none';
+            });
+        }
     }
 };
 

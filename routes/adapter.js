@@ -6,12 +6,35 @@
 const fs   = require('fs');
 const PATHS = require('./paths');
 
+function normalizeAdapter(rawAdapter) {
+  const adapter = {};
+  for (const [branchName, branch] of Object.entries(rawAdapter || {})) {
+    const masters = Array.isArray(branch.masters) ? branch.masters : [];
+    adapter[branchName] = {
+      ...branch,
+      masters: masters.map(master => {
+        const elNames = Array.isArray(master.el_kassa)
+          ? master.el_kassa.map(s => String(s || '').trim()).filter(Boolean)
+          : String(master.el_kassa || '').split(',').map(s => s.trim()).filter(Boolean);
+        const primaryName = elNames[0] || String(master.dash || '').trim();
+        return {
+          ...master,
+          dash: primaryName,
+          el_kassa: primaryName ? (elNames.length ? elNames : [primaryName]) : [],
+          topMaster: master.topMaster === true,
+        };
+      }).filter(master => master.dash),
+    };
+  }
+  return adapter;
+}
+
 function handlePost(req, res) {
   let body = '';
   req.on('data', chunk => { body += chunk.toString(); });
   req.on('end', () => {
     try {
-      const rawAdapter = JSON.parse(body);
+      const rawAdapter = normalizeAdapter(JSON.parse(body));
 
       const fileContent = `/**
  * Grome Adapter (Registry)
@@ -71,8 +94,20 @@ function getYclientsCompanyId(branchName) {
     return ADAPTER[branchName].yclients_company_id;
 }
 
+// 6. Получить имя мастера для дашборда по YClients staff_id
+function getDashNameByYclientsId(staffId) {
+    if (!staffId) return undefined;
+    const sid = String(staffId);
+    for (const [, config] of Object.entries(ADAPTER)) {
+        for (const master of config.masters) {
+            if (master.yclients_id === sid) return master.dash;
+        }
+    }
+    return undefined;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ADAPTER, getDashNameByElkassa, getYclientsId, getTerminalId, getYclientsCompanyId, getDashNameByYclients };
+    module.exports = { ADAPTER, getDashNameByElkassa, getYclientsId, getTerminalId, getYclientsCompanyId, getDashNameByYclients, getDashNameByYclientsId };
 }
 `;
 

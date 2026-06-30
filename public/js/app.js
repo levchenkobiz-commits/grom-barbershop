@@ -11,60 +11,103 @@
 // ==== APP INIT ====
 
 window.onload = async () => {
-    const urlParams  = new URLSearchParams(window.location.search);
-    const getCookie  = (name) => {
-        const m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[\]/+^])/g, '\\$1') + '=([^;]*)'));
-        return m ? decodeURIComponent(m[1]) : undefined;
-    };
-
-    let urlId = urlParams.get('tg_id');
-    let tg_id = urlId || localStorage.getItem('tg_id') || getCookie('tg_id') || 'manager_test';
-
-    if (tg_id) {
+    // Попробуем восстановить сессию из localStorage
+    const saved = localStorage.getItem('grome_user');
+    if (saved) {
         try {
-            const res = await fetch('/api/me?tg_id=' + tg_id);
-            if (res.ok) {
-                const user = await res.json();
-                localStorage.setItem('tg_id', tg_id);
-                document.cookie = `tg_id=${tg_id}; path=/; max-age=31536000`;
-                window.USER = user;
-
-                document.getElementById('login-screen').classList.add('hidden');
-
-                if (urlId) {
-                    const welcomeScreen = document.getElementById('welcome-screen');
-                    document.getElementById('welcome-msg').innerText = `Привет, ${user.name} 👋`;
-                    welcomeScreen.classList.remove('hidden');
-
-                    setTimeout(() => {
-                        welcomeScreen.style.opacity = '0';
-                        setTimeout(() => {
-                            welcomeScreen.classList.add('hidden');
-                            document.getElementById('app-container').classList.remove('hidden');
-                            initializeApp();
-                        }, 500);
-                    }, 1500);
-                } else {
-                    document.getElementById('app-container').classList.remove('hidden');
-                    initializeApp();
-                }
-            } else {
-                localStorage.removeItem('tg_id');
-                document.cookie = 'tg_id=; path=/; max-age=0;';
-                document.getElementById('login-screen').classList.remove('hidden');
-            }
+            window.USER = JSON.parse(saved);
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            initializeApp();
+            return;
         } catch(e) {
-            console.error('[App] Auth error:', e);
-            document.getElementById('login-screen').classList.remove('hidden');
+            localStorage.removeItem('grome_user');
         }
-    } else {
-        document.getElementById('login-screen').classList.remove('hidden');
+    }
+    document.getElementById('login-screen').classList.remove('hidden');
+};
+
+// ==== LOGIN SUBMIT ====
+window.handleLoginSubmit = async function() {
+    const loginEl = document.getElementById('login-input');
+    const passEl  = document.getElementById('password-input');
+    const errEl   = document.getElementById('login-error');
+    const btnEl   = document.getElementById('login-btn');
+
+    const login    = (loginEl.value || '').trim();
+    const password = (passEl.value || '').trim();
+
+    if (!login || !password) {
+        errEl.textContent = 'Введите логин и пароль';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    btnEl.disabled   = true;
+    btnEl.textContent = '⌛ Вход...';
+    errEl.style.display = 'none';
+
+    try {
+        const res  = await fetch('/api/login', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ login, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            errEl.textContent   = data.error || 'Неверный логин или пароль';
+            errEl.style.display = 'block';
+            btnEl.disabled      = false;
+            btnEl.textContent   = 'Войти';
+            return;
+        }
+
+        // Сохраняем сессию (включаем key для X-User-Key заголовка в fetch interceptor)
+        window.USER = { ...data.user, key: data.key };
+        localStorage.setItem('grome_user', JSON.stringify(window.USER));
+
+        // Приветствие
+        const welcomeScreen = document.getElementById('welcome-screen');
+        document.getElementById('welcome-msg').innerText = `Привет, ${data.user.name} 👋`;
+        document.getElementById('login-screen').classList.add('hidden');
+        welcomeScreen.classList.remove('hidden');
+
+        setTimeout(() => {
+            welcomeScreen.style.opacity = '0';
+            setTimeout(() => {
+                welcomeScreen.classList.add('hidden');
+                welcomeScreen.style.opacity = '';
+                document.getElementById('app-container').classList.remove('hidden');
+                initializeApp();
+            }, 500);
+        }, 1200);
+
+    } catch(e) {
+        errEl.textContent   = 'Ошибка подключения';
+        errEl.style.display = 'block';
+        btnEl.disabled      = false;
+        btnEl.textContent   = 'Войти';
     }
 };
+
+// ==== ENTER KEY SUPPORT ====
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen && !loginScreen.classList.contains('hidden')) {
+            window.handleLoginSubmit();
+        }
+    }
+});
 
 async function initializeApp() {
     const user = window.USER;
     if (!user) return;
+    ensureLogoutButton();
+
+    // 0. Сразу скрываем все секции (analytics active в HTML по умолчанию)
+    document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
 
     // 1. Имя мастера
     window.CURRENT_MASTER = user.name;
@@ -74,16 +117,24 @@ async function initializeApp() {
     // 2. Ролевые ограничения UI
     applyRoleConstraints();
 
-    // 3. Начальная вкладка
+    // 3. Начальная вкладка (с проверкой прав!)
     const hash      = (window.location.hash || '').replace('#', '');
     const validTabs = ['analytics','ovn','lates','schedule','master-cabinet','manager','settings'];
 
-    if (hash && validTabs.includes(hash)) {
+    // Маппинг хеша → пермишн (проверяем, имеет ли юзер доступ к вкладке из URL)
+    const HASH_PERM = {
+        'analytics': 'tabAnalytics', 'ovn': 'tabOvn', 'lates': 'tabLates',
+        'schedule': 'tabSchedule', 'master-cabinet': 'tabMasterCabinet',
+        'manager': 'tabManager', 'settings': 'tabAnalytics',
+    };
+
+    if (hash && validTabs.includes(hash) && PERM.can(HASH_PERM[hash] || '')) {
         switchTab(hash);
     } else {
-        if (user.role === 'ovn')    switchTab('ovn',            document.getElementById('tab-ovn'));
-        else if (user.role === 'master') switchTab('master-cabinet', document.getElementById('tab-master'));
-        else                             switchTab('analytics',       document.getElementById('tab-analytics'));
+        // Начальная вкладка определяется правами из permissions.js
+        if (PERM.can('tabMasterCabinet') && !PERM.can('tabAnalytics'))     switchTab('master-cabinet', document.getElementById('tab-master'));
+        else if (PERM.can('tabOvn') && !PERM.can('tabAnalytics'))          switchTab('ovn',            document.getElementById('tab-ovn'));
+        else                                                                switchTab('analytics',       document.getElementById('tab-analytics'));
     }
 
     // 4. Загружаем данные
@@ -91,11 +142,14 @@ async function initializeApp() {
     setInterval(loadData, 120000);
 
     // 5. Lazy-load остальных вкладок
+    if (typeof window.loadManagerSchedule === 'function') await window.loadManagerSchedule();
     loadOVNHistory();
     loadLatesHistory();
     loadSchedule();
     if (typeof loadMasterSchedule === 'function') loadMasterSchedule();
-    if (user.role === 'manager' || user.role === 'owner') loadManagerChecks();
+    if (PERM.can('tabManager')) {
+        loadManagerChecks();
+    }
 
     // 6. Hash-навигация
     window.addEventListener('hashchange', () => {
@@ -107,14 +161,44 @@ async function initializeApp() {
 // Экспортируем для совместимости
 window.initializeApp = initializeApp;
 
+function ensureLogoutButton() {
+    if (document.getElementById('logout-btn')) return;
+
+    const header = document.querySelector('header');
+    if (!header) return;
+
+    const button = document.createElement('button');
+    button.id = 'logout-btn';
+    button.type = 'button';
+    button.className = 'btn-refresh';
+    button.textContent = 'Выйти';
+    button.onclick = window.handleLogout;
+    button.style.marginLeft = '12px';
+    button.style.borderColor = 'rgba(255,255,255,0.18)';
+
+    header.appendChild(button);
+}
+
 // ==== LOGOUT ====
 window.handleLogout = function() {
+    localStorage.removeItem('grome_user');
     localStorage.removeItem('tg_id');
     document.cookie = 'tg_id=; path=/; max-age=0;';
     window.USER = null;
+    window.location.hash = '';
     document.getElementById('app-container').classList.add('hidden');
     document.getElementById('login-screen').classList.remove('hidden');
+    // Очищаем поля формы
+    const li = document.getElementById('login-input');
+    const pi = document.getElementById('password-input');
+    if (li) li.value = '';
+    if (pi) pi.value = '';
+    const err = document.getElementById('login-error');
+    if (err) err.style.display = 'none';
+    const btn = document.getElementById('login-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Войти'; }
 };
+
 
 // ==== SETTINGS: 14-day schedule ====
 window.renderSettingsSchedule = function() {

@@ -15,10 +15,16 @@
 
 // ==== FINE CALCULATION HELPERS ====
 
+function isFineWaivedByForceMajeure(r, violationRaw, notesRaw) {
+    const text = `${violationRaw || ''} ${notesRaw || ''} ${(r && r.forceMajeureType) || ''}`.toLowerCase();
+    return !!(r && (r.isForceMajeure || r.fineWaived)) || text.includes('форс-мажор');
+}
+
 /**
  * Возвращает сумму штрафа для одного нарушения.
  */
 function getViolationFine(violationRaw, notesRaw, r) {
+    if (isFineWaivedByForceMajeure(r, violationRaw, notesRaw)) return 0;
     if (r && r.isManualFine) return Number(r.cost) || 0;
 
     let violations = [];
@@ -35,7 +41,9 @@ function getViolationFine(violationRaw, notesRaw, r) {
         const n = (notesRaw || '').toLowerCase();
         let currentFine = 0;
 
-        for (const [key, value] of Object.entries(window.GLOBAL_HANDBOOK || {})) {
+        const handbook = window.GLOBAL_HANDBOOK || {};
+        const isSecondMaster = r && String(r.slot || '') === '2';
+        for (const [key, value] of Object.entries(handbook)) {
             if (v.includes(key.toLowerCase()) || n.includes(key.toLowerCase())) {
                 currentFine = value; break;
             }
@@ -47,19 +55,23 @@ function getViolationFine(violationRaw, notesRaw, r) {
             if (m) currentFine = parseInt(m[1], 10);
         }
 
-        // Fallbacks
-        if (currentFine === 0) {
-            if (v.includes('опоздал') || n.includes('опоздани')) currentFine = (window.GLOBAL_HANDBOOK || {})['Опоздание'] || 300;
-            else if (v.includes('не выход') || v.includes('невыход')) currentFine = (window.GLOBAL_HANDBOOK || {})['Невыход'] || 5000;
-            else if (v.includes('воровство') || v.includes('неоплаченная') || v.includes('терминал')) currentFine = (window.GLOBAL_HANDBOOK || {})['Услуга не проведена через терминал'] || 5000;
-        }
-
-        // Lateness duration escalation
+        // Опоздания всегда берут сумму из справочника по диапазону.
         if (v.includes('опоздал') || n.includes('опоздани')) {
             const match = n.match(/на\s+(\d+)\s+мин/);
             const minutes = match ? parseInt(match[1]) : 0;
-            if      (minutes >= 30) currentFine = Math.max(currentFine, 1000);
-            else if (minutes >= 20) currentFine = Math.max(currentFine, 500);
+            let key = '';
+            if      (minutes >= 61) key = 'Опоздание 61+ мин (Невыход)';
+            else if (minutes >= 31) key = 'Опоздание 31-60 мин';
+            else if (minutes >= 21) key = 'Опоздание 21-30 мин';
+            else if (minutes >= 11) key = 'Опоздание 11-20 мин';
+            if (key) {
+                const secondKey = `Опоздание второй мастер ${key.replace('Опоздание ', '')}`;
+                currentFine = Number(handbook[isSecondMaster ? secondKey : key]) || 0;
+            }
+        } else if (v.includes('не вышел') || v.includes('не выход') || v.includes('невыход')) {
+            currentFine = Number(handbook['Невыход']) || 0;
+        } else if (v.includes('воровство') || v.includes('неоплаченная') || v.includes('терминал')) {
+            currentFine = Number(handbook['Услуга не проведена через терминал']) || 0;
         }
 
         if (currentFine > maxFine) maxFine = currentFine;
@@ -67,7 +79,16 @@ function getViolationFine(violationRaw, notesRaw, r) {
     return maxFine;
 }
 
+function hasActualFine(r) {
+    return r && r.fine !== undefined && r.fine !== null && r.fine !== '' && Number.isFinite(Number(r.fine));
+}
+
+function getActualFine(r) {
+    return hasActualFine(r) ? Number(r.fine) : 0;
+}
+
 function isMandatoryFine(vRaw, nRaw, r) {
+    if (isFineWaivedByForceMajeure(r, vRaw, nRaw)) return false;
     if (r && r.isManualFine) return true;
     let violations = [];
     if      (Array.isArray(vRaw)) violations = vRaw;
@@ -80,7 +101,7 @@ function isMandatoryFine(vRaw, nRaw, r) {
         if (v.includes('пробит'))    return true;
         if (v.includes('опоздал') || n.includes('опоздани')) return true;
         if (v.includes('воровство') || v.includes('неоплаченная') || v.includes('терминал')) return true;
-        if (v.includes('не выход') || v.includes('невыход')) return true;
+        if (v.includes('не вышел') || v.includes('не выход') || v.includes('невыход')) return true;
     }
     return false;
 }
@@ -94,14 +115,21 @@ function isMandatoryFine(vRaw, nRaw, r) {
 function getAdapterMasterCanonical(name) {
     if (!name || typeof ADAPTER === 'undefined') return null;
     const n = String(name).toLowerCase().trim();
+    const candidates = [];
+
     for (const loc in ADAPTER) {
         if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
         for (const m of ADAPTER[loc].masters) {
             const dash = (m.dash || '').toLowerCase().trim();
             const aliases = (m.el_kassa || []).map(x => String(x).toLowerCase().trim());
             if (dash === n || aliases.some(a => n.includes(a) || a.includes(n))) return m.dash;
+            const dashFirst = dash.split(/\s+/)[0];
+            const nameFirst = n.split(/\s+/)[0];
+            if (dashFirst && nameFirst && dashFirst === nameFirst) candidates.push(m.dash);
         }
     }
+    const uniqueCandidates = Array.from(new Set(candidates));
+    if (uniqueCandidates.length === 1) return uniqueCandidates[0];
     return null;
 }
 
@@ -161,9 +189,13 @@ function calculateFines(reports, targetPeriod) {
     for (const master in masters) {
         const mReports = masters[master].reports.sort((a, b) => dayjs(a.date || a.createdAt).valueOf() - dayjs(b.date || b.createdAt).valueOf());
         let state              = 'Green';
+        let displayState       = 'Green';
+        let targetWeekSeen     = false;
         let currentMonthFines  = 0;
         const weeks            = {};
         const details          = []; // детализация штрафов
+        const monthlyLateCounts = {};
+        const currentLateGraceMonth = dayjs().format('YYYY-MM');
 
         mReports.forEach(r => {
             const d   = dayjs(r.date || r.createdAt);
@@ -194,6 +226,7 @@ function calculateFines(reports, targetPeriod) {
 
                 vList.forEach(vName => {
                     if (!vName) return;
+                    if (isFineWaivedByForceMajeure(r, vName, r.notes)) return;
                     const fine        = getViolationFine(vName, r.notes, r);
                     const isMandatory = isMandatoryFine(vName, r.notes, r);
 
@@ -206,11 +239,15 @@ function calculateFines(reports, targetPeriod) {
                         let finalFine = fine;
                         if (vName.toLowerCase().includes('опоздал') || (r.notes||'').toLowerCase().includes('опоздани')) {
                             lateCount++;
+                            const lateMonth = dayjs(r.date || r.createdAt).format('YYYY-MM');
+                            monthlyLateCounts[lateMonth] = (monthlyLateCounts[lateMonth] || 0) + 1;
                             if (lateCount >= 2) finalFine *= 2;
+                            if (lateMonth === currentLateGraceMonth && monthlyLateCounts[lateMonth] === 1) finalFine = 0;
                         }
                         if (inPeriod && finalFine > 0) {
                             currentMonthFines += finalFine;
                             details.push({
+                                id: r.id,
                                 date: dayjs(r.date || r.createdAt).format('DD.MM.YYYY'),
                                 violation: vName,
                                 notes: r.notes || '',
@@ -225,31 +262,36 @@ function calculateFines(reports, targetPeriod) {
                 });
             });
 
+            const activeState = state;
+            if (weekReports.some(r => isFineReportInPeriod(r, period))) {
+                displayState = activeState;
+                targetWeekSeen = true;
+            }
             let zoneFine = 0;
             const finesApplied = [];
-            if (state === 'Green') {
-                if (violationsCount >= 14) {
-                    state = 'Red';
-                    weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
-                } else if (violationsCount > 9) {
-                    state = 'Yellow';
-                    if (weekViolationsList.length > 0) {
-                        const freq = {};
-                        weekViolationsList.forEach(v => { freq[v.type] = (freq[v.type]||0)+1; });
-                        let topType='', maxF=0;
-                        for (let t in freq) { if (freq[t] > maxF) { maxF = freq[t]; topType = t; } }
-                        const topV = weekViolationsList.find(x => x.type === topType);
-                        if (topV) { zoneFine += topV.fine; finesApplied.push(topV); }
-                    }
-                }
-            } else if (state === 'Yellow') {
-                if (violationsCount > 9) {
-                    state = 'Red';
-                    weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
-                } else if (violationsCount === 0) { state = 'Green'; }
-            } else if (state === 'Red') {
+            if (activeState === 'Yellow' && weekViolationsList.length > 0) {
+                const freq = {};
+                weekViolationsList.forEach(v => { freq[v.type] = (freq[v.type]||0)+1; });
+                let topType='', maxF=0;
+                for (let t in freq) { if (freq[t] > maxF) { maxF = freq[t]; topType = t; } }
+                const topV = weekViolationsList.find(x => x.type === topType);
+                if (topV) { zoneFine += topV.fine; finesApplied.push(topV); }
+            } else if (activeState === 'Red') {
+                weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
+            }
+
+            // Нарушения этой недели определяют зону только следующей недели.
+            if (activeState === 'Green') {
+                if (violationsCount >= 14) state = 'Red';
+                else if (violationsCount > 9) state = 'Yellow';
+                else state = 'Green';
+            } else if (activeState === 'Yellow') {
+                if (violationsCount > 9) state = 'Red';
+                else if (violationsCount === 0) state = 'Green';
+                else state = 'Yellow';
+            } else {
                 if (violationsCount === 0) state = 'Green';
-                else weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
+                else state = 'Red';
             }
 
             if (zoneFine > 0) {
@@ -257,6 +299,7 @@ function calculateFines(reports, targetPeriod) {
                     if (!isFineReportInPeriod(v.r || { date: v.date }, period)) return;
                     currentMonthFines += v.fine;
                     details.push({
+                        id: v.r ? v.r.id : undefined,
                         date: dayjs(v.date).format('DD.MM.YYYY'),
                         violation: v.vName || v.type,
                         notes: v.r ? (v.r.notes || '') : '',
@@ -270,7 +313,7 @@ function calculateFines(reports, targetPeriod) {
 
         results[master] = {
             loc:            masters[master].loc,
-            state,
+            state:          targetWeekSeen ? displayState : state,
             weekViolations: periodViolationsCount,
             monthFines:     currentMonthFines,
             details:        details.sort((a, b) => {
@@ -283,6 +326,11 @@ function calculateFines(reports, targetPeriod) {
     return results;
 }
 
+window.calculateFines = calculateFines;
+window.getViolationFine = getViolationFine;
+window.isMandatoryFine = isMandatoryFine;
+window.isFineWaivedByForceMajeure = isFineWaivedByForceMajeure;
+
 // ==== FINES MODAL ====
 // Хранение отчётов для детализации
 let _finesAllReports = [];
@@ -290,34 +338,57 @@ let _finesResults    = {};
 
 window.openFinesModal = function() {
     document.getElementById('fines-modal').classList.add('active');
-    // Устанавливаем текущий месяц по умолчанию
+    ['fines-date-start', 'fines-date-end'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = '';
+    });
+    const selector = document.getElementById('fines-month-select');
+    if (selector) {
+        selector.style.minWidth = '280px';
+        const hint = selector.parentElement && selector.parentElement.querySelector('div');
+        if (hint) hint.textContent = 'Расчёт строго за календарную неделю: понедельник-воскресенье. Зона определяется предыдущей неделей.';
+    }
     const sel = document.getElementById('fines-month-select');
-    if (sel) sel.value = dayjs().format('YYYY-MM');
-    const startEl = document.getElementById('fines-date-start');
-    const endEl   = document.getElementById('fines-date-end');
-    if (startEl && !startEl.value) startEl.value = dayjs().startOf('month').format('YYYY-MM-DD');
-    if (endEl && !endEl.value) endEl.value = dayjs().endOf('month').format('YYYY-MM-DD');
+    if (sel && !sel.value) {
+        const monday = dayjs().startOf('isoWeek');
+        sel.value = `${monday.format('YYYY-MM-DD')}|${monday.add(6, 'day').format('YYYY-MM-DD')}`;
+    }
+    syncFinesDateInputsFromSelect();
     renderFinesTable();
 };
 
 window.applyFinesMonthPreset = function() {
-    const sel = document.getElementById('fines-month-select');
-    if (!sel || !sel.value) return renderFinesTable();
-    const startEl = document.getElementById('fines-date-start');
-    const endEl   = document.getElementById('fines-date-end');
-    const base = dayjs(sel.value + '-01');
-    if (startEl) startEl.value = base.startOf('month').format('YYYY-MM-DD');
-    if (endEl) endEl.value = base.endOf('month').format('YYYY-MM-DD');
+    syncFinesDateInputsFromSelect();
     renderFinesTable();
 };
 
 function getSelectedFinesPeriod() {
+    const sel = document.getElementById('fines-month-select');
     const startEl = document.getElementById('fines-date-start');
-    const endEl   = document.getElementById('fines-date-end');
+    const endEl = document.getElementById('fines-date-end');
+    if (startEl && endEl && startEl.value && endEl.value) {
+        return normalizeFinesPeriod({
+            start: startEl.value,
+            end: endEl.value
+        });
+    }
+    const [start, end] = String((sel && sel.value) || '').split('|');
     return normalizeFinesPeriod({
-        start: startEl ? startEl.value : '',
-        end: endEl ? endEl.value : ''
+        start,
+        end
     });
+}
+
+function syncFinesDateInputsFromSelect() {
+    const sel = document.getElementById('fines-month-select');
+    const startEl = document.getElementById('fines-date-start');
+    const endEl = document.getElementById('fines-date-end');
+    if (!sel || !startEl || !endEl || !sel.value) return;
+    const [start, end] = String(sel.value).split('|');
+    if (start && end) {
+        startEl.value = start;
+        endEl.value = end;
+    }
 }
 
 async function renderFinesTable() {
@@ -333,7 +404,7 @@ async function renderFinesTable() {
         const reports = await res.json();
         _finesAllReports = reports;
 
-        // Заполняем доступные месяцы
+        // Заполняем доступные календарные недели.
         populateMonthSelect(reports);
 
         const targetPeriod = getSelectedFinesPeriod();
@@ -355,7 +426,9 @@ async function renderFinesTable() {
                     <td>${dateStr}</td><td>${r.location||'-'}</td>
                     <td style="font-weight:700">${canonicalMaster}</td>
                     <td>${r.violation||r.notes}</td>
-                    <td style="color:#FF3B30;font-weight:bold;">${r.cost} ₽</td>
+                    <td style="color:#FF3B30;font-weight:bold;white-space:nowrap;">${r.cost} ₽
+                        ${PERM.can('editOvnCheck') ? `<button onclick="editOvnFromFines('${r.id}', event)" title="Редактировать ОВН" style="margin-left:8px;background:transparent;border:none;color:#E8FF38;cursor:pointer;font-size:13px">✎</button>` : ''}
+                    </td>
                 </tr>`;
             });
             manualTbody.innerHTML = mHtml || '<tr><td colspan="5" style="text-align:center;color:#888;">Ручных штрафов нет</td></tr>';
@@ -392,31 +465,32 @@ async function renderFinesTable() {
 }
 
 /**
- * Заполняет select доступными месяцами из данных OVN
+ * Заполняет select календарными неделями (понедельник-воскресенье).
  */
 function populateMonthSelect(reports) {
     const sel = document.getElementById('fines-month-select');
     if (!sel) return;
 
-    const months = new Set();
+    const weeks = new Set();
     reports.forEach(r => {
         const d = dayjs(r.date || r.createdAt);
-        if (d.isValid()) months.add(d.format('YYYY-MM'));
+        if (d.isValid()) weeks.add(d.startOf('isoWeek').format('YYYY-MM-DD'));
     });
 
     const currentVal = sel.value;
-    const sortedMonths = Array.from(months).sort().reverse();
+    const currentMonday = dayjs().startOf('isoWeek').format('YYYY-MM-DD');
+    weeks.add(currentMonday);
+    const sortedWeeks = Array.from(weeks).sort().reverse();
+    const ruMonths = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 
-    // Добавим текущий месяц если нет
-    const curMonth = dayjs().format('YYYY-MM');
-    if (!sortedMonths.includes(curMonth)) sortedMonths.unshift(curMonth);
-
-    sel.innerHTML = sortedMonths.map(m => {
-        const [y, mo] = m.split('-');
-        const label = dayjs(m + '-01').format('MMMM YYYY');
-        const capLabel = label.charAt(0).toUpperCase() + label.slice(1);
-        return `<option value="${m}" ${m === currentVal ? 'selected' : ''}>${capLabel}</option>`;
+    sel.innerHTML = sortedWeeks.map(start => {
+        const from = dayjs(start);
+        const to = from.add(6, 'day');
+        const value = `${start}|${to.format('YYYY-MM-DD')}`;
+        const label = `${from.format('D')} ${ruMonths[from.month()]} - ${to.format('D')} ${ruMonths[to.month()]} ${to.format('YYYY')}`;
+        return `<option value="${value}" ${value === currentVal ? 'selected' : ''}>${label}</option>`;
     }).join('');
+    if (!sel.value && sel.options.length) sel.selectedIndex = 0;
 }
 
 /**
@@ -441,10 +515,17 @@ window.showFineDetail = function(masterName) {
             total += d.fine;
             const typeIcon = d.type === 'mandatory' ? '⚠️' : '🔶';
             const typeLabel = d.type === 'mandatory' ? 'Авто' : 'Зона';
+            const editId = d.id || findFineSourceReportId(masterName, d);
+            const editButton = editId
+                ? `<button onclick="editOvnFromFines('${editId}', event)" title="Открыть исходную ОВН-проверку" style="margin-top:7px;background:rgba(232,255,56,0.14);border:1px solid rgba(232,255,56,0.55);color:#E8FF38;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:800;white-space:nowrap">Редактировать ОВН</button>`
+                : '';
             return `<tr>
                 <td style="white-space:nowrap">${d.date}</td>
                 <td>${d.location}</td>
-                <td style="max-width:250px">${d.violation}</td>
+                <td style="max-width:250px">
+                    <div>${d.violation}</div>
+                    ${editButton}
+                </td>
                 <td><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${d.type === 'mandatory' ? 'rgba(255,59,48,0.15);color:#FF3B30' : 'rgba(255,159,10,0.15);color:#FF9F0A'}">${typeIcon} ${typeLabel}</span></td>
                 <td style="color:#FF3B30;font-weight:700;text-align:right;white-space:nowrap">${d.fine.toLocaleString()} ₽</td>
             </tr>`;
@@ -459,6 +540,50 @@ window.showFineDetail = function(masterName) {
 
     block.style.display = 'block';
     block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+function findFineSourceReportId(masterName, detail) {
+    if (!detail || !Array.isArray(_finesAllReports)) return null;
+    const targetDate = dayjs(detail.date, 'DD.MM.YYYY');
+    const targetDay = targetDate.isValid() ? targetDate.format('YYYY-MM-DD') : '';
+    const violation = String(detail.violation || '').toLowerCase().trim();
+    const location = String(detail.location || '').toLowerCase().trim();
+
+    const match = _finesAllReports.find(r => {
+        const canonical = getAdapterMasterCanonical(r.barber);
+        if (canonical !== masterName) return false;
+        const rDay = dayjs(r.date || r.createdAt).format('YYYY-MM-DD');
+        if (targetDay && rDay !== targetDay) return false;
+        if (location && String(r.location || '').toLowerCase().trim() !== location) return false;
+        const rViolation = String(r.violation || '').toLowerCase();
+        return !violation || rViolation.includes(violation) || violation.includes(rViolation);
+    });
+    return match ? match.id : null;
+}
+
+window.editOvnFromFines = async function(id, event) {
+    if (event) event.stopPropagation();
+    try {
+        if (!window.lastOvnVideoRes || !window.lastOvnVideoRes.some(r => String(r.id) === String(id))) {
+            const res = await fetch('/api/ovn?v=' + Date.now());
+            const reports = res.ok ? await res.json() : [];
+            window.lastOvnVideoRes = reports.filter(r => typeof isOvnLateRecord !== 'function' || !isOvnLateRecord(r));
+            const missed = reports.find(r => String(r.id) === String(id));
+            if (missed && !window.lastOvnVideoRes.some(r => String(r.id) === String(id))) {
+                window.lastOvnVideoRes.push(missed);
+            }
+        }
+        const finesModal = document.getElementById('fines-modal');
+        if (finesModal) finesModal.classList.remove('active');
+        if (typeof triggerEditOVN === 'function') {
+            triggerEditOVN(id);
+        } else {
+            showToast('Редактор ОВН ещё не загружен', 'error');
+        }
+    } catch (e) {
+        console.error('[Fines] edit OVN', e);
+        showToast('Не удалось открыть редактирование ОВН', 'error');
+    }
 };
 
 window.hideFineDetail = function() {
@@ -539,6 +664,8 @@ window.renderHandbookEditor = function() {
 
     // Auto-seed commonly used keys
     ['Опоздание 11-20 мин','Опоздание 21-30 мин','Опоздание 31-60 мин','Опоздание 61+ мин (Невыход)',
+     'Опоздание второй мастер 11-20 мин','Опоздание второй мастер 21-30 мин',
+     'Опоздание второй мастер 31-60 мин','Опоздание второй мастер 61+ мин (Невыход)',
      'Невыход','Услуга не проведена через терминал','Грязное рабочее место','Без формы',
      'Еда / напитки на рабочем месте','Разговор на нац. языке','Отказ клиенту','Поломка',
      'Про акцию не сказал','Телефон при клиенте',

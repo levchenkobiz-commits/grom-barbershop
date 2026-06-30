@@ -55,19 +55,22 @@ async function loadLatesHistory() {
                     График на сегодня не составлен для этой локации
                 </div>`;
             } else {
+                const canMarkException = !window.PERM || window.PERM.can('markNoShow');
                 auditEl.innerHTML = mastersList.map(m => {
                     const check       = checksForSelectedDay.find(r => r.barber === m.name);
                     const isChecked   = !!check;
+                    const isForceMajeure = isLatesForceMajeure(check);
                     const statusColor = isChecked
-                        ? ((check.violation || '').toLowerCase().includes('опоздал') ? '#FF3B30' : '#34C759')
+                        ? (isForceMajeure ? '#0A84FF' : ((check.violation || '').toLowerCase().includes('опоздал') ? '#FF3B30' : '#34C759'))
                         : 'rgba(255,255,255,0.1)';
                     const latenessMsg = isChecked
-                        ? ((check.violation || '').toLowerCase().includes('опоздал') ? '⚠️ Опоздание' : '✅ Вовремя')
+                        ? (isForceMajeure ? '🛡 Форс-мажор' : ((check.violation || '').toLowerCase().includes('опоздал') ? '⚠️ Опоздание' : '✅ Вовремя'))
                         : 'Ожидание...';
                     const safeId = 'm' + Array.from(m.name || 'x').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0).toString(36).replace('-','n');
                     const replaceBadge = m.isReplacement
                         ? `<span style="font-size:10px;padding:2px 7px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);border-radius:6px;color:var(--accent)">ЗАМЕНА</span>`
                         : `<span style="font-size:10px;padding:2px 7px;background:rgba(255,255,255,0.05);border-radius:6px;color:var(--text-muted)">Основной</span>`;
+                    const forceBtnArgs = `decodeURIComponent('${encodeURIComponent(m.name || '')}'), decodeURIComponent('${encodeURIComponent(m.startTime || '')}'), this`;
 
                     return `
                     <div class="card" style="padding:20px;border-top:4px solid ${statusColor};transition:border-color 0.3s">
@@ -95,14 +98,21 @@ async function loadLatesHistory() {
                                 ${isChecked ? 'Обновить' : 'Сохранить'}
                             </button>
                         </div>
-                        ${!isChecked ? `
-                        <div style="margin-top:8px;text-align:right">
+                        ${canMarkException ? `
+                        <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+                            <button onclick="openForceMajeureModal(${forceBtnArgs})"
+                                style="padding:3px 10px;font-size:10px;background:rgba(10,132,255,0.12);color:#64D2FF;border:1px solid rgba(10,132,255,0.35);border-radius:8px;cursor:pointer;transition:all 0.2s;"
+                                onmouseenter="this.style.background='rgba(10,132,255,0.24)'"
+                                onmouseleave="this.style.background='rgba(10,132,255,0.12)'">
+                                Форс-мажор
+                            </button>
+                            ${!isChecked ? `
                             <button onclick="quickNoShow('${m.name || ''}', '${m.startTime || ''}', this)"
                                 style="padding:3px 10px;font-size:10px;background:rgba(255,59,48,0.12);color:#FF3B30;border:1px solid rgba(255,59,48,0.35);border-radius:8px;cursor:pointer;transition:all 0.2s;"
                                 onmouseenter="this.style.background='rgba(255,59,48,0.25)'"
                                 onmouseleave="this.style.background='rgba(255,59,48,0.12)'">
                                 ✕ Не вышел (прошло более 2 часов)
-                            </button>
+                            </button>` : ''}
                         </div>` : ''}
                     </div>`;
                 }).join('');
@@ -170,8 +180,125 @@ function focusLatesJournalDate(date) {
     if (presetEl) presetEl.value = 'custom';
 }
 
+function isLatesForceMajeure(r) {
+    if (!r) return false;
+    const text = `${r.violation || ''} ${r.notes || ''} ${r.forceMajeureType || ''}`.toLowerCase();
+    return !!(r.isForceMajeure || r.fineWaived || text.includes('форс-мажор'));
+}
+
+function ensureForceMajeureModal() {
+    if (document.getElementById('force-majeure-modal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'force-majeure-modal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:560px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:24px;gap:16px;align-items:flex-start">
+                <div>
+                    <h2 style="font-size:24px;font-weight:800;margin:0">Форс-мажор</h2>
+                    <div id="force-majeure-subtitle" style="margin-top:6px;color:var(--text-muted);font-size:13px"></div>
+                </div>
+                <button type="button" onclick="closeForceMajeureModal()" style="background:none;border:none;color:var(--text-muted);font-size:30px;cursor:pointer;line-height:1">&times;</button>
+            </div>
+            <form id="force-majeure-form" onsubmit="submitForceMajeure(event)">
+                <input type="hidden" id="fm-barber">
+                <input type="hidden" id="fm-plan-time">
+                <input type="hidden" id="fm-location">
+                <div class="form-field" style="margin-bottom:18px">
+                    <label>Ситуация</label>
+                    <select id="fm-type" required>
+                        <option value="Мастер не вышел">Мастер не вышел</option>
+                        <option value="Мастер выйдет позже">Мастер выйдет позже</option>
+                    </select>
+                </div>
+                <div class="form-field" style="margin-bottom:26px">
+                    <label>Комментарий</label>
+                    <textarea id="fm-comment" rows="4" placeholder="Что случилось..." required></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Сохранить без штрафа</button>
+            </form>
+        </div>`;
+    document.body.appendChild(modal);
+}
+
+window.openForceMajeureModal = function(barber, planTime, btn) {
+    ensureForceMajeureModal();
+
+    const location = (document.getElementById('lates-audit-loc') || {}).value || '';
+    const existing = (window.lastOvnRes || []).find(r =>
+        dayjs(r.date || r.createdAt).format('YYYY-MM-DD') === dayjs().format('YYYY-MM-DD') &&
+        r.location === location &&
+        r.barber === barber &&
+        r.schedTime
+    );
+
+    document.getElementById('fm-barber').value = barber || '';
+    document.getElementById('fm-plan-time').value = planTime || '';
+    document.getElementById('fm-location').value = location;
+    document.getElementById('force-majeure-subtitle').textContent = `${barber || 'Мастер'} · ${location || 'Салон'} · план ${planTime || '--:--'}`;
+    document.getElementById('fm-type').value = existing && existing.forceMajeureType ? existing.forceMajeureType : 'Мастер не вышел';
+    document.getElementById('fm-comment').value = existing && isLatesForceMajeure(existing)
+        ? String(existing.notes || '').replace(/^Форс-мажор:\s*[^.]+\.?\s*/i, '')
+        : '';
+
+    document.getElementById('force-majeure-modal').classList.add('active');
+};
+
+window.closeForceMajeureModal = function() {
+    const modal = document.getElementById('force-majeure-modal');
+    if (modal) modal.classList.remove('active');
+};
+
+window.submitForceMajeure = async function(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const type = document.getElementById('fm-type').value;
+    const comment = document.getElementById('fm-comment').value.trim();
+    const report = {
+        location: document.getElementById('fm-location').value,
+        barber: document.getElementById('fm-barber').value,
+        date: dayjs().format('YYYY-MM-DD'),
+        time: '',
+        schedTime: document.getElementById('fm-plan-time').value,
+        fine: 0,
+        cost: 0,
+        slot: '1',
+        match: 'нет',
+        violation: type,
+        notes: comment ? `Форс-мажор: ${type}. ${comment}` : `Форс-мажор: ${type}`,
+        isForceMajeure: true,
+        fineWaived: true,
+        forceMajeureType: type
+    };
+
+    try {
+        btn.disabled = true;
+        btn.textContent = 'Сохранение...';
+        const res = await fetch('/api/ovn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(report)
+        });
+        if (!res.ok) throw new Error('Server error');
+        focusLatesJournalDate(report.date);
+        closeForceMajeureModal();
+        showToast('Форс-мажор сохранён, штраф не начислен', 'success');
+        setTimeout(() => loadLatesHistory(), 500);
+        if (document.getElementById('fines-modal') && document.getElementById('fines-modal').classList.contains('active')) {
+            renderFinesTable();
+        }
+    } catch (err) {
+        showToast('Ошибка: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Сохранить без штрафа';
+    }
+};
+
 window.quickNoShow = async function(barber, planTime, btn) {
-    if (!confirm(`Зафиксировать невыход на смену для ${barber}?\nШтраф: 2000 ₽`)) return;
+    const noShowFine = Number((window.GLOBAL_HANDBOOK || {})['Невыход']) || 5000;
+    if (!confirm(`Зафиксировать невыход на смену для ${barber}?\nШтраф: ${noShowFine} ₽`)) return;
 
     const report = {
         location:  (document.getElementById('lates-audit-loc') || {}).value,
@@ -179,7 +306,7 @@ window.quickNoShow = async function(barber, planTime, btn) {
         date:      dayjs().format('YYYY-MM-DD'),
         time:      '',
         schedTime: planTime,
-        fine:      2000,
+        fine:      noShowFine,
         slot:      '1',
         match:     'нет',
         violation: 'Не вышел на смену',
@@ -196,7 +323,7 @@ window.quickNoShow = async function(barber, planTime, btn) {
         });
         if (!res.ok) throw new Error('Server error');
         focusLatesJournalDate(report.date);
-        showToast('Невыход зафиксирован, штраф 2000 ₽', 'error');
+        showToast(`Невыход зафиксирован, штраф ${noShowFine} ₽`, 'error');
         setTimeout(() => loadLatesHistory(), 500);
     } catch (e) {
         showToast('Ошибка: ' + e.message, 'error');
@@ -204,6 +331,16 @@ window.quickNoShow = async function(barber, planTime, btn) {
         btn.textContent = '✕ Не вышел (прошло более 2 часов)';
     }
 };
+
+function getLatenessFine(minutes) {
+    const handbook = window.GLOBAL_HANDBOOK || {};
+    if (minutes <= 0) return 0;
+    if (minutes >= 61) return Number(handbook['Опоздание 61+ мин (Невыход)']) || Number(handbook['Невыход']) || 5000;
+    if (minutes >= 31) return Number(handbook['Опоздание 31-60 мин']) || 1000;
+    if (minutes >= 21) return Number(handbook['Опоздание 21-30 мин']) || 500;
+    if (minutes >= 11) return Number(handbook['Опоздание 11-20 мин']) || 300;
+    return 0;
+}
 
 // ==== LATENESS CALC (live) ====
 window.updateLateness = function(el, barberId) {
@@ -228,7 +365,7 @@ window.quickSaveLate = async function(barber, btn) {
 
     const diff      = dayjs(`2000-01-01 ${fact}`).diff(dayjs(`2000-01-01 ${plan}`), 'minute');
     const violation = diff > 0 ? 'Мастер опоздал' : 'Замечаний нет';
-    const fine      = diff > 0 ? 500 : 0;
+    const fine      = getLatenessFine(diff);
 
     const report = {
         location:  (document.getElementById('lates-audit-loc') || {}).value,
@@ -299,6 +436,16 @@ window.renderLatesJournal = function() {
     if (!window.lastOvnRes) return;
     const res = window.lastOvnRes;
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[ch]));
+    }
+
     const presetEl = document.getElementById('lates-history-preset');
     if (presetEl && presetEl.value === 'today' && !document.getElementById('lates-history-start').value) {
         applyLatesPreset(); return;
@@ -325,6 +472,7 @@ window.renderLatesJournal = function() {
     }).sort((a, b) => dayjs(b.date || b.createdAt).valueOf() - dayjs(a.date || a.createdAt).valueOf());
 
     function isLate(r) {
+        if (isLatesForceMajeure(r)) return false;
         if (r.schedTime && r.time) return r.time > r.schedTime;
         return (r.violation || '').toLowerCase().includes('опоздал');
     }
@@ -332,8 +480,10 @@ window.renderLatesJournal = function() {
     // ── KPI CARDS ──
     const total  = list.length;
     const late   = list.filter(isLate).length;
-    const onTime = total - late;
-    const pct    = total > 0 ? Math.round((onTime / total) * 100) : 0;
+    const forceMajeure = list.filter(isLatesForceMajeure).length;
+    const onTime = Math.max(0, total - late - forceMajeure);
+    const pctBase = Math.max(0, total - forceMajeure);
+    const pct    = pctBase > 0 ? Math.round((onTime / pctBase) * 100) : 0;
     const pctColor = pct >= 95 ? '#34C759' : pct >= 80 ? '#FF9F0A' : '#FF3B30';
 
     const kpiEl = document.getElementById('lates-kpi-row');
@@ -343,7 +493,7 @@ window.renderLatesJournal = function() {
                 <div style="font-size:28px">📋</div>
                 <div>
                     <div style="font-size:28px;font-weight:800;line-height:1">${total}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Всего проверок</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Всего проверок${forceMajeure ? ` · ФМ ${forceMajeure}` : ''}</div>
                 </div>
             </div>
             <div class="card" style="padding:20px 24px;display:flex;align-items:center;gap:16px">
@@ -370,6 +520,39 @@ window.renderLatesJournal = function() {
     }
 
     // ── ACCORDION TABLE ──
+    const legacyTbody = document.getElementById('lates-history');
+    if (legacyTbody) {
+        if (total === 0) {
+            legacyTbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                        Нет данных за выбранный период
+                    </td>
+                </tr>`;
+        } else {
+            legacyTbody.innerHTML = list.map(r => {
+                const recDay = dayjs(r.date || r.createdAt);
+                const delay = r.schedTime && r.time
+                    ? Math.max(0, dayjs(`2000-01-01 ${r.time}`).diff(dayjs(`2000-01-01 ${r.schedTime}`), 'minute'))
+                    : 0;
+                const late = isLate(r);
+                const violation = r.violation || (late ? 'Мастер опоздал' : 'Замечаний нет');
+                const delayText = r.schedTime ? (delay > 0 ? `+${delay} мин` : '0 мин') : '';
+                const fm = isLatesForceMajeure(r);
+                return `
+                    <tr>
+                        <td data-label="МАСТЕР" style="padding-left:25px;font-weight:700">${escapeHtml(r.barber || 'Мастер')}</td>
+                        <td data-label="НАРУШЕНИЕ" style="color:${fm ? '#64D2FF' : (late ? '#FF3B30' : '#34C759')}">${escapeHtml(fm ? `Форс-мажор: ${violation}` : violation)}</td>
+                        <td data-label="ДАТА / ВРЕМЯ">${escapeHtml(recDay.isValid() ? recDay.format('DD.MM.YYYY') : '')}</td>
+                        <td data-label="ЛОКАЦИЯ">${escapeHtml(r.location || '')}</td>
+                        <td data-label="ГРАФИК">${escapeHtml(r.schedTime || '-')}</td>
+                        <td data-label="ПРИХОД">${escapeHtml(r.time || '-')}</td>
+                        <td data-label="ЗАДЕРЖКА" style="color:${fm ? '#64D2FF' : (late ? '#FF3B30' : '#34C759')};font-weight:700">${escapeHtml(fm ? 'Без штрафа' : delayText)}</td>
+                    </tr>`;
+            }).join('');
+        }
+    }
+
     const accEl = document.getElementById('lates-journal-accordion');
     if (!accEl) return;
 

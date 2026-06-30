@@ -34,12 +34,17 @@ function isOvnLateRecord(report) {
 
 // ==== FORM: open / close ====
 window.openOVNModal = function(loc = '') {
-    document.getElementById('ovn-modal').classList.add('active');
+    const modal = document.getElementById('ovn-modal');
+    if (modal) {
+        modal.style.display = '';
+        modal.classList.add('active');
+    }
     if (loc) {
         document.getElementById('ovn-location').value = loc;
         updateMastersDropdown();
     }
     document.getElementById('ovn-date').value = dayjs().format('YYYY-MM-DD');
+    setupOvnDateMasterSync();
     // Reset edit state
     window.CURRENT_EDIT_OVN_ID = null;
     const titleEl = document.getElementById('ovn-modal-title');
@@ -47,7 +52,11 @@ window.openOVNModal = function(loc = '') {
 };
 
 window.closeOVNModal = function() {
-    document.getElementById('ovn-modal').classList.remove('active');
+    const modal = document.getElementById('ovn-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = '';
+    }
     window.CURRENT_EDIT_OVN_ID = null;
     // Remove extra violation rows
     const container = document.getElementById('ovn-violations-container');
@@ -61,18 +70,48 @@ window.closeOVNModal = function() {
 // ==== MASTERS DROPDOWN ====
 window.updateMastersDropdown = function() {
     const loc    = document.getElementById('ovn-location').value;
+    const date   = (document.getElementById('ovn-date') || {}).value;
     const select = document.getElementById('ovn-barber');
     select.innerHTML = '<option value="">Выберите мастера</option>';
 
-    if (!loc || !window.BARBER_ROSTER[loc]) return;
+    if (!loc) return;
 
-    const uniqueMasters = [...window.BARBER_ROSTER[loc]].sort((a, b) => a.localeCompare(b));
+    const uniqueMasters = [...((window.BARBER_ROSTER && window.BARBER_ROSTER[loc]) || [])].sort((a, b) => a.localeCompare(b));
     uniqueMasters.forEach(name => {
         const o = document.createElement('option');
         o.value = name; o.textContent = name;
         select.appendChild(o);
     });
+
+    const runId = String(Date.now()) + Math.random();
+    select.dataset.scheduleRunId = runId;
+    fetch('/api/schedule?v=' + Date.now())
+        .then(r => r.ok ? r.json() : [])
+        .then(schedule => {
+            if (select.dataset.scheduleRunId !== runId) return;
+            const day = (schedule || []).find(s => s.date === date && s.location === loc);
+            const existing = new Set(Array.from(select.options).map(o => o.value));
+            (day && Array.isArray(day.masters) ? day.masters : []).forEach(m => {
+                const text = String(m.text || m.startTime || '').trim().toLowerCase();
+                const isOff = !text || text === 'выходной' || text === 'вых';
+                const name = String(m.name || '').trim();
+                if (isOff || !name || existing.has(name)) return;
+                const o = document.createElement('option');
+                o.value = name;
+                o.textContent = m.isReplacement ? `${name} (замена)` : name;
+                select.appendChild(o);
+                existing.add(name);
+            });
+        })
+        .catch(() => {});
 };
+
+function setupOvnDateMasterSync() {
+    const dateEl = document.getElementById('ovn-date');
+    if (!dateEl || dateEl.dataset.ovnMasterSync === '1') return;
+    dateEl.dataset.ovnMasterSync = '1';
+    dateEl.addEventListener('change', () => updateMastersDropdown());
+}
 
 // ==== ADD VIOLATION ROW ====
 window.addViolationRow = function() {
@@ -151,6 +190,7 @@ window.submitOVN = async function(e) {
             method = 'PUT';
             report.id         = window.CURRENT_EDIT_OVN_ID;
             report.editorName = window.USER ? window.USER.name : 'Аноним';
+            report.role       = window.USER ? window.USER.role : '';
         }
 
         const res = await fetch('/api/ovn', {
@@ -245,9 +285,10 @@ window.triggerEditOVN = async function(id) {
         if (titleEl) titleEl.innerText = 'Редактирование проверки ОВН';
 
         const modal = document.getElementById('ovn-modal');
-        modal.style.display = 'flex';
-        modal.offsetHeight;
-        modal.classList.add('active');
+        if (modal) {
+            modal.style.display = '';
+            modal.classList.add('active');
+        }
     }, 50);
 };
 
@@ -319,7 +360,7 @@ async function loadOVNHistory() {
         }
 
         // Master role: update own OVN score
-        if (window.USER && window.USER.role === 'master') {
+        if (PERM.can('tabMasterCabinet')) {
             const myName  = window.USER.name;
             const myOvn   = reports.filter(r => r.barber === myName);
             const scoreEl = document.getElementById('master-ovn-score');
@@ -342,8 +383,8 @@ async function loadOVNHistory() {
             dayjs(r.createdAt).format('YYYY-MM-DD') === todayStr &&
             !(r.violation || '').toLowerCase().includes('мастер опоздал')
         );
-        const remaining    = Math.max(0, 35 - todayReports.length);
-        const counterEl    = document.getElementById('ovn-remaining-count');
+        const remaining = Math.max(0, 35 - todayReports.length);
+        const counterEl = document.getElementById('ovn-remaining-count');
         if (counterEl) {
             if (remaining > 0) { counterEl.innerText = `Осталось проверок: ${remaining}`; counterEl.style.color = '#FF9F0A'; }
             else               { counterEl.innerText = 'Проверки завершены ✅'; counterEl.style.color = '#34C759'; }
@@ -351,25 +392,21 @@ async function loadOVNHistory() {
 
         // --- Render today's table ---
         const renderRow = (r) => {
-            const lowV      = (r.violation || '').toLowerCase();
+            const lowV       = (r.violation || '').toLowerCase();
             const badgeClass = (lowV.includes('нет') || lowV.includes('✅')) ? 'badge-yes' : 'badge-no';
-            const matchVal   = (r.match || '').trim() === 'да';
-            const matchTag   = matchVal
-                ? `<span style="color:#34C759; margin-left:4px" title="Чек совпадает">●</span>`
-                : `<span style="color:#FF3B30; margin-left:4px" title="Расхождение">●</span>`;
-            const role       = window.USER ? window.USER.role : '';
-            const canEdit    = (role === 'ovn' || role === 'manager' || role === 'owner') && !r.editedBy;
-            const editHtml   = canEdit
-                ? `<span onclick="triggerEditOVN('${r.id}', '${(r.notes || '').replace(/'/g, "\\'")}')"\
-                      style="cursor:pointer;margin-left:8px;opacity:0.6" title="Редактировать">✏️</span>`
+        const canEdit  = PERM.can('editOvnCheck');
+            const editHtml = canEdit
+                ? `<span onclick="triggerEditOVN('${r.id}')" style="cursor:pointer;margin-left:8px;opacity:0.6" title="Редактировать">✏️</span>`
                 : '';
+            const reactionHtml = renderReactionBlock(r);
             return `<tr>
                 <td data-label="МАСТЕР" style="font-size:14px;padding-left:25px"><b>${r.barber}</b></td>
                 <td data-label="НАРУШЕНИЕ"><span class="badge-status ${badgeClass}" style="text-align:center">${r.violation}</span></td>
                 <td data-label="ДАТА ПРОСМ." style="font-size:11px;white-space:nowrap;opacity:0.8">${dayjs(r.createdAt).format('HH:mm DD.MM')}</td>
                 <td data-label="САЛОН" style="font-size:13px;font-weight:700;color:var(--accent)">${r.location}</td>
-                <td style="font-size:13px;opacity:0.7">${dayjs(r.date || '').format('DD.MM')} ${r.time || ''} ${matchTag}</td>
+                <td style="font-size:13px;opacity:0.7">${dayjs(r.date || '').format('DD.MM')} ${r.time || ''}</td>
                 <td data-label="РАБОТА" style="font-size:12px;opacity:0.7">${r.notes || '-'} ${editHtml}</td>
+                <td data-label="РЕАКЦИЯ">${reactionHtml}</td>
             </tr>`;
         };
 
@@ -395,8 +432,106 @@ async function loadOVNHistory() {
 
         if (typeof renderOvnJournal === 'function') renderOvnJournal();
 
+        // --- Среднее время реакции (за текущий месяц, только нарушения) ---
+        const reacted = reports.filter(r => {
+            if (!r.reactionAt || !r.createdAt) return false;
+            // Только текущий месяц
+            if (dayjs(r.createdAt).format('YYYY-MM') !== curMonth) return false;
+            // Только реальные нарушения (не "замечаний нет")
+            const lowV = (r.violation || '').toLowerCase();
+            if (lowV.includes('нет') || lowV.includes('✅')) return false;
+            return true;
+        });
+        const avgEl = document.getElementById('card-avg-reaction');
+        if (avgEl) {
+            if (reacted.length > 0) {
+                const avgMs = reacted.reduce((sum, r) => {
+                    const ms = typeof window.getOvnReactionWorkingMs === 'function'
+                        ? window.getOvnReactionWorkingMs(r)
+                        : (new Date(r.reactionAt) - new Date(r.createdAt));
+                    return sum + ms;
+                }, 0) / reacted.length;
+                const avgH = Math.floor(avgMs / 3600000);
+                const avgM = Math.floor((avgMs % 3600000) / 60000);
+                avgEl.innerText = avgH > 0 ? `${avgH}ч ${avgM}мин` : `${avgM}мин`;
+            } else {
+                avgEl.innerText = 'Нет данных';
+            }
+        }
+
+        // Обновить крупное отображение времени реакции (Игорь) в Кабинете менеджера
+        if (typeof window.updateIgorReactionTime === 'function') {
+            window.updateIgorReactionTime(reports);
+        }
+
+        // Обновить пульсирующую точку на вкладке OVN
+        updateOvnTabBadge(reports);
+
     } catch (e) {
         console.error('[OVN] History load error:', e);
+    }
+}
+
+// ==== ПУЛЬСИРУЮЩАЯ ТОЧКА НА ВКЛАДКЕ OVN ====
+// Показывается если есть нарушения (не "нет замечаний") без реакции менеджера
+function updateOvnTabBadge(reports) {
+    // Только для ролей с правом реакции на ОВН
+    if (!PERM.can('reactToOvn')) return;
+
+    const tab = document.getElementById('tab-ovn');
+    if (!tab) return;
+
+    // Считаем нарушения за последние 7 дней без реакции
+    const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    const unreacted = (reports || []).filter(r => {
+        if (!r.createdAt) return false;
+        if (new Date(r.createdAt).getTime() < cutoff) return false;
+        // Исключаем "нет замечаний" и опоздания
+        const lowV = (r.violation || '').toLowerCase();
+        if (lowV.includes('нет') || lowV.includes('✅') || lowV.includes('мастер опоздал')) return false;
+        // Нет реакции
+        return !r.reaction;
+    });
+
+    // Убираем старый бейдж если есть
+    let badge = document.getElementById('ovn-tab-badge');
+
+    if (unreacted.length === 0) {
+        if (badge) badge.remove();
+        return;
+    }
+
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.id = 'ovn-tab-badge';
+        badge.title = `${unreacted.length} нарушений без реакции`;
+        badge.style.cssText = `
+            display:inline-block;
+            width:8px;height:8px;
+            background:#FF3B30;
+            border-radius:50%;
+            margin-left:5px;
+            vertical-align:middle;
+            animation:ovn-pulse 1.4s ease-in-out infinite;
+            position:relative;top:-1px;
+        `;
+        tab.appendChild(badge);
+
+        // Добавляем keyframes один раз
+        if (!document.getElementById('ovn-pulse-style')) {
+            const style = document.createElement('style');
+            style.id = 'ovn-pulse-style';
+            style.textContent = `
+                @keyframes ovn-pulse {
+                    0%   { box-shadow: 0 0 0 0 rgba(255,59,48,0.7); opacity:1; }
+                    70%  { box-shadow: 0 0 0 6px rgba(255,59,48,0); opacity:0.8; }
+                    100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); opacity:1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    } else {
+        badge.title = `${unreacted.length} нарушений без реакции`;
     }
 }
 
@@ -459,18 +594,13 @@ window.renderOvnJournal = function() {
     }
 
     tbody.innerHTML = list.map(r => {
-        const lowV      = (r.violation || '').toLowerCase();
+        const lowV       = (r.violation || '').toLowerCase();
         const badgeClass = (lowV.includes('нет') || lowV.includes('✅')) ? 'badge-yes' : 'badge-no';
-        const matchVal   = (r.match || '').trim() === 'да';
-        const matchTag   = matchVal
-            ? `<span style="color:#34C759;margin-left:4px" title="Чек совпадает">●</span>`
-            : `<span style="color:#FF3B30;margin-left:4px" title="Расхождение">●</span>`;
-        const role       = window.USER ? window.USER.role : '';
-        const canEdit    = (role === 'ovn' || role === 'manager' || role === 'owner') && !r.editedBy;
-        const editHtml   = canEdit
+        const canEdit = PERM.can('editOvnCheck');
+        const editHtml = canEdit
             ? `<span onclick="triggerEditOVN('${r.id}')" style="cursor:pointer;margin-left:8px;opacity:0.6" title="Редактировать">✏️</span>`
             : '';
-        const isToday    = dayjs(r.createdAt).format('YYYY-MM-DD') === dayjs().format('YYYY-MM-DD');
+        const isToday = dayjs(r.createdAt).format('YYYY-MM-DD') === dayjs().format('YYYY-MM-DD');
         return `<tr>
             <td data-label="МАСТЕР" style="font-size:14px;padding-left:25px"><b>${r.barber}</b></td>
             <td data-label="НАРУШЕНИЕ"><span class="badge-status ${badgeClass}" style="text-align:center">${r.violation}</span></td>
@@ -479,8 +609,169 @@ window.renderOvnJournal = function() {
                 ${isToday ? '<span style="color:var(--accent);margin-left:3px">●</span>' : ''}
             </td>
             <td data-label="САЛОН" style="font-size:13px;font-weight:700;color:var(--accent)">${r.location}</td>
-            <td style="font-size:13px;opacity:0.7">${dayjs(r.date || '').format('DD.MM')} ${r.time || ''} ${matchTag}</td>
+            <td style="font-size:13px;opacity:0.7">${dayjs(r.date || '').format('DD.MM')} ${r.time || ''}</td>
             <td data-label="РАБОТА" style="font-size:12px;opacity:0.7">${r.notes || '-'} ${editHtml}</td>
+            <td data-label="РЕАКЦИЯ">${renderReactionBlock(r)}</td>
         </tr>`;
     }).join('');
+};
+
+// ==== REACTION BLOCK ====
+// Рендерит блок реакции для строки OVN-таблицы
+function renderReactionBlock(r) {
+    const userId    = window.USER ? window.USER.name : 'Менеджер';
+    const canReact  = PERM.can('reactToOvn');
+
+    // Таймер: время от createdAt до reactionAt
+    function formatDuration(ms) {
+        if (ms < 0) return '';
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        if (h > 0) return `${h}ч ${m}мин`;
+        return `${m}мин`;
+    }
+
+    let timerHtml = '';
+    if (r.createdAt) {
+        const diff = typeof window.getOvnReactionWorkingMs === 'function'
+            ? window.getOvnReactionWorkingMs(r)
+            : ((r.reactionAt ? new Date(r.reactionAt).getTime() : Date.now()) - new Date(r.createdAt).getTime());
+        timerHtml = `<div style="font-size:10px;color:#888;margin-top:3px">⏱ Время реакции: ${formatDuration(diff)}</div>`;
+    }
+
+    const manualFineHtml = getOvnManualFineButton(r);
+
+    if (r.reaction) {
+        // Определить можно ли ещё редактировать
+        const todayMsk = (() => {
+            const ms = Date.now() + 3 * 3600000;
+            return new Date(ms).toISOString().slice(0, 10);
+        })();
+        const createdDay = (() => {
+            const ms = new Date(r.createdAt || Date.now()).getTime() + 3 * 3600000;
+            return new Date(ms).toISOString().slice(0, 10);
+        })();
+        const isSameDay   = createdDay === todayMsk;
+        const alreadyEdit = !!r.reactionEditedAt;
+        const canEdit     = canReact && (isSameDay || !alreadyEdit);
+
+        const editBtn = canEdit
+            ? `<span onclick="openReactionEdit('${r.id}', this)" style="cursor:pointer;opacity:0.5;font-size:11px;margin-left:6px">✏️</span>`
+            : '';
+        const editedMark = r.reactionEditedAt
+            ? `<span style="font-size:9px;color:#666;display:block">(отредактировано)</span>` : '';
+
+        return `<div style="font-size:12px;color:#ddd;max-width:200px">
+            ${r.reaction}${editBtn}
+            ${editedMark}
+            ${manualFineHtml}
+            ${timerHtml}
+        </div>`;
+    }
+
+    if (!canReact) {
+        return `<span style="font-size:11px;color:#555;font-style:italic">Нет реакции</span>${timerHtml}`;
+    }
+
+    // Кнопка добавить реакцию
+    return `<div>
+        <button onclick="openReactionEdit('${r.id}', this)"
+            style="background:rgba(255,204,0,0.1);border:1px solid rgba(255,204,0,0.3);color:#FFCC00;
+                   padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap">
+            + Добавить реакцию
+        </button>
+        ${manualFineHtml}
+        ${timerHtml}
+    </div>`;
+}
+
+function getOvnManualFineButton(r) {
+    if (!r || !PERM.can('reactToOvn')) return '';
+    const lowV = String(r.violation || '').toLowerCase();
+    const needsManual = lowV.includes('другое') || lowV.includes('пробиты не все услуги');
+    if (!needsManual) return '';
+    return `<div style="margin-top:6px">
+        <button type="button" onclick="openManualFineFromOvn('${r.id}')"
+            style="background:rgba(255,59,48,0.12);border:1px solid rgba(255,59,48,0.35);color:#FF3B30;
+                   padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap">
+            Создать ручной штраф
+        </button>
+    </div>`;
+}
+
+window.openManualFineFromOvn = function(id) {
+    const report = (window.lastOvnVideoRes || []).find(r => String(r.id) === String(id));
+    if (!report || typeof openManualFineModal !== 'function') return;
+    openManualFineModal();
+    const loc = document.getElementById('mf-location');
+    const barber = document.getElementById('mf-barber');
+    const date = document.getElementById('mf-date');
+    const violation = document.getElementById('mf-violation');
+    const notes = document.getElementById('mf-notes');
+    if (loc) loc.value = report.location || '';
+    if (typeof updateMFMastersDropdown === 'function') updateMFMastersDropdown();
+    if (barber) {
+        if (report.barber && !Array.from(barber.options).some(o => o.value === report.barber)) {
+            const opt = document.createElement('option');
+            opt.value = report.barber;
+            opt.textContent = report.barber;
+            barber.appendChild(opt);
+        }
+        barber.value = report.barber || '';
+    }
+    if (date) date.value = report.date || dayjs().format('YYYY-MM-DD');
+    if (violation) violation.value = report.violation || '';
+    if (notes) notes.value = report.notes || '';
+};
+
+// Открыть инлайн-редактор реакции
+window.openReactionEdit = function(id, btn) {
+    const td = btn.closest('td');
+    const report = (window.lastOvnVideoRes || []).find(r => String(r.id) === String(id));
+    if (!td) return;
+    td.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:180px">
+            <textarea id="reaction-input-${id}" rows="2"
+                style="background:#111;border:1px solid #FFCC00;color:#fff;padding:6px;border-radius:6px;
+                       font-size:12px;resize:none;width:100%;box-sizing:border-box"
+                placeholder="Введите реакцию...">${report && report.reaction ? report.reaction.replace(/ \(отредактировано[^)]*\)/, '') : ''}</textarea>
+            <div style="display:flex;gap:6px">
+                <button onclick="saveReaction('${id}')"
+                    style="flex:1;background:#FFCC00;color:#000;border:none;padding:5px;border-radius:5px;
+                           font-size:11px;font-weight:700;cursor:pointer">Сохранить</button>
+                <button onclick="loadOVNHistory()"
+                    style="flex:1;background:transparent;border:1px solid #444;color:#888;padding:5px;
+                           border-radius:5px;font-size:11px;cursor:pointer">Отмена</button>
+            </div>
+        </div>`;
+    const ta = document.getElementById('reaction-input-' + id);
+    if (ta) ta.focus();
+};
+
+window.saveReaction = async function(id) {
+    const ta = document.getElementById('reaction-input-' + id);
+    if (!ta) return;
+    const text = ta.value.trim();
+    if (!text) { showToast('Введите текст реакции', 'error'); return; }
+
+    try {
+        const res = await fetch('/api/ovn/reaction', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id,
+                reaction: text,
+                editorName: window.USER ? window.USER.name : 'Менеджер',
+                role: window.USER ? window.USER.role : ''
+            })
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Ошибка сервера');
+        }
+        showToast('Реакция сохранена', 'success');
+        loadOVNHistory();
+    } catch(e) {
+        showToast('Ошибка: ' + e.message, 'error');
+    }
 };

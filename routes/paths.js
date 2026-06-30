@@ -19,12 +19,20 @@ const PATHS = {
   roles:          path.join(ROOT, 'roles.json'),
   syncStatus:     path.join(ROOT, 'sync_status.json'),
   uploadsDir:     path.join(ROOT, 'manager_uploads'),
+  masterPhotosDir: path.join(ROOT, 'master_photos'),
+  pendingPhotos:  path.join(ROOT, 'pending_photos.json'),
   adapterOut:     path.join(ROOT, 'adapter.js'),
 };
 
-// Создаём папку для загрузок при старте (один раз)
+// Создаём папки при старте (один раз)
 if (!fs.existsSync(PATHS.uploadsDir)) {
   fs.mkdirSync(PATHS.uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(PATHS.masterPhotosDir)) {
+  fs.mkdirSync(PATHS.masterPhotosDir, { recursive: true });
+}
+if (!fs.existsSync(PATHS.pendingPhotos)) {
+  fs.writeFileSync(PATHS.pendingPhotos, '[]');
 }
 
 module.exports = PATHS;
