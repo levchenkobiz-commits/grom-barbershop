@@ -74,6 +74,7 @@ const ROUTES = [
   // ===== График управляющих =====
   { method: 'GET',    path: '/api/manager-schedule',  handler: (q, r) => mgrSchedule.handleGet(q, r) },
   { method: 'POST',   path: '/api/manager-schedule',  handler: (q, r) => mgrSchedule.handlePost(q, r) },
+  { method: 'PATCH',  path: '/api/manager-schedule',  handler: (q, r) => mgrSchedule.handlePatch(q, r) },
 
   // ===== El-Kassa API (прямая интеграция) =====
   { method: 'GET',    path: '/api/elkassa/terminals',           handler: (q, r, u) => elkassa.handleTerminals(q, r, u) },

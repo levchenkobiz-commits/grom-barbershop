@@ -57,3 +57,29 @@ exports.handlePost = async function(req, res) {
         res.writeHead(500); res.end(JSON.stringify({ error: e.message }));
     }
 };
+
+exports.handlePatch = async function(req, res) {
+    try {
+        const payload = await readBody(req);
+        const date = payload && payload.date;
+        const name = payload && payload.name;
+        const status = payload && payload.status;
+
+        if (!date || !name || !['work', 'off'].includes(status)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Expected { date, name, status }' }));
+            return;
+        }
+
+        const data = readData().filter(item => !(item.date === date && item.name === name));
+        if (status === 'work') data.push({ date, name, status });
+        data.sort((a, b) => (a.date + a.name).localeCompare(b.date + b.name));
+        writeData(data);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, count: data.length, data }));
+    } catch(e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+    }
+};

@@ -49,6 +49,7 @@ const ROUTE_PERMS = {
 
     // ── График управляющих ──
     'POST /api/manager-schedule':   ['owner', 'manager'],
+    'PATCH /api/manager-schedule':  ['owner', 'manager'],
 
     // ── Справочник ──
     'POST /api/handbook':           ['owner', 'manager'],
