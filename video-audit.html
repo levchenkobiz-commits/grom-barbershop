@@ -182,6 +182,15 @@
       return res.json();
     }
 
+    async function apiBlob(path) {
+      const headers = new Headers();
+      const key = userKey();
+      if (key) headers.set('X-User-Key', key);
+      const res = await fetch(API + path, {headers});
+      if (!res.ok) throw new Error(await res.text());
+      return URL.createObjectURL(await res.blob());
+    }
+
     async function loadAll() {
       boot = await api('/bootstrap');
       document.getElementById('health').textContent = 'online';
@@ -272,13 +281,22 @@
         ctx.fillText('Загрузи кадр / скриншот', 30, 50);
         return;
       }
+      const objectUrl = await apiBlob(`/evidence/${ev.id}?t=${Date.now()}`);
       image = new Image();
       image.onload = () => {
         canvas.width = image.naturalWidth;
         canvas.height = image.naturalHeight;
         redraw();
+        URL.revokeObjectURL(objectUrl);
       };
-      image.src = `${API}/evidence/${ev.id}?t=${Date.now()}`;
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        canvas.width = 900; canvas.height = 520;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#ff5f5f'; ctx.font = '20px Arial';
+        ctx.fillText('Не удалось загрузить кадр', 30, 50);
+      };
+      image.src = objectUrl;
     }
 
     function redraw() {
