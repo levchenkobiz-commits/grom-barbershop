@@ -69,7 +69,7 @@ jobs:
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
-            "rm -rf /root/grome-video-auditor"
+            "pm2 delete grom-video-auditor-1 grom-video-auditor-2 grom-video-auditor-3 grom-video-auditor-4 >/dev/null 2>&1 || true; pm2 save >/dev/null; rm -rf /root/grome-video-auditor"
 
       - name: Upload manifest files only
         run: |
