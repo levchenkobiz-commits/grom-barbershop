@@ -103,7 +103,12 @@ function authorize(req, res, pathname) {
         return false;
     }
 
-    if (!allowedRoles.includes(user.role)) {
+    const isKseniaManagerSchedule = user.key === 'ksenia' && (
+        routeKey === 'POST /api/manager-schedule' ||
+        routeKey === 'PATCH /api/manager-schedule'
+    );
+
+    if (!allowedRoles.includes(user.role) && !isKseniaManagerSchedule) {
         res.writeHead(403, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Недостаточно прав' }));
         return false;
