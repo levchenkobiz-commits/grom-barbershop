@@ -9,13 +9,52 @@ const USER_KEY = process.env.VIDEO_AUDIT_USER_KEY || '';
 const INTERNAL_TOKEN = process.env.VIDEO_AUDIT_INTERNAL_TOKEN || '';
 const LOGIN = process.env.IVIDEON_LOGIN || '';
 const PASSWORD = process.env.IVIDEON_PASSWORD || '';
-const INTERVAL_MIN = Math.max(1, Number(process.env.IVIDEON_CAPTURE_INTERVAL_MIN || 30));
+const INTERVAL_MIN = Math.max(1, Number(process.env.IVIDEON_CAPTURE_INTERVAL_MIN || 1));
+const ACTIVE_TZ = process.env.IVIDEON_CAPTURE_TIMEZONE || 'Europe/Moscow';
+const ACTIVE_START = process.env.IVIDEON_CAPTURE_START || '08:55';
+const ACTIVE_END = process.env.IVIDEON_CAPTURE_END || '23:00';
 const HEADLESS = process.env.IVIDEON_HEADLESS !== 'false';
 const STATE_PATH = process.env.IVIDEON_STATE_PATH || path.join(__dirname, 'video_audit_data', 'ivideon-storage-state.json');
 const CAMERA_CONFIG_PATH = process.env.IVIDEON_CAMERA_CONFIG || path.join(__dirname, 'ivideon_cameras.json');
 
 function log(...args) {
   console.log(new Date().toISOString(), '[ivideon-worker]', ...args);
+}
+
+function getWallClockParts(date = new Date(), timeZone = ACTIVE_TZ) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  return {
+    hour: Number(parts.find(part => part.type === 'hour')?.value || 0),
+    minute: Number(parts.find(part => part.type === 'minute')?.value || 0),
+    second: Number(parts.find(part => part.type === 'second')?.value || 0),
+  };
+}
+
+function minutesOfDay(value) {
+  const [hour, minute] = String(value || '').split(':').map(Number);
+  return hour * 60 + minute;
+}
+
+function isWithinCaptureWindow(date = new Date()) {
+  const current = getWallClockParts(date);
+  const currentMinute = current.hour * 60 + current.minute;
+  const start = minutesOfDay(ACTIVE_START);
+  const end = minutesOfDay(ACTIVE_END);
+  if (start <= end) return currentMinute >= start && currentMinute <= end;
+  return currentMinute >= start || currentMinute <= end;
+}
+
+function msUntilNextTick(date = new Date()) {
+  const current = getWallClockParts(date);
+  const secondsIntoInterval = ((current.minute % INTERVAL_MIN) * 60) + current.second;
+  const intervalSeconds = INTERVAL_MIN * 60;
+  return Math.max(1000, (intervalSeconds - secondsIntoInterval) * 1000);
 }
 
 function readCameraConfig() {
@@ -161,12 +200,16 @@ async function runOnce() {
 
 async function loop() {
   while (true) {
-    try {
-      await runOnce();
-    } catch (error) {
-      console.error(new Date().toISOString(), '[ivideon-worker] error', error.message);
+    if (isWithinCaptureWindow()) {
+      try {
+        await runOnce();
+      } catch (error) {
+        console.error(new Date().toISOString(), '[ivideon-worker] error', error.message);
+      }
+    } else {
+      log(`outside capture window ${ACTIVE_START}-${ACTIVE_END} ${ACTIVE_TZ}`);
     }
-    await new Promise(resolve => setTimeout(resolve, INTERVAL_MIN * 60 * 1000));
+    await new Promise(resolve => setTimeout(resolve, msUntilNextTick()));
   }
 }
 

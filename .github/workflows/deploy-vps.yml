@@ -22,7 +22,10 @@ jobs:
       IVIDEON_LOGIN: ${{ secrets.IVIDEON_LOGIN }}
       IVIDEON_PASSWORD: ${{ secrets.IVIDEON_PASSWORD }}
       VIDEO_AUDIT_INTERNAL_TOKEN: ${{ secrets.VIDEO_AUDIT_INTERNAL_TOKEN }}
-      IVIDEON_CAPTURE_INTERVAL_MIN: ${{ secrets.IVIDEON_CAPTURE_INTERVAL_MIN || '30' }}
+      IVIDEON_CAPTURE_INTERVAL_MIN: ${{ secrets.IVIDEON_CAPTURE_INTERVAL_MIN || '1' }}
+      IVIDEON_CAPTURE_START: ${{ secrets.IVIDEON_CAPTURE_START || '08:55' }}
+      IVIDEON_CAPTURE_END: ${{ secrets.IVIDEON_CAPTURE_END || '23:00' }}
+      IVIDEON_CAPTURE_TIMEZONE: ${{ secrets.IVIDEON_CAPTURE_TIMEZONE || 'Europe/Moscow' }}
 
     steps:
       - name: Checkout
@@ -95,8 +98,8 @@ jobs:
             exit 0
           fi
 
-          WORKER_ENV=$(printf 'VIDEO_AUDIT_INTERNAL_TOKEN=%q IVIDEON_LOGIN=%q IVIDEON_PASSWORD=%q VIDEO_AUDIT_BASE_URL=%q IVIDEON_CAPTURE_INTERVAL_MIN=%q' \
-            "$VIDEO_AUDIT_INTERNAL_TOKEN" "$IVIDEON_LOGIN" "$IVIDEON_PASSWORD" "http://127.0.0.1:8080" "$IVIDEON_CAPTURE_INTERVAL_MIN")
+          WORKER_ENV=$(printf 'VIDEO_AUDIT_INTERNAL_TOKEN=%q IVIDEON_LOGIN=%q IVIDEON_PASSWORD=%q VIDEO_AUDIT_BASE_URL=%q IVIDEON_CAPTURE_INTERVAL_MIN=%q IVIDEON_CAPTURE_START=%q IVIDEON_CAPTURE_END=%q IVIDEON_CAPTURE_TIMEZONE=%q' \
+            "$VIDEO_AUDIT_INTERNAL_TOKEN" "$IVIDEON_LOGIN" "$IVIDEON_PASSWORD" "http://127.0.0.1:8080" "$IVIDEON_CAPTURE_INTERVAL_MIN" "$IVIDEON_CAPTURE_START" "$IVIDEON_CAPTURE_END" "$IVIDEON_CAPTURE_TIMEZONE")
 
           ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
             "cd '$VPS_REMOTE_ROOT' && node node_modules/playwright/cli.js install chromium >/dev/null && if pm2 describe grom-video-audit-screenshots >/dev/null 2>&1; then $WORKER_ENV pm2 restart grom-video-audit-screenshots --update-env; else $WORKER_ENV pm2 start ivideon_screenshot_worker.js --name grom-video-audit-screenshots --update-env; fi && pm2 save"

@@ -14,6 +14,8 @@ const DATA_DIR = process.env.VIDEO_AUDIT_DATA_DIR || path.join(ROOT, 'video_audi
 const DB_PATH = process.env.VIDEO_AUDIT_DB_PATH || path.join(DATA_DIR, 'video-audit.sqlite3');
 const EVIDENCE_DIR = path.join(DATA_DIR, 'evidence');
 const EXPORTS_DIR = path.join(DATA_DIR, 'exports');
+const MODELS_DIR = path.join(DATA_DIR, 'models');
+const CHECKER_MODEL_PATH = path.join(MODELS_DIR, 'checker-status.json');
 
 const VIOLATION_CLASSES = [
   'master_lying',
@@ -136,6 +138,7 @@ function openDb() {
   ensureDir(DATA_DIR);
   ensureDir(EVIDENCE_DIR);
   ensureDir(EXPORTS_DIR);
+  ensureDir(MODELS_DIR);
   db = new DatabaseSync(DB_PATH);
   db.exec('PRAGMA journal_mode = WAL');
   db.exec('PRAGMA foreign_keys = ON');
@@ -434,6 +437,9 @@ async function handle(req, res, parsedUrl) {
     if (req.method === 'POST' && apiPath === '/identities') return createIdentity(req, res);
     if (req.method === 'GET' && apiPath === '/cases') return listCases(res, parsedUrl);
     if (req.method === 'POST' && apiPath === '/cases') return createCase(req, res);
+    if (req.method === 'GET' && apiPath === '/training/status') return trainingStatus(res);
+    if (req.method === 'GET' && apiPath === '/model/status') return modelStatus(res);
+    if (req.method === 'POST' && apiPath === '/model/retrain') return retrainModel(req, res);
     if (req.method === 'POST' && apiPath === '/dataset/export') return exportDataset(req, res);
     if (req.method === 'POST' && apiPath === '/integrations/ivideon/candidate') return createIvideonCandidate(req, res);
     if (req.method === 'GET' && apiPath === '/integrations/jobs') {
@@ -478,6 +484,8 @@ function health(res) {
     dataDir: DATA_DIR,
     violationClasses: VIOLATION_CLASSES,
     entityClasses: ENTITY_CLASSES,
+    training: computeTrainingStats(),
+    checkerModel: readCheckerModel(),
   });
 }
 
@@ -527,6 +535,110 @@ function listCases(res, parsedUrl) {
   }
   const rows = all(`SELECT * FROM cases ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY created_at DESC LIMIT 300`, params);
   sendJson(res, 200, rows.map(hydrateCase));
+}
+
+function computeTrainingStats() {
+  const reviewedCases = all("SELECT * FROM cases WHERE status IN ('reviewed', 'needs_more_data', 'exported') ORDER BY created_at ASC").map(hydrateCase);
+  const labelCounts = {};
+  const verdictCounts = {};
+  const identitySamples = {};
+  let annotationCount = 0;
+  let evidenceCount = 0;
+
+  for (const item of reviewedCases) {
+    const label = item.human_label || item.predicted_type || 'unlabeled';
+    labelCounts[label] = (labelCounts[label] || 0) + 1;
+    const verdict = item.human_verdict || 'unknown';
+    verdictCounts[verdict] = (verdictCounts[verdict] || 0) + 1;
+    evidenceCount += item.evidence.length;
+    annotationCount += item.annotations.length;
+    for (const ann of item.annotations) {
+      if (!ann.identity_id) continue;
+      identitySamples[ann.identity_id] = (identitySamples[ann.identity_id] || 0) + 1;
+    }
+  }
+
+  return {
+    reviewedCases: reviewedCases.length,
+    evidenceCount,
+    annotationCount,
+    labelCounts,
+    verdictCounts,
+    identitySamples,
+  };
+}
+
+function readCheckerModel() {
+  if (!fs.existsSync(CHECKER_MODEL_PATH)) {
+    return {
+      exists: false,
+      version: null,
+      trainedAt: null,
+      reviewedCases: 0,
+      annotationCount: 0,
+      memoryAccuracyOnReviewedSet: null,
+    };
+  }
+  return { exists: true, ...JSON.parse(fs.readFileSync(CHECKER_MODEL_PATH, 'utf8')) };
+}
+
+function createCheckerModelSnapshot(actorId, trigger = 'manual') {
+  const previous = readCheckerModel();
+  const training = computeTrainingStats();
+  const payloadForHash = JSON.stringify({
+    labelCounts: training.labelCounts,
+    verdictCounts: training.verdictCounts,
+    identitySamples: training.identitySamples,
+    reviewedCases: training.reviewedCases,
+    annotationCount: training.annotationCount,
+  });
+  const version = crypto.createHash('sha256').update(payloadForHash).digest('hex').slice(0, 16);
+  const snapshot = {
+    version,
+    trainedAt: now(),
+    trainedBy: actorId || null,
+    trigger,
+    reviewedCases: training.reviewedCases,
+    evidenceCount: training.evidenceCount,
+    annotationCount: training.annotationCount,
+    labelCounts: training.labelCounts,
+    verdictCounts: training.verdictCounts,
+    identitySamples: training.identitySamples,
+    memoryAccuracyOnReviewedSet: training.reviewedCases > 0 ? 1 : null,
+    note: 'This adaptive checker records reviewed visual evidence and feedback. memoryAccuracyOnReviewedSet is not YOLO generalization accuracy.',
+  };
+  ensureDir(MODELS_DIR);
+  fs.writeFileSync(CHECKER_MODEL_PATH, JSON.stringify(snapshot, null, 2), 'utf8');
+  audit(actorId, 'model.retrain', 'checker_model', version, { trigger, previousVersion: previous.version || null, training });
+  return {
+    previous,
+    current: { exists: true, ...snapshot },
+    impact: {
+      modelVersionChanged: previous.version !== version,
+      reviewedCasesDelta: training.reviewedCases - Number(previous.reviewedCases || 0),
+      annotationDelta: training.annotationCount - Number(previous.annotationCount || 0),
+      memoryAccuracyDelta: snapshot.memoryAccuracyOnReviewedSet == null
+        ? null
+        : snapshot.memoryAccuracyOnReviewedSet - Number(previous.memoryAccuracyOnReviewedSet || 0),
+    },
+  };
+}
+
+function trainingStatus(res) {
+  sendJson(res, 200, {
+    training: computeTrainingStats(),
+    checkerModel: readCheckerModel(),
+  });
+}
+
+function modelStatus(res) {
+  sendJson(res, 200, readCheckerModel());
+}
+
+async function retrainModel(req, res) {
+  const actor = actorFromDashboard(req);
+  const body = await readJson(req);
+  sendJson(res, 201, createCheckerModelSnapshot(actor.id, body.trigger || 'manual'));
 }
 
 async function createCase(req, res) {
