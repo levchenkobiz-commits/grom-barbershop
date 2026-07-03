@@ -68,10 +68,21 @@ window.closeOVNModal = function() {
 };
 
 // ==== MASTERS DROPDOWN ====
-window.updateMastersDropdown = function() {
+window.updateMastersDropdown = function(preserveCurrent = false) {
     const loc    = document.getElementById('ovn-location').value;
     const date   = (document.getElementById('ovn-date') || {}).value;
     const select = document.getElementById('ovn-barber');
+    const selectedMaster = preserveCurrent ? select.value : '';
+    const restoreSelectedMaster = () => {
+        if (!selectedMaster) return;
+        if (!Array.from(select.options).some(o => o.value === selectedMaster)) {
+            const o = document.createElement('option');
+            o.value = selectedMaster;
+            o.textContent = selectedMaster;
+            select.appendChild(o);
+        }
+        select.value = selectedMaster;
+    };
     select.innerHTML = '<option value="">Выберите мастера</option>';
 
     if (!loc) return;
@@ -82,6 +93,7 @@ window.updateMastersDropdown = function() {
         o.value = name; o.textContent = name;
         select.appendChild(o);
     });
+    restoreSelectedMaster();
 
     const runId = String(Date.now()) + Math.random();
     select.dataset.scheduleRunId = runId;
@@ -102,6 +114,7 @@ window.updateMastersDropdown = function() {
                 select.appendChild(o);
                 existing.add(name);
             });
+            restoreSelectedMaster();
         })
         .catch(() => {});
 };
@@ -110,7 +123,7 @@ function setupOvnDateMasterSync() {
     const dateEl = document.getElementById('ovn-date');
     if (!dateEl || dateEl.dataset.ovnMasterSync === '1') return;
     dateEl.dataset.ovnMasterSync = '1';
-    dateEl.addEventListener('change', () => updateMastersDropdown());
+    dateEl.addEventListener('change', () => updateMastersDropdown(true));
 }
 
 // ==== ADD VIOLATION ROW ====
