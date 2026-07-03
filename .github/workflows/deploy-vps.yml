@@ -99,4 +99,4 @@ jobs:
             "$VIDEO_AUDIT_INTERNAL_TOKEN" "$IVIDEON_LOGIN" "$IVIDEON_PASSWORD" "http://127.0.0.1:8080" "$IVIDEON_CAPTURE_INTERVAL_MIN")
 
           ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
-            "cd '$VPS_REMOTE_ROOT' && npx playwright install chromium >/dev/null && if pm2 describe grom-video-audit-screenshots >/dev/null 2>&1; then $WORKER_ENV pm2 restart grom-video-audit-screenshots --update-env; else $WORKER_ENV pm2 start ivideon_screenshot_worker.js --name grom-video-audit-screenshots --update-env; fi && pm2 save"
+            "cd '$VPS_REMOTE_ROOT' && node node_modules/playwright/cli.js install chromium >/dev/null && if pm2 describe grom-video-audit-screenshots >/dev/null 2>&1; then $WORKER_ENV pm2 restart grom-video-audit-screenshots --update-env; else $WORKER_ENV pm2 start ivideon_screenshot_worker.js --name grom-video-audit-screenshots --update-env; fi && pm2 save"
