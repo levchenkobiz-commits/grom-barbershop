@@ -57,13 +57,6 @@ const ROUTES = [
   { method: 'PUT',    path: '/api/manager_checks',    handler: (q, r) => manager.handlePut(q, r) },
 
   { method: 'POST',   path: '/api/adapter',           handler: (q, r) => adapter.handlePost(q, r) },
-  { method: 'GET',    path: '/api/video-audit/events', handler: (q, r, u) => videoAudit.handleGetEvents(q, r, u) },
-  { method: 'GET',    path: '/api/video-audit/frame',  handler: (q, r, u) => videoAudit.handleGetFrame(q, r, u) },
-  { method: 'PATCH',  path: '/api/video-audit/events', handler: (q, r, u) => videoAudit.handlePatchEvent(q, r, u) },
-  { method: 'GET',    path: '/api/video-audit/training', handler: (q, r, u) => videoAudit.handleGetTraining(q, r, u) },
-  { method: 'GET',    path: '/api/video-audit/training/export', handler: (q, r, u) => videoAudit.handleExportTraining(q, r, u) },
-  { method: 'POST',   path: '/api/video-audit/training/import', handler: (q, r, u) => videoAudit.handleImportTraining(q, r, u) },
-
   // ===== Фото мастеров =====
   { method: 'POST',   path: '/api/master_photos',     handler: (q, r) => masterPhotos.handleUploadPhoto(q, r) },
   { method: 'GET',    path: '/api/master_photos',     handler: (q, r, u) => masterPhotos.handleGetPhotos(q, r, u) },
@@ -121,6 +114,18 @@ function route(req, res, parsedUrl) {
   }
 
   // Поиск в таблице маршрутов
+  if (pathname.startsWith('/api/video-audit')) {
+    const internalToken = process.env.VIDEO_AUDIT_INTERNAL_TOKEN || '';
+    if (internalToken && req.headers['x-video-audit-internal-token'] === internalToken) {
+      req.authUser = { key: 'video_audit_worker', role: 'owner', name: 'Video Audit Worker' };
+      videoAudit.handle(req, res, parsedUrl);
+      return true;
+    }
+    if (!auth.authorize(req, res, '/api/video-audit')) return true;
+    videoAudit.handle(req, res, parsedUrl);
+    return true;
+  }
+
   const match = ROUTES.find(r => r.method === req.method && r.path === pathname);
   if (match) {
     // Серверная проверка ролей (auth.js)

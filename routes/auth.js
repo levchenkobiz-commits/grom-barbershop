@@ -40,6 +40,9 @@ const ROUTE_PERMS = {
 
     // ── Настройки адаптер ──
     'POST /api/adapter':            ['owner', 'manager'],
+    'GET /api/video-audit':          ['owner', 'manager'],
+    'POST /api/video-audit':         ['owner', 'manager'],
+    'PATCH /api/video-audit':        ['owner', 'manager'],
     'GET /api/video-audit/events':   ['owner'],
     'GET /api/video-audit/frame':    ['owner'],
     'PATCH /api/video-audit/events': ['owner'],

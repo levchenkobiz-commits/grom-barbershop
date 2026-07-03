@@ -5,7 +5,9 @@
   "main": "agent.js",
   "scripts": {
     "start": "node agent.js",
-    "scrape": "node agent.js --mode scrape"
+    "scrape": "node agent.js --mode scrape",
+    "video-audit:capture": "node ivideon_screenshot_worker.js",
+    "video-audit:capture-once": "node ivideon_screenshot_worker.js --once"
   },
   "dependencies": {
     "dayjs": "^1.11.20",

@@ -19,6 +19,10 @@ jobs:
       VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
       VPS_REMOTE_ROOT: ${{ secrets.VPS_REMOTE_ROOT || '/root/grom-dashboard' }}
       VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+      IVIDEON_LOGIN: ${{ secrets.IVIDEON_LOGIN }}
+      IVIDEON_PASSWORD: ${{ secrets.IVIDEON_PASSWORD }}
+      VIDEO_AUDIT_INTERNAL_TOKEN: ${{ secrets.VIDEO_AUDIT_INTERNAL_TOKEN }}
+      IVIDEON_CAPTURE_INTERVAL_MIN: ${{ secrets.IVIDEON_CAPTURE_INTERVAL_MIN || '30' }}
 
     steps:
       - name: Checkout
@@ -29,9 +33,11 @@ jobs:
           set -euo pipefail
           node --check server.js
           node --check routes/router.js
+          node --check routes/video_audit.js
           node --check routes/manager.js
           node --check public/js/analytics.js
           node --check public/js/analytics_history_overlay.js
+          node --check ivideon_screenshot_worker.js
 
       - name: Configure SSH
         env:
@@ -59,6 +65,12 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
             "/usr/local/sbin/grom-backup predeploy"
 
+      - name: Remove legacy ChatGPT video auditor
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
+            "rm -rf /root/grome-video-auditor"
+
       - name: Upload manifest files only
         run: |
           set -euo pipefail
@@ -71,5 +83,20 @@ jobs:
       - name: Install and restart
         run: |
           set -euo pipefail
+          SERVER_ENV=$(printf 'VIDEO_AUDIT_INTERNAL_TOKEN=%q' "$VIDEO_AUDIT_INTERNAL_TOKEN")
           ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
-            "cd '$VPS_REMOTE_ROOT' && npm install --omit=dev && pm2 restart grom-server --update-env && pm2 save && for i in \$(seq 1 30); do curl -fsS http://127.0.0.1:8080/ >/dev/null && exit 0; sleep 1; done; exit 1"
+            "cd '$VPS_REMOTE_ROOT' && npm install --omit=dev && $SERVER_ENV pm2 restart grom-server --update-env && pm2 save && for i in \$(seq 1 30); do curl -fsS http://127.0.0.1:8080/ >/dev/null && exit 0; sleep 1; done; exit 1"
+
+      - name: Start Ivideon screenshot worker
+        run: |
+          set -euo pipefail
+          if [ -z "$VIDEO_AUDIT_INTERNAL_TOKEN" ] || [ -z "$IVIDEON_LOGIN" ] || [ -z "$IVIDEON_PASSWORD" ]; then
+            echo "Ivideon worker secrets are not set; skipping worker start."
+            exit 0
+          fi
+
+          WORKER_ENV=$(printf 'VIDEO_AUDIT_INTERNAL_TOKEN=%q IVIDEON_LOGIN=%q IVIDEON_PASSWORD=%q VIDEO_AUDIT_BASE_URL=%q IVIDEON_CAPTURE_INTERVAL_MIN=%q' \
+            "$VIDEO_AUDIT_INTERNAL_TOKEN" "$IVIDEON_LOGIN" "$IVIDEON_PASSWORD" "http://127.0.0.1:8080" "$IVIDEON_CAPTURE_INTERVAL_MIN")
+
+          ssh -i ~/.ssh/deploy_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" \
+            "cd '$VPS_REMOTE_ROOT' && npx playwright install chromium >/dev/null && if pm2 describe grom-video-audit-screenshots >/dev/null 2>&1; then $WORKER_ENV pm2 restart grom-video-audit-screenshots --update-env; else $WORKER_ENV pm2 start ivideon_screenshot_worker.js --name grom-video-audit-screenshots --update-env; fi && pm2 save"

@@ -6,6 +6,7 @@ logo_v2.png
 server.js
 package.json
 package-lock.json
+ivideon_screenshot_worker.js
 analytics_history.json
 public/js/config.js
 public/js/ui.js
