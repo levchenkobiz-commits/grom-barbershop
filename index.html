@@ -323,6 +323,9 @@
             <div class="text-center mt-6 scroll-reveal delay-4">
                 <a href="https://n2015703.yclients.com" target="_top" class="framer-btn secondary lg">Весь прайс-лист</a>
             </div>
+        </div>
+    </section>
+
     <!-- RESPONSIVE GALLERY SECTION -->
     <section class="section-layout" id="gallery" style="position: relative; overflow: hidden; padding: 100px 0 16px 0;">
         <div class="hero-orb" style="width:700px;height:400px;top:5%;left:-18%;background:radial-gradient(ellipse at center,rgba(255,255,255,.035) 0%,transparent 65%);filter:blur(60px);animation:gOrb2 30s ease-in-out infinite;z-index:0;"></div>
@@ -719,9 +722,10 @@
                 background: #000;
                 font-family: 'Unbounded', sans-serif;
                 position: relative;
-                width: 100vw;
-                margin-left: calc(50% - 50vw);
-                margin-right: calc(50% - 50vw);
+                display: block;
+                width: 100%;
+                max-width: none;
+                margin: 0;
                 isolation: isolate;
             }
             /* Thin lime accent line at top */
@@ -742,11 +746,12 @@
                 z-index: 1;
             }
             /* 3-column: brand | nav | contact+booking */
-            .footer-grid {
+            .site-footer-grid {
                 display: grid;
                 grid-template-columns: 1.6fr 1fr 1fr;
                 gap: 48px;
                 padding-bottom: 52px;
+                margin: 0;
             }
             /* Brand col */
             .f-brand { }
@@ -834,7 +839,7 @@
             /* Responsive */
             @media (max-width: 768px) {
                 .footer-wrap { padding: 56px max(20px, env(safe-area-inset-left)) 36px max(20px, env(safe-area-inset-right)); }
-                .footer-grid {
+                .site-footer-grid {
                     grid-template-columns: 1fr 1fr;
                     gap: 36px;
                 }
@@ -843,13 +848,13 @@
                 .f-bottom { align-items: flex-start; }
             }
             @media (max-width: 480px) {
-                .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+                .site-footer-grid { grid-template-columns: 1fr; gap: 32px; }
                 .f-brand { grid-column: auto; }
             }
         </style>
 
         <div class="footer-wrap">
-            <div class="footer-grid">
+            <div class="site-footer-grid">
 
                 <!-- Brand -->
                 <div class="f-brand">
