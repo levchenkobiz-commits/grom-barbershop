@@ -4,6 +4,9 @@ favicon.ico
 favicon.png
 logo_v2.png
 server.js
+agent.js
+adapter.js
+elkassa_scraper.js
 package.json
 package-lock.json
 ivideon_screenshot_worker.js

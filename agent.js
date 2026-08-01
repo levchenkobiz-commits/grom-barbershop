@@ -28,20 +28,55 @@ if (!fs.existsSync(CONFIG.downloadDir)) {
 
 const lockPath = path.join(__dirname, 'scraping_lock');
 
-async function run() {
+function acquireScrapingLock() {
     if (fs.existsSync(lockPath)) {
-        console.log('Scraper already running (lock file exists), skipping...');
-        return;
+        let ownerPid = 0;
+        try {
+            ownerPid = Number(JSON.parse(fs.readFileSync(lockPath, 'utf8')).pid) || 0;
+        } catch (_) {
+            // Legacy lock files contained just "active". They cannot prove that a
+            // scraper is still running and previously blocked analytics forever.
+        }
+
+        if (ownerPid > 0) {
+            try {
+                process.kill(ownerPid, 0);
+                console.log(`Scraper already running (pid ${ownerPid}), skipping...`);
+                return false;
+            } catch (_) {
+                // The owner no longer exists, so the lock is stale.
+            }
+        }
+        console.warn('Removing stale scraper lock.');
+        fs.unlinkSync(lockPath);
     }
-    fs.writeFileSync(lockPath, 'active');
+
+    fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }));
+    return true;
+}
+
+function releaseScrapingLock() {
+    if (!fs.existsSync(lockPath)) return;
+    try {
+        const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+        if (Number(lock.pid) !== process.pid) return;
+    } catch (_) {
+        // We own all newly-created locks; also clean up a malformed legacy lock.
+    }
+    fs.unlinkSync(lockPath);
+}
+
+async function run() {
+    if (!acquireScrapingLock()) return;
     console.log(`\n=== [${dayjs().format('HH:mm:ss')}] GROME FULL SYNC (EXCEL EXTRACTOR) ===`);
-    const browser = await chromium.launch({ headless: true, timeout: 90000 });
-    const context = await browser.newContext({ acceptDownloads: true });
-    const page = await context.newPage();
+    let browser;
 
     let loadErrors = { yclients: false, elkassa: false };
 
     try {
+        browser = await chromium.launch({ headless: true, timeout: 90000 });
+        const context = await browser.newContext({ acceptDownloads: true });
+        const page = await context.newPage();
         try {
             await page.goto(CONFIG.url, { waitUntil: 'domcontentloaded', timeout: 90000 });
             
@@ -691,10 +726,8 @@ async function run() {
         }
         fs.writeFileSync(CONFIG.dataPath, JSON.stringify(safeData, null, 2));
     } finally {
-        await browser.close();
-        if (fs.existsSync(lockPath)) {
-            fs.unlinkSync(lockPath);
-        }
+        if (browser) await browser.close().catch(() => {});
+        releaseScrapingLock();
     }
 }
 
@@ -704,9 +737,12 @@ async function loop() {
     setTimeout(loop, 3600000); // 60 min after completion
 }
 
-if (process.argv.includes('--single')) {
-    run().then(() => process.exit(0));
-} else {
-    loop();
+if (require.main === module) {
+    if (process.argv.includes('--single')) {
+        run().then(() => process.exit(0));
+    } else {
+        loop();
+    }
 }
 
+module.exports = { acquireScrapingLock, releaseScrapingLock, run };
