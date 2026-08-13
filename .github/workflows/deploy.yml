@@ -5,6 +5,10 @@ on:
     branches: [master]
   workflow_dispatch:
 
+concurrency:
+  group: grome-production-release
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -12,33 +16,83 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the exact release commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Verify source contract
+        run: |
+          set -euo pipefail
+          npm ci --omit=dev
+          npm run test:adapter-truth
+          npm run test:schedule-integrity
+          npm run test:analytics-top3
+          npm run test:ovn-filter-layout
+          npm run test:release-contract
+
+      - name: Build immutable release payload
+        run: |
+          set -euo pipefail
+          mkdir -p .release
+          {
+            printf '%s\n' server.js agent.js telegram_bot.js index.html master-mobile-current.html
+            printf '%s\n' package.json package-lock.json logo_v2.png favicon.png favicon.ico
+            find routes -type f -name '*.js' -print
+            find public -type f \( -name '*.js' -o -name '*.css' -o -name '*.svg' -o -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.webp' -o -name '*.ico' \) -print
+          } | LC_ALL=C sort -u > .release/files.txt
+          xargs -d '\n' sha256sum < .release/files.txt > .release/release.manifest
+          tar -czf .release/release.tgz -T .release/files.txt
+
       - name: Deploy to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          RELEASE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/grome_vps_key
           chmod 600 ~/.ssh/grome_vps_key
           ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/grome_vps_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE'
+          ssh -i ~/.ssh/grome_vps_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "mkdir -p /tmp/grome-release-${RELEASE_SHA}"
+          scp -i ~/.ssh/grome_vps_key -P "$VPS_PORT" .release/release.tgz .release/release.manifest "$VPS_USER@$VPS_HOST:/tmp/grome-release-${RELEASE_SHA}/"
+          ssh -i ~/.ssh/grome_vps_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "RELEASE_SHA='$RELEASE_SHA' bash -s" <<'REMOTE'
           set -euo pipefail
-          cd /root/grom-dashboard-source
-          git fetch origin master
-          git reset --hard origin/master
+          APP_DIR=/root/grom-dashboard
+          RELEASE_DIR="/tmp/grome-release-${RELEASE_SHA}"
+          LOCK_FILE=/tmp/grome-production-release.lock
+          exec 9>"$LOCK_FILE"
+          flock -n 9 || { echo 'Another production release is running.' >&2; exit 1; }
 
-          # Copy application code only. Runtime data and secrets stay on the VPS.
-          rsync -a server.js adapter.js agent.js telegram_bot.js index.html master-mobile-current.html package.json package-lock.json logo_v2.png favicon.png favicon.ico /root/grom-dashboard/
-          rsync -a --include='*/' --include='*.js' --exclude='*' routes/ /root/grom-dashboard/routes/
-          rsync -a --include='*/' --include='*.js' --include='*.css' --exclude='*' public/ /root/grom-dashboard/public/
+          verify_previous_release() {
+            local line expected file actual
+            [ -f "$APP_DIR/.release-manifest" ] || return 0
+            while IFS= read -r line; do
+              expected="${line%% *}"
+              file="${line#*  }"
+              [ -f "$APP_DIR/$file" ] || { echo "Released file is missing: $file" >&2; return 1; }
+              actual="$(sha256sum "$APP_DIR/$file" | awk '{print $1}')"
+              [ "$actual" = "$expected" ] || { echo "Production code drift detected: $file" >&2; return 1; }
+            done < "$APP_DIR/.release-manifest"
+          }
 
-          cd /root/grom-dashboard
-          npm install --omit=dev
+          trap 'rm -rf "$RELEASE_DIR"' EXIT
+          verify_previous_release
+          mkdir -p "$RELEASE_DIR/unpacked"
+          tar -xzf "$RELEASE_DIR/release.tgz" -C "$RELEASE_DIR/unpacked"
+
+          # adapter.js is runtime data and is deliberately absent from this payload.
+          rsync -a --delay-updates "$RELEASE_DIR/unpacked/" "$APP_DIR/"
+          cd "$APP_DIR"
+          npm ci --omit=dev
           pm2 restart grom-server --update-env
           pm2 restart grom-agent --update-env
           pm2 save
           curl -fsS http://127.0.0.1:8080/ >/dev/null
+          cp "$RELEASE_DIR/release.manifest" "$APP_DIR/.release-manifest"
+          printf '%s\n' "$RELEASE_SHA" > "$APP_DIR/.release-version"
           REMOTE

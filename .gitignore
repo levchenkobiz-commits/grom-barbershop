@@ -10,6 +10,7 @@ weekly_salary_rev.json
 yc_ls.json
 rr_results.json
 sync_status.json
+pending_photos.json
 
 # === Секреты (НЕ коммитим в git!) ===
 # roles.json содержит Telegram ID — добавь вручную на каждом сервере

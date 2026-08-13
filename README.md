@@ -26,11 +26,11 @@ node server.js
 
 ## Деплой на VPS
 
-```bash
-node deploy.js
-```
-
-> `deploy.js` не хранится в git (содержит пароль). Храни локально или используй переменные окружения.
+Релиз выполняет только GitHub Actions после попадания commit в `master`.
+Не копируй файлы на VPS вручную и не запускай локальные скрипты деплоя: workflow
+разворачивает точный SHA, проверяет дрейф production-кода и сохраняет версию релиза.
+Правила для Codex Desktop и CLI — в [AGENTS.md](AGENTS.md), краткая передача
+контекста между сессиями — в [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
 ## Структура
 
