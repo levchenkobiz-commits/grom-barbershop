@@ -9,6 +9,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const workflow = fs.readFileSync(path.join(root, '.github/workflows/deploy.yml'), 'utf8');
 const rules = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
+const legacyWorkflow = path.join(root, '.github/workflows/deploy-vps.yml');
 const required = [
   'actions/checkout@v4',
   'github.sha',
@@ -31,6 +32,9 @@ for (const forbidden of ['grom-dashboard-source', 'git reset --hard', 'git fetch
 }
 if (!rules.includes('GitHub `master` — каноническая версия')) {
   throw new Error('AGENTS.md must name GitHub master as the canonical source.');
+}
+if (fs.existsSync(legacyWorkflow)) {
+  throw new Error('Legacy deploy-vps workflow must not coexist with the verified release workflow.');
 }
 
 console.log('Release pipeline contract regression passed.');
