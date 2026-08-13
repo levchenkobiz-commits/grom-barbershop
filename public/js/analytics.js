@@ -1,4 +1,5 @@
 /**
+ * FINANCIAL UI — salary/fines/zones are protected by /root/grom-dashboard/AGENTS.md.
  * public/js/analytics.js
  * =====================================================
  * Модуль Аналитики.
@@ -60,11 +61,16 @@ function renderData(data) {
         if (data.revenue) {
             try {
                 const revCard  = document.querySelector('#analytics-section .metrics-grid .card:nth-child(1)');
-                const growthVal = data.revenue.growth || 0;
-                revCard.querySelector('.card-value').innerText = (growthVal >= 0 ? '+' : '') + growthVal + '%';
-                const curRev  = data.revenue.current  ? data.revenue.current.toLocaleString()  : '0';
-                const prevRev = data.revenue.previous ? data.revenue.previous.toLocaleString() : '0';
-                revCard.querySelector('.card-subtext').innerText = (data.revenue.period ? data.revenue.period + ' | ' : `${startStr}-${endStr} | `) + `(${curRev} vs ${prevRev} ₽)`;
+                if (data.revenue.noData) {
+                    revCard.querySelector('.card-value').innerText = '—';
+                    revCard.querySelector('.card-subtext').innerText = (data.revenue.period ? data.revenue.period + ' | ' : '') + (data.revenue.reason || 'Нет сопоставимого полного периода');
+                } else {
+                    const growthVal = data.revenue.growth || 0;
+                    revCard.querySelector('.card-value').innerText = (growthVal >= 0 ? '+' : '') + growthVal + '%';
+                    const curRev  = data.revenue.current  ? data.revenue.current.toLocaleString()  : '0';
+                    const prevRev = data.revenue.previous ? data.revenue.previous.toLocaleString() : '0';
+                    revCard.querySelector('.card-subtext').innerText = (data.revenue.period ? data.revenue.period + ' | ' : `${startStr}-${endStr} | `) + `(${curRev} vs ${prevRev} ₽)`;
+                }
             } catch(e) {}
         }
 
@@ -85,7 +91,7 @@ function renderData(data) {
                 const cycleCard = document.querySelector('#analytics-section .metrics-grid .card:nth-child(3)');
                 if (cycleCard) {
                     cycleCard.querySelector('.card-value').innerText = (data.cycle.value || 0) + 'д';
-                    cycleCard.querySelector('.card-subtext').innerText = (data.cycle.period ? data.cycle.period + ' | ' : '') + 'Медиана дней между визитами';
+                    cycleCard.querySelector('.card-subtext').innerText = (data.cycle.period ? data.cycle.period + ' | ' : '') + '120 дней · ≥3 визита · медиана';
                 }
             } catch(e) {}
         }
@@ -95,7 +101,12 @@ function renderData(data) {
                 const apptCard = findAnalyticsCard('онл-запис');
                 if (apptCard) {
                     apptCard.querySelector('.card-value').innerText = (data.appointments.percentage || 0) + '%';
-                    apptCard.querySelector('.card-subtext').innerText = (data.appointments.period ? data.appointments.period + ' | ' : '') + 'Записи от общего числа услуг';
+                    const numerator = data.appointments.onlineRecords;
+                    const denominator = data.appointments.totalServices;
+                    apptCard.querySelector('.card-subtext').innerText = (data.appointments.period ? data.appointments.period + ' | ' : '')
+                        + (Number.isFinite(numerator) && Number.isFinite(denominator)
+                            ? `${numerator} / ${denominator} записей / услуг`
+                            : 'Записи от общего числа услуг');
                 }
             } catch(e) {}
         }
@@ -110,6 +121,17 @@ function renderData(data) {
             } catch(e) {}
         }
 
+        if (data.latenessRate) {
+            try {
+                const valueEl = document.getElementById('card-lateness-rate');
+                const subEl = document.getElementById('card-lateness-subtext');
+                if (valueEl) valueEl.innerText = data.latenessRate.noData ? '—' : data.latenessRate.value + '%';
+                if (subEl) subEl.innerText = data.latenessRate.noData
+                    ? 'Нет проверок прихода за период'
+                    : `${data.latenessRate.period || 'MTD'} | ${data.latenessRate.late} из ${data.latenessRate.total} с опозданием`;
+            } catch(e) {}
+        }
+
         try { updateMasterCabinet(data); } catch(e) {}
         window.DASH_DATA = data;
 
@@ -120,17 +142,15 @@ function renderData(data) {
 
 // ==== MASTER CABINET UPDATE ====
 function getMasterCabinetViolationPeriod() {
-    const start = dayjs().subtract(1, 'week').startOf('isoWeek');
-    const end   = dayjs().subtract(1, 'week').endOf('isoWeek');
+    const start = dayjs().startOf('isoWeek');
+    const end   = dayjs();
     return { start, end };
 }
 
 function getMasterCabinetCanonicalName(name) {
-    if (typeof getAdapterMasterCanonical === 'function') {
-        const canonical = getAdapterMasterCanonical(name);
-        if (canonical) return canonical;
-    }
-    return String(name || '').trim();
+    return typeof window.getAdapterMasterCanonical === 'function'
+        ? window.getAdapterMasterCanonical(name)
+        : null;
 }
 
 function isSameMasterForCabinet(left, right) {
@@ -169,7 +189,7 @@ function isMasterCabinetOvnViolation(report) {
     const text = String((report && report.violation) || '').toLowerCase();
     if (!text) return false;
     if (text.includes('замечаний нет') || text.includes('✅')) return false;
-    if (text.includes('мастер опоздал')) return false;
+    if (typeof window.isZoneExcludedViolation === 'function' ? window.isZoneExcludedViolation(text) : (text.includes('опоздал') || text.includes('отказ клиенту'))) return false;
     if (report && report.isManualFine) return false;
     return true;
 }
@@ -186,6 +206,7 @@ function getMasterCabinetWeeklyViolations(reports) {
 }
 
 async function updateMasterCabinet(data) {
+    if (window.HANDBOOK_READY) await window.HANDBOOK_READY;
     ensureMasterCabinetUi();
     const myName = window.CURRENT_MASTER || 'Шохназар Д.';
     const myCanonicalName = getMasterCabinetCanonicalName(myName);
@@ -194,7 +215,7 @@ async function updateMasterCabinet(data) {
     // Occupancy
     let myOcc = '0';
     if (data.occupancy && data.occupancy.drilldown && data.occupancy.drilldown[0]) {
-        const occObj = data.occupancy.drilldown[0].masters.find(m => m.name === myName);
+        const occObj = data.occupancy.drilldown[0].masters.find(m => isSameMasterForCabinet(m.name, myCanonicalName));
         if (occObj) myOcc = occObj.v;
     }
     const occEl = document.getElementById('master-occupancy');
@@ -203,7 +224,7 @@ async function updateMasterCabinet(data) {
     // Return Rate
     let myRr = 0;
     if (data.returnRate && data.returnRate.drilldown && data.returnRate.drilldown[0]) {
-        const rrObj = data.returnRate.drilldown[0].masters.find(m => m.name === myName);
+        const rrObj = data.returnRate.drilldown[0].masters.find(m => isSameMasterForCabinet(m.name, myCanonicalName));
         if (rrObj) {
             myRr = parseFloat(rrObj.v);
             const rrEl = document.getElementById('master-rr');
@@ -278,7 +299,7 @@ async function updateMasterCabinet(data) {
     // YClients
     let myYc = '0%';
     if (data.appointments && data.appointments.drilldown && data.appointments.drilldown[0] && Array.isArray(data.appointments.drilldown[0].masters)) {
-        const ycObj = data.appointments.drilldown[0].masters.find(m => m.name === myName);
+        const ycObj = data.appointments.drilldown[0].masters.find(m => isSameMasterForCabinet(m.name, myCanonicalName));
         if (ycObj) myYc = ycObj.v;
     }
     const ycEl = document.getElementById('master-yc-percent');
@@ -400,140 +421,21 @@ function renderMasterViolationJournal(reports) {
 
 // ==== DRILLDOWN ====
 window.toggleDrilldown = function(type) {
-    const container = document.getElementById('drilldown');
-
-    if (type === 'ovn') {
-        if (!window.OVN_DRILLDOWN) return;
-        container.style.display = 'block';
-        document.getElementById('drilldown-title').innerText = 'Детализация: Качество ОВН (За месяц)';
-        const topData = window.OVN_TOPS || { violators: [], violations: [] };
-        const renderTopList = (items, emptyText) => items.length
-            ? items.map((item, idx) => `<tr><td>${idx + 1}. ${item.name}</td><td style="font-weight:800;color:var(--accent);text-align:right">${item.count}</td></tr>`).join('')
-            : `<tr><td colspan="2" style="color:var(--text-muted);text-align:center">${emptyText}</td></tr>`;
-        const topHtml = `
-            <tbody><tr><td colspan="3" style="padding:0 0 22px;border-bottom:none;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;">
-                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--card-border);border-radius:16px;padding:18px;">
-                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;font-weight:800;margin-bottom:10px;">Топ-3 нарушителя</div>
-                    <table><tbody>${renderTopList(topData.violators || [], 'Нарушений нет')}</tbody></table>
-                </div>
-                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--card-border);border-radius:16px;padding:18px;">
-                    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;font-weight:800;margin-bottom:10px;">Топ-3 частых нарушений</div>
-                    <table><tbody>${renderTopList(topData.violations || [], 'Нарушений нет')}</tbody></table>
-                </div>
-            </div></td></tr></tbody>`;
-        document.getElementById('drilldown-table').innerHTML = topHtml + `
-            <thead><tr>
-                <th>Филиал / Мастер</th><th>Показатель</th><th>Тренд</th>
-            </tr></thead>
-            <tbody id="drilldown-body">` +
-            window.OVN_DRILLDOWN.map((item, idx) => `
-                <tr class="branch-row" onclick="this.classList.toggle('active'); document.querySelectorAll('.m-${idx}').forEach(m => m.classList.toggle('active'))">
-                    <td><span class="chevron">›</span>${item.name}</td><td>${item.value}</td><td class="trend-${item.trend}">${item.trend === 'up' ? '↗' : '↘'}</td>
-                </tr>
-                ${item.masters.filter(m => isAdapterMaster(m.name)).map(m => `<tr class="master-row m-${idx}"><td>${m.name}</td><td>${m.v}</td><td>-</td></tr>`).join('')}
-            `).join('') + `</tbody>`;
-        window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
-        return;
+    if (window.AnalyticsExplorer && typeof window.AnalyticsExplorer.open === 'function') {
+        return window.AnalyticsExplorer.open(type);
     }
-
-    if (!window.DASH_DATA) return;
-    const keyMap = { revenue: 'revenue', returns: 'returnRate', intervals: 'cycle', appointments: 'appointments', occupancy: 'occupancy' };
-    const data   = window.DASH_DATA[keyMap[type]];
-    if (!data) return;
-
-    const labels = { revenue: 'Выручка / Рост', returns: 'Возвращаемость (RR)', intervals: 'Цикл визита', appointments: 'Онлайн-записи', occupancy: 'Заполняемость' };
-    container.style.display = 'block';
-    document.getElementById('drilldown-title').innerText = 'Детализация: ' + (labels[type] || type);
-
-    // Special two-tab layout for intervals (cycle) drilldown — by branch + by month
-    if (type === 'intervals' && data.drilldown && data.drilldown.length >= 2) {
-        if (!window.switchDrillTab) {
-            window.switchDrillTab = function(tabName, btn) {
-                document.querySelectorAll('.drill-tab').forEach(b => { b.style.color = '#888'; b.style.borderBottom = 'none'; });
-                btn.style.color = '#E8FF38'; btn.style.borderBottom = '2px solid #E8FF38';
-                document.getElementById('drill-masters-body').style.display  = tabName === 'masters'  ? 'table-row-group' : 'none';
-                document.getElementById('drill-branches-body').style.display = tabName === 'branches' ? 'table-row-group' : 'none';
-            };
-        }
-        document.getElementById('drilldown-table').innerHTML = `
-            <thead>
-                <tr><td colspan="2" style="padding:0;border:none;">
-                    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:15px;font-size:14px;font-weight:600;">
-                        <div class="drill-tab" onclick="switchDrillTab('masters',this)" style="padding:15px 25px;cursor:pointer;color:#E8FF38;border-bottom:2px solid #E8FF38;">По филиалам</div>
-                        <div class="drill-tab" onclick="switchDrillTab('branches',this)" style="padding:15px 25px;cursor:pointer;color:#888;">По месяцам</div>
-                    </div>
-                </td></tr>
-                <tr><th>Объект</th><th>Мед. цикл</th></tr>
-            </thead>
-            <tbody id="drill-masters-body">
-                ${data.drilldown[0].masters.map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
-            </tbody>
-            <tbody id="drill-branches-body" style="display:none;">
-                ${data.drilldown[1].masters.map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
-            </tbody>
-        `;
-        window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
-        return;
-    }
-
-    // Special RR two-tab layout
-    if (type === 'returns' && data.drilldown && data.drilldown.length >= 2) {
-        if (!window.switchDrillTab) {
-            window.switchDrillTab = function(tabName, btn) {
-                document.querySelectorAll('.drill-tab').forEach(b => { b.style.color = '#888'; b.style.borderBottom = 'none'; });
-                btn.style.color = '#E8FF38'; btn.style.borderBottom = '2px solid #E8FF38';
-                document.getElementById('drill-masters-body').style.display  = tabName === 'masters'  ? 'table-row-group' : 'none';
-                document.getElementById('drill-branches-body').style.display = tabName === 'branches' ? 'table-row-group' : 'none';
-            };
-        }
-        document.getElementById('drilldown-table').innerHTML = `
-            <thead>
-                <tr><td colspan="3" style="padding:0;border:none;">
-                    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:15px;font-size:14px;font-weight:600;">
-                        <div class="drill-tab" onclick="switchDrillTab('masters',this)" style="padding:15px 25px;cursor:pointer;color:#E8FF38;border-bottom:2px solid #E8FF38;">По мастерам</div>
-                        <div class="drill-tab" onclick="switchDrillTab('branches',this)" style="padding:15px 25px;cursor:pointer;color:#888;">По филиалам</div>
-                    </div>
-                </td></tr>
-                <tr><th>Объект детализации</th><th>Возвращаемость (RR)</th><th></th></tr>
-            </thead>
-            <tbody id="drill-masters-body">
-                ${data.drilldown[0].masters.filter(m => isAdapterMaster(m.name)).map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td colspan="2" style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
-            </tbody>
-            <tbody id="drill-branches-body" style="display:none;">
-                ${data.drilldown[1].masters.map((m, i) => `<tr><td>${i+1}. ${m.name}</td><td colspan="2" style="font-weight:bold;color:var(--accent);">${m.v}</td></tr>`).join('')}
-            </tbody>
-        `;
-        window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
-        return;
-    }
-
-    // Generic drilldown
-    document.getElementById('drilldown-table').innerHTML = `
-        <thead><tr><th>Филиал / Мастер</th><th>Показатель</th><th>Тренд</th></tr></thead>
-        <tbody id="drilldown-body">` +
-        data.drilldown.map((item, idx) => `
-            <tr class="branch-row" onclick="this.classList.toggle('active'); document.querySelectorAll('.m-${idx}').forEach(m => m.classList.toggle('active'))">
-                <td><span class="chevron">›</span>${item.name}</td><td>${item.value}</td><td class="trend-${item.trend}">${item.trend === 'up' ? '↗' : '↘'}</td>
-            </tr>
-            ${item.masters.filter(m => isAdapterMaster(m.name)).map(m => `<tr class="master-row m-${idx}"><td>${m.name}</td><td>${m.v}</td><td>-</td></tr>`).join('')}
-        `).join('') + `</tbody>`;
-    window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
+    console.error('[Analytics] detail explorer is unavailable');
 };
 
 // ==== DATA LOADING ====
 async function loadData() {
     try {
-        const res = await fetch(`./data.json?v=${Date.now()}`);
+        const res = await fetch(`/api/data?v=${Date.now()}`);
         if (res.ok) {
             const data = await res.json();
             if (!data) return;
             window.dashboardData = data;
             renderData(data);
-            try {
-                const dateEl = document.getElementById('current-date');
-                if (dateEl) dateEl.innerHTML = `<span style="color:#34C759">● LIVE</span> Обновлено: ${data.lastUpdate || 'только что'}`;
-            } catch(e) {}
         }
     } catch (err) {
         console.error('[Analytics] loadData fetch error:', err);

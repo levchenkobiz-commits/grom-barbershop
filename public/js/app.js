@@ -10,12 +10,19 @@
 
 // ==== APP INIT ====
 
+function openPrimaryMasterCabinet(user) {
+    if (!user || user.role !== 'master') return false;
+    window.location.replace('/master-mobile-current.html');
+    return true;
+}
+
 window.onload = async () => {
     // Попробуем восстановить сессию из localStorage
     const saved = localStorage.getItem('grome_user');
     if (saved) {
         try {
             window.USER = JSON.parse(saved);
+            if (openPrimaryMasterCabinet(window.USER)) return;
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
             initializeApp();
@@ -66,22 +73,11 @@ window.handleLoginSubmit = async function() {
         // Сохраняем сессию (включаем key для X-User-Key заголовка в fetch interceptor)
         window.USER = { ...data.user, key: data.key };
         localStorage.setItem('grome_user', JSON.stringify(window.USER));
+        if (openPrimaryMasterCabinet(window.USER)) return;
 
-        // Приветствие
-        const welcomeScreen = document.getElementById('welcome-screen');
-        document.getElementById('welcome-msg').innerText = `Привет, ${data.user.name} 👋`;
         document.getElementById('login-screen').classList.add('hidden');
-        welcomeScreen.classList.remove('hidden');
-
-        setTimeout(() => {
-            welcomeScreen.style.opacity = '0';
-            setTimeout(() => {
-                welcomeScreen.classList.add('hidden');
-                welcomeScreen.style.opacity = '';
-                document.getElementById('app-container').classList.remove('hidden');
-                initializeApp();
-            }, 500);
-        }, 1200);
+        document.getElementById('app-container').classList.remove('hidden');
+        initializeApp();
 
     } catch(e) {
         errEl.textContent   = 'Ошибка подключения';
@@ -104,7 +100,6 @@ document.addEventListener('keydown', function(e) {
 async function initializeApp() {
     const user = window.USER;
     if (!user) return;
-    ensureLogoutButton();
 
     // 0. Сразу скрываем все секции (analytics active в HTML по умолчанию)
     document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
@@ -119,11 +114,12 @@ async function initializeApp() {
 
     // 3. Начальная вкладка (с проверкой прав!)
     const hash      = (window.location.hash || '').replace('#', '');
-    const validTabs = ['analytics','ovn','lates','schedule','master-cabinet','manager','settings'];
+    const validTabs = ['analytics','comeback','ovn','lates','schedule','master-cabinet','manager','settings'];
 
     // Маппинг хеша → пермишн (проверяем, имеет ли юзер доступ к вкладке из URL)
     const HASH_PERM = {
         'analytics': 'tabAnalytics', 'ovn': 'tabOvn', 'lates': 'tabLates',
+        'comeback': 'tabComeback',
         'schedule': 'tabSchedule', 'master-cabinet': 'tabMasterCabinet',
         'manager': 'tabManager', 'settings': 'tabAnalytics',
     };
@@ -134,7 +130,8 @@ async function initializeApp() {
         // Начальная вкладка определяется правами из permissions.js
         if (PERM.can('tabMasterCabinet') && !PERM.can('tabAnalytics'))     switchTab('master-cabinet', document.getElementById('tab-master'));
         else if (PERM.can('tabOvn') && !PERM.can('tabAnalytics'))          switchTab('ovn',            document.getElementById('tab-ovn'));
-        else                                                                switchTab('analytics',       document.getElementById('tab-analytics'));
+        else if (PERM.can('tabManager') && !PERM.can('tabAnalytics'))         switchTab('manager',          document.getElementById('tab-manager'));
+        else                                                                 switchTab('analytics',        document.getElementById('tab-analytics'));
     }
 
     // 4. Загружаем данные
@@ -160,24 +157,6 @@ async function initializeApp() {
 
 // Экспортируем для совместимости
 window.initializeApp = initializeApp;
-
-function ensureLogoutButton() {
-    if (document.getElementById('logout-btn')) return;
-
-    const header = document.querySelector('header');
-    if (!header) return;
-
-    const button = document.createElement('button');
-    button.id = 'logout-btn';
-    button.type = 'button';
-    button.className = 'btn-refresh';
-    button.textContent = 'Выйти';
-    button.onclick = window.handleLogout;
-    button.style.marginLeft = '12px';
-    button.style.borderColor = 'rgba(255,255,255,0.18)';
-
-    header.appendChild(button);
-}
 
 // ==== LOGOUT ====
 window.handleLogout = function() {

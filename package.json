@@ -6,6 +6,12 @@
   "scripts": {
     "start": "node agent.js",
     "scrape": "node agent.js --mode scrape",
+    "test:fines-salary": "node tests/fines_salary_regression.js && node tests/violation_rules_regression.js && node tests/salary_access_regression.js",
+    "test:fines-salary:integration": "node tests/fines_salary_integration.js",
+    "test:adapter-truth": "node tests/adapter_source_truth.js && node tests/lateness_punctuality_regression.js && node tests/master_cabinet_ovn_source_regression.js",
+    "test:schedule-integrity": "node tests/schedule_integrity_regression.js",
+    "test:analytics-top3": "node tests/analytics_top3_regression.js && node tests/ovn_analytics_endpoint_regression.js",
+    "test:autosend-tech": "node tests/autosend_technical_tasks_regression.js",
     "video-audit:capture": "node ivideon_screenshot_worker.js",
     "video-audit:capture-once": "node ivideon_screenshot_worker.js --once"
   },

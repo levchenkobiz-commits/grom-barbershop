@@ -36,7 +36,13 @@ const server = http.createServer((req, res) => {
 
   // 2. Раздача статических файлов
   const pathname = parsedUrl.pathname;
-  const filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname.substring(1));
+  // Both public master-cabinet URLs are permanent aliases of one canonical UI.
+  // This prevents the legacy and redesigned versions from drifting apart again.
+  const masterCabinetAliases = new Set(['/master-mobile.html', '/master-mobile-current.html']);
+  const staticName = masterCabinetAliases.has(pathname)
+    ? 'master-mobile-current.html'
+    : (pathname === '/' ? 'index.html' : pathname.substring(1));
+  const filePath = path.join(__dirname, staticName);
   const ext      = String(path.extname(filePath)).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 

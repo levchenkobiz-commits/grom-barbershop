@@ -1,0 +1,537 @@
+/*
+ * Manager salary ledger: presentation only.
+ * The financial formula and source adapters remain in public/js/salary.js.
+ */
+
+#salary-modal {
+  --salary-bg: #0d0e0f;
+  --salary-surface: #121315;
+  --salary-surface-raised: #17181a;
+  --salary-line: rgba(255, 255, 255, 0.09);
+  --salary-line-strong: rgba(255, 255, 255, 0.17);
+  --salary-text: #f5f5f2;
+  --salary-muted: #a4a5a0;
+  --salary-accent: #e8ff38;
+  --salary-danger: #ff6b66;
+  --salary-success: #72df8b;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding: 0 !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  overflow: hidden !important;
+  background: var(--salary-bg) !important;
+  color-scheme: dark;
+}
+
+#salary-modal .salary-ledger-shell {
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 0 env(safe-area-inset-bottom) !important;
+  display: grid !important;
+  grid-template-rows: max-content max-content max-content minmax(0, 1fr);
+  align-content: start;
+  overflow: hidden !important;
+  background: var(--salary-bg) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--salary-text);
+}
+
+#salary-modal .salary-ledger-shell::selection,
+#salary-modal .salary-ledger-shell *::selection {
+  color: #090a0b;
+  background: var(--salary-accent);
+}
+
+#salary-modal .salary-ledger-header {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-direction: row !important;
+  margin: 0 !important;
+  padding: max(7px, env(safe-area-inset-top)) 18px 7px;
+  border-bottom: 1px solid var(--salary-line);
+}
+
+#salary-modal .salary-ledger-header > div {
+  width: auto !important;
+  min-width: 0;
+}
+
+#salary-modal .salary-ledger-header h2 {
+  margin: 0;
+  color: var(--salary-text);
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+#salary-modal .salary-ledger-header p {
+  margin: 3px 0 0;
+  color: var(--salary-muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+#salary-modal .salary-close-button,
+#salary-modal .salary-calculate-button {
+  min-height: 44px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+#salary-modal .salary-close-button {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  border: 1px solid var(--salary-line-strong);
+  background: transparent;
+  color: var(--salary-text);
+}
+
+#salary-modal .salary-close-button:hover {
+  background: var(--salary-surface-raised);
+}
+
+#salary-modal .salary-period-panel {
+  display: grid;
+  grid-template-columns: minmax(330px, 0.9fr) minmax(150px, 0.35fr) minmax(360px, 1.4fr);
+  align-items: end;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--salary-line);
+}
+
+#salary-modal .salary-date-range {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#salary-modal .salary-field {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  color: var(--salary-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: none;
+}
+
+#salary-modal .salary-field input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  padding: 0 11px;
+  border: 1px solid var(--salary-line-strong);
+  border-radius: 9px;
+  background: var(--salary-surface);
+  color: var(--salary-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  box-shadow: none;
+}
+
+#salary-modal .salary-calculate-button {
+  width: 100%;
+  padding: 0 18px;
+  border: 1px solid var(--salary-accent);
+  background: var(--salary-accent);
+  color: #090a0b;
+}
+
+#salary-modal .salary-calculate-button:hover {
+  background: #f0ff73;
+}
+
+#salary-modal .salary-calculate-button:active,
+#salary-modal .salary-close-button:active {
+  transform: translateY(1px);
+}
+
+#salary-modal .salary-calculate-button:disabled {
+  border-color: var(--salary-line-strong);
+  background: var(--salary-surface-raised);
+  color: var(--salary-muted);
+  cursor: wait;
+}
+
+#salary-modal .salary-formula-note {
+  align-self: center;
+  margin: 14px 0 0;
+  color: var(--salary-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+#salary-modal .salary-period-status {
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--salary-line);
+  background: var(--salary-surface);
+  color: var(--salary-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+#salary-modal .salary-period-status[hidden] {
+  display: none;
+}
+
+#salary-modal .salary-table-shell {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--salary-line-strong) var(--salary-bg);
+}
+
+#salary-modal .salary-table {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: table !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+  overflow: visible !important;
+  font-variant-numeric: tabular-nums;
+}
+
+#salary-modal .salary-col-master { width: 16%; }
+#salary-modal .salary-col-terms { width: 13%; }
+#salary-modal .salary-col-revenue { width: 16%; }
+#salary-modal .salary-col-work { width: 15%; }
+#salary-modal .salary-col-fines { width: 20%; }
+#salary-modal .salary-col-total { width: 20%; }
+
+#salary-modal .salary-table thead {
+  display: table-header-group !important;
+}
+
+#salary-modal .salary-table tbody {
+  display: table-row-group !important;
+}
+
+#salary-modal .salary-table tr {
+  display: table-row !important;
+}
+
+#salary-modal .salary-table th,
+#salary-modal .salary-table td {
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  border-bottom: 1px solid var(--salary-line);
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+#salary-modal .salary-table th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 36px;
+  padding: 6px 12px;
+  background: rgba(13, 14, 15, 0.98);
+  color: var(--salary-muted);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.15;
+  text-align: left;
+  text-transform: none;
+}
+
+#salary-modal .salary-table th:last-child {
+  color: var(--salary-accent);
+  text-align: right;
+}
+
+#salary-modal .salary-master-row td {
+  height: 49px;
+  padding: 5px 12px;
+  color: var(--salary-text);
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+#salary-modal .salary-master-row:hover td {
+  background: var(--salary-surface);
+}
+
+#salary-modal .salary-master-name,
+#salary-modal .salary-primary-value {
+  display: block;
+  color: var(--salary-text);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+#salary-modal .salary-secondary-value {
+  display: block;
+  margin-top: 3px;
+  color: var(--salary-muted);
+  font-size: 10px;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+#salary-modal .salary-fine-value {
+  color: var(--salary-danger);
+}
+
+#salary-modal .salary-payout-cell {
+  text-align: right;
+}
+
+#salary-modal .salary-payout-cell .salary-primary-value {
+  color: var(--salary-success);
+  font-size: 15px;
+}
+
+#salary-modal .salary-zone-green { color: var(--salary-success); }
+#salary-modal .salary-zone-yellow { color: #ffc45b; }
+#salary-modal .salary-zone-red { color: var(--salary-danger); }
+
+#salary-modal .salary-state-row td {
+  height: 120px;
+  padding: 30px 18px;
+  color: var(--salary-muted);
+  text-align: center;
+}
+
+#salary-modal .salary-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+#salary-modal .salary-loading::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--salary-accent);
+  animation: salary-loading-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes salary-loading-pulse {
+  from { opacity: 0.35; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+#salary-modal .salary-error {
+  color: var(--salary-danger);
+}
+
+#salary-modal .salary-grand-total {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: 9px 12px;
+  background: rgba(23, 24, 26, 0.98);
+  border-top: 1px solid var(--salary-line-strong);
+}
+
+#salary-modal .salary-total-label {
+  color: var(--salary-text);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+
+#salary-modal .salary-total-value {
+  color: var(--salary-accent);
+  font-size: 17px;
+  font-weight: 850;
+  text-align: right;
+}
+
+#salary-modal .salary-close-button:focus-visible,
+#salary-modal .salary-calculate-button:focus-visible,
+#salary-modal .salary-field input:focus-visible {
+  outline: 2px solid var(--salary-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  #salary-modal .salary-ledger-shell {
+    grid-template-rows: max-content max-content max-content minmax(0, 1fr);
+  }
+
+  #salary-modal .salary-ledger-header {
+    min-height: 56px;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  #salary-modal .salary-ledger-header p {
+    display: none;
+  }
+
+  #salary-modal .salary-close-button {
+    padding: 0 12px;
+  }
+
+  #salary-modal .salary-period-panel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px 12px 10px;
+  }
+
+  #salary-modal .salary-date-range {
+    gap: 7px;
+  }
+
+  #salary-modal .salary-formula-note {
+    margin: 0;
+  }
+
+  #salary-modal .salary-period-status {
+    padding: 8px 12px;
+  }
+
+  #salary-modal .salary-table-shell {
+    padding: 8px 10px 12px;
+  }
+
+  #salary-modal .salary-table,
+  #salary-modal .salary-table tbody {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  #salary-modal .salary-table colgroup,
+  #salary-modal .salary-table thead {
+    display: none !important;
+  }
+
+  #salary-modal .salary-table .salary-master-row {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    grid-template-areas:
+      'master payout'
+      'terms revenue'
+      'work fines';
+    margin: 0 0 8px;
+    padding: 12px;
+    border: 1px solid var(--salary-line);
+    border-radius: 12px;
+    background: var(--salary-surface);
+  }
+
+  #salary-modal .salary-master-row:hover td {
+    background: transparent;
+  }
+
+  #salary-modal .salary-master-row td {
+    height: auto;
+    min-height: 42px;
+    padding: 6px;
+    overflow: visible;
+    border-bottom: 0;
+    text-overflow: clip;
+  }
+
+  #salary-modal .salary-master-cell { grid-area: master; }
+  #salary-modal .salary-terms-cell { grid-area: terms; }
+  #salary-modal .salary-revenue-cell { grid-area: revenue; }
+  #salary-modal .salary-work-cell { grid-area: work; }
+  #salary-modal .salary-fines-cell { grid-area: fines; }
+  #salary-modal .salary-payout-cell { grid-area: payout; }
+
+  #salary-modal .salary-master-row td:not(.salary-master-cell)::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 5px;
+    color: var(--salary-muted);
+    font-size: 9px;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  #salary-modal .salary-payout-cell::before {
+    text-align: right;
+  }
+
+  #salary-modal .salary-state-row {
+    display: block !important;
+  }
+
+  #salary-modal .salary-state-row td {
+    display: block;
+    width: 100%;
+    height: auto;
+    padding: 40px 12px;
+    border: 0;
+  }
+
+  #salary-modal .salary-grand-total {
+    bottom: -12px;
+    width: 100%;
+    min-height: 52px;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--salary-line-strong);
+    border-radius: 12px 12px 0 0;
+  }
+}
+
+@media (max-width: 359px) {
+  #salary-modal .salary-table .salary-master-row {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'master'
+      'payout'
+      'terms'
+      'revenue'
+      'work'
+      'fines';
+  }
+
+  #salary-modal .salary-payout-cell,
+  #salary-modal .salary-payout-cell::before {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #salary-modal .salary-loading::before {
+    animation: none;
+  }
+
+  #salary-modal .salary-calculate-button:active,
+  #salary-modal .salary-close-button:active {
+    transform: none;
+  }
+}

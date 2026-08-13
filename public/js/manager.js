@@ -33,6 +33,179 @@ function escapeManagerHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+let managerTechnicalTasksRequest = 0;
+
+function managerTechnicalTaskStatus(task) {
+    if (task.deferRequest || task.deferredUntil) return 'Перенесено';
+    return task.status === 'В работе' ? 'В работе' : 'Новая';
+}
+
+async function loadManagerTechnicalTasksForSalon(salon) {
+    const box = document.getElementById('manager-technical-tasks-list');
+    const count = document.getElementById('manager-technical-tasks-count');
+    if (!box) return;
+    const requestId = ++managerTechnicalTasksRequest;
+    const selectedSalon = String(salon || '').trim();
+    if (!selectedSalon) {
+        if (count) count.textContent = '0';
+        box.innerHTML = '<div style="color:var(--text-muted);font-size:12px">Сначала выберите салон.</div>';
+        return;
+    }
+    box.innerHTML = '<div style="color:var(--text-muted);font-size:12px">Загружаем задачи Кирилла…</div>';
+    try {
+        const response = await fetch(`/api/technical_tasks?salon=${encodeURIComponent(selectedSalon)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Не удалось загрузить задачи');
+        if (requestId !== managerTechnicalTasksRequest) return;
+        const currentSalon = String(document.getElementById('manager-location')?.value || '').trim();
+        if (currentSalon !== selectedSalon) return;
+        const tasks = (Array.isArray(data.active) ? data.active : []).filter(task =>
+            task && !task.archived && task.status !== 'Выполнено'
+        );
+        if (count) count.textContent = String(tasks.length);
+        if (!tasks.length) {
+            box.innerHTML = '<div style="color:#34C759;font-size:12px">Незавершённых технических задач по этому салону нет.</div>';
+            return;
+        }
+        box.innerHTML = tasks.map(task => {
+            const status = managerTechnicalTaskStatus(task);
+            const color = status === 'В работе' ? '#FF9F0A' : status === 'Перенесено' ? '#64D2FF' : 'var(--accent)';
+            return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+                <span style="font-size:12px;line-height:1.35;color:#fff">${escapeManagerHtml(task.title)}</span>
+                <span style="flex:0 0 auto;font-size:10px;font-weight:800;color:${color};white-space:nowrap">${status}</span>
+            </div>`;
+        }).join('');
+    } catch (error) {
+        if (requestId !== managerTechnicalTasksRequest) return;
+        if (count) count.textContent = '—';
+        box.innerHTML = `<div style="color:#FF453A;font-size:12px">${escapeManagerHtml(error.message)}</div>`;
+    }
+}
+
+function ensureTechnicalTasksView() {
+    const tab = document.getElementById('tab-manager');
+    if (tab) tab.textContent = 'Технические задачи';
+    const section = document.getElementById('manager-section');
+    if (!section || section.dataset.technicalTasksReady === '1') return;
+    section.dataset.technicalTasksReady = '1';
+    section.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+            <div><h1 class="section-title" style="margin:0 0 8px">Технические недоработки</h1>
+            <div style="color:var(--text-muted);font-size:13px">Задачи автоматически поступают из пункта 6 проверок менеджера</div></div>
+            <button class="btn-refresh" onclick="loadTechnicalTasks()">Обновить</button>
+        </div>
+        <div id="technical-task-groups"></div>
+        <details style="margin-top:24px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:16px 20px">
+            <summary style="cursor:pointer;font-weight:800">Архив выполненных (<span id="technical-archive-count">0</span>)</summary>
+            <div style="overflow:auto;margin-top:14px"><table class="journal-table"><thead><tr><th>Выполнено</th><th>Салон</th><th>Задача</th></tr></thead><tbody id="technical-tasks-archive"></tbody></table></div>
+        </details>`;
+}
+
+function technicalTaskRow(task) {
+    const date = dayjs(task.reportedAt);
+    const dateText = date.isValid() ? date.format('DD.MM.YYYY') : '—';
+    const statuses = ['Новая задача', 'В работе', 'Выполнено'];
+    const options = statuses.map(status => `<option value="${status}" ${task.status === status ? 'selected' : ''}>${status}</option>`).join('');
+    const deferLabel = task.deferredUntil
+        ? `<div style="color:#64D2FF;font-size:11px;margin-top:6px">Перенесено до ${dayjs(task.deferredUntil).format('DD.MM.YYYY')}${task.deferComment ? ` · ${escapeManagerHtml(task.deferComment)}` : ''}</div>`
+        : '';
+    return `<tr><td>${dateText}</td><td style="font-weight:700">${escapeManagerHtml(task.salon)}</td><td>${escapeManagerHtml(task.title)}${deferLabel}</td><td><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select onchange="updateTechnicalTaskStatus('${escapeManagerHtml(task.id)}', this.value, this)" style="min-width:150px">${options}</select><button class="btn-refresh" style="padding:7px 10px" onclick="requestTechnicalTaskDefer('${escapeManagerHtml(task.id)}')">Перенести</button></div></td></tr>`;
+}
+
+function technicalTaskGroup(title, tasks, color) {
+    const rows = tasks.length ? tasks.map(technicalTaskRow).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">Задач нет</td></tr>';
+    return `<section style="margin-bottom:22px"><h2 style="font-size:18px;margin:0 0 10px;color:${color}">${title} (${tasks.length})</h2><div class="ovn-matrix-container" style="padding:0;overflow:hidden;border-radius:20px"><table class="journal-table"><thead><tr><th>Дата</th><th>Салон</th><th>Задача</th><th>Действия</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+
+window.loadTechnicalTasks = async function() {
+    ensureTechnicalTasksView();
+    try {
+        const response = await fetch('/api/technical_tasks');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка загрузки');
+        const groups = document.getElementById('technical-task-groups');
+        const archive = document.getElementById('technical-tasks-archive');
+        const today = dayjs().format('YYYY-MM-DD');
+        const deferred = data.active.filter(task => task.deferRequest || (task.deferredUntil && task.deferredUntil >= today));
+        const regular = data.active.filter(task => !deferred.includes(task));
+        const fresh = regular.filter(task => task.status === 'Новая задача');
+        const inWork = regular.filter(task => task.status === 'В работе');
+        if (groups) groups.innerHTML = technicalTaskGroup('Новые задачи', fresh, 'var(--accent)') + technicalTaskGroup('В работе', inWork, '#FF9F0A') + technicalTaskGroup('Перенесённые', deferred, '#64D2FF');
+        if (archive) archive.innerHTML = data.archived.length ? data.archived.map(task => `<tr><td>${task.completedAt ? dayjs(task.completedAt).format('DD.MM.YYYY') : '—'}</td><td>${escapeManagerHtml(task.salon)}</td><td>${escapeManagerHtml(task.title)}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">Архив пуст</td></tr>';
+        const count = document.getElementById('technical-archive-count');
+        if (count) count.textContent = data.archived.length;
+    } catch (error) {
+        if (typeof showToast === 'function') showToast(error.message, 'error');
+    }
+};
+
+window.requestTechnicalTaskDefer = async function(id) {
+    document.getElementById('technical-defer-dialog')?.remove();
+    const today = dayjs().format('YYYY-MM-DD');
+    const tomorrow = dayjs().add(1, 'day').format('YYYY-MM-DD');
+    const overlay = document.createElement('div');
+    overlay.id = 'technical-defer-dialog';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px';
+    overlay.innerHTML = `<div style="width:min(430px,100%);background:#111;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:20px;box-shadow:0 20px 70px rgba(0,0,0,.55)">
+        <div style="font-size:18px;font-weight:850;margin-bottom:16px">Перенести задачу</div>
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:7px">Новая дата</label>
+        <input id="technical-defer-date" type="date" min="${tomorrow}" value="${tomorrow}" style="width:100%;box-sizing:border-box;padding:13px;border-radius:11px;background:#080808;color:#fff;border:1px solid rgba(255,255,255,.16);font:600 14px Inter,sans-serif;color-scheme:dark">
+        <div id="technical-defer-reason-wrap" style="margin-top:14px">
+            <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:7px">Комментарий к переносу</label>
+            <textarea id="technical-defer-reason" rows="3" placeholder="Например: ожидаем поставку детали" style="width:100%;box-sizing:border-box;padding:12px;border-radius:11px;background:#080808;color:#fff;border:1px solid rgba(255,255,255,.16);font:500 13px Inter,sans-serif;resize:vertical"></textarea>
+            <div style="font-size:11px;color:#FF9F0A;margin-top:6px">Комментарий обязателен и будет одинаковым в дашборде и Auto Send.</div>
+        </div>
+        <div id="technical-defer-error" style="min-height:18px;margin-top:10px;color:#FF453A;font-size:12px"></div>
+        <div style="display:flex;gap:9px;margin-top:8px"><button type="button" id="technical-defer-cancel" class="btn-refresh" style="flex:1">Отмена</button><button type="button" id="technical-defer-submit" class="btn-submit" style="flex:1">Перенести</button></div>
+    </div>`;
+    document.body.appendChild(overlay);
+    const dateInput = overlay.querySelector('#technical-defer-date');
+    const reasonInput = overlay.querySelector('#technical-defer-reason');
+    const errorBox = overlay.querySelector('#technical-defer-error');
+    const daysUntil = () => dayjs(dateInput.value).startOf('day').diff(dayjs(today).startOf('day'), 'day');
+    const refreshReason = () => { errorBox.textContent = ''; };
+    dateInput.addEventListener('change', refreshReason);
+    refreshReason();
+    overlay.querySelector('#technical-defer-cancel').onclick = () => overlay.remove();
+    overlay.addEventListener('click', event => { if (event.target === overlay) overlay.remove(); });
+    overlay.querySelector('#technical-defer-submit').onclick = async event => {
+        const button = event.currentTarget;
+        const days = daysUntil();
+        const comment = reasonInput.value.trim();
+        if (!dateInput.value || days < 1) { errorBox.textContent = 'Выберите будущую дату.'; return; }
+        if (!comment) { errorBox.textContent = 'Укажите комментарий к переносу.'; reasonInput.focus(); return; }
+        button.disabled = true;
+        try {
+            const response = await fetch('/api/technical_tasks/defer', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, date: dateInput.value, comment })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Ошибка переноса');
+            overlay.remove();
+            if (typeof showToast === 'function') showToast(`Задача перенесена до ${dayjs(data.task.deferredUntil).format('DD.MM.YYYY')}`, 'success');
+            await window.loadTechnicalTasks();
+        } catch (error) {
+            button.disabled = false;
+            errorBox.textContent = error.message;
+        }
+    };
+};
+
+window.updateTechnicalTaskStatus = async function(id, status, select) {
+    select.disabled = true;
+    try {
+        const response = await fetch('/api/technical_tasks', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка сохранения');
+        if (typeof showToast === 'function') showToast(status === 'Выполнено' ? 'Задача перемещена в архив' : 'Статус обновлён', 'success');
+        await window.loadTechnicalTasks();
+    } catch (error) {
+        select.disabled = false;
+        if (typeof showToast === 'function') showToast(error.message, 'error');
+    }
+};
+
 function canEditManagerCheck(check) {
     if (!check || !check.createdAt) return false;
     const createdAt = new Date(check.createdAt).getTime();
@@ -43,86 +216,14 @@ function ensureManagerHistoryGroupedStyles() {
     const tbody = document.getElementById('manager-history');
     const table = tbody ? tbody.closest('table') : null;
     if (table) table.classList.add('manager-history-grouped');
-
-    if (document.getElementById('manager-history-grouped-style')) return;
-
-    const style = document.createElement('style');
-    style.id = 'manager-history-grouped-style';
-    style.textContent = `
-        .manager-history-grouped {
-            border-collapse: separate;
-            border-spacing: 0 8px;
-        }
-        .manager-history-grouped th {
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-        .manager-date-row td {
-            padding: 16px 18px 8px;
-            border: 0;
-            background: linear-gradient(90deg, rgba(232,255,56,0.12), rgba(255,255,255,0.035));
-            border-top: 1px solid rgba(232,255,56,0.18);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-        }
-        .manager-date-heading {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .manager-date-title {
-            color: var(--accent);
-            font-size: 15px;
-            font-weight: 800;
-        }
-        .manager-date-meta {
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .manager-check-row {
-            background: rgba(255,255,255,0.022);
-        }
-        .manager-check-row:hover {
-            background: rgba(255,255,255,0.045);
-        }
-        .manager-check-row td {
-            border-top: 1px solid rgba(255,255,255,0.045);
-            border-bottom: 1px solid rgba(255,255,255,0.045);
-            vertical-align: middle;
-        }
-        .manager-check-row td:first-child {
-            border-left: 1px solid rgba(255,255,255,0.045);
-            border-radius: 10px 0 0 10px;
-        }
-        .manager-check-row td:last-child {
-            border-right: 1px solid rgba(255,255,255,0.045);
-            border-radius: 0 10px 10px 0;
-        }
-        @media (max-width: 768px) {
-            .manager-history-grouped {
-                border-spacing: 0;
-            }
-            .manager-date-row {
-                display: block;
-                margin: 0 0 10px;
-            }
-            .manager-date-row td {
-                display: block;
-                width: 100%;
-            }
-            .manager-check-row {
-                margin-bottom: 12px;
-            }
-        }
-    `;
-    document.head.appendChild(style);
 }
 
 
 // ==== LOAD MANAGER CHECKS ====
 async function loadManagerChecks() {
+    if (window.USER && window.USER.role === 'maintenance') {
+        return window.loadTechnicalTasks();
+    }
     try {
         const res    = await fetch('/api/manager_checks');
         if (!res.ok) return;
@@ -197,27 +298,6 @@ async function loadManagerChecks() {
         window.MANAGER_CHECKS_DATA = checks;
         return;
 
-        checks.slice(0, 50).forEach(c => {
-            const dateStr    = new Date(c.createdAt).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-            const totalItems = c.items.length;
-            const cleanItems = c.items.filter(i => i.status === 'yes').length;
-            const badItems   = c.items.filter(i => i.status === 'no');
-            const issuesText = badItems.length > 0
-                ? badItems.map(i => `<div style="margin-bottom:3px"><strong>П. ${i.id}:</strong> ${i.comment}</div>`).join('')
-                : '<span style="color:#34C759">Идеально (без нарушений)</span>';
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${dateStr}</td>
-                <td style="font-weight:600">${c.location}</td>
-                <td>${cleanItems} / ${totalItems} выполнено</td>
-                <td style="font-size:11px;line-height:1.3;max-width:300px">${issuesText}</td>
-                <td><button onclick="viewManagerCheck(${c.id})" class="btn-refresh" style="padding:5px 10px">Просмотр</button></td>
-            `;
-            tbody.appendChild(row);
-        });
-
-        window.MANAGER_CHECKS_DATA = checks;
     } catch(e) {
         console.error('[Manager] loadManagerChecks error:', e);
     }
@@ -252,7 +332,73 @@ window.viewManagerCheck = function(id) {
 
 // ==== ADAPTER GUI ====
 
-function _renderAdapterGUI(adapterData) {
+const MASTER_ONBOARDING_LABELS = {
+    documentsStatus: { pending: 'Не оформлен', completed: 'Оформлен' },
+    uniformStatus: { none: 'Без формы', issued: 'Форма выдана', apron: 'Фартук', shirt: 'Футболка', own: 'Своя форма' },
+};
+
+function _escapeOnboardingHtml(value) {
+    return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _onboardingSelectHtml(record, field) {
+    const labels = MASTER_ONBOARDING_LABELS[field];
+    const options = Object.entries(labels).map(([value, label]) =>
+        `<option value="${value}" ${record[field] === value ? 'selected' : ''}>${label}</option>`
+    ).join('');
+    return `<select class="onboarding-status-select onboarding-status-select--${record[field] === 'pending' || record[field] === 'none' ? 'pending' : 'done'}"
+        data-master-id="${_escapeOnboardingHtml(record.id)}" data-field="${field}" data-saved-value="${record[field]}"
+        onchange="updateMasterOnboardingStatus(this)">${options}</select>`;
+}
+
+window.updateMasterOnboardingStatus = async function(select) {
+    const id = select.dataset.masterId;
+    const field = select.dataset.field;
+    const previous = select.dataset.savedValue;
+    const next = select.value;
+    select.disabled = true;
+    try {
+        const res = await fetch('/api/master-onboarding', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, [field]: next }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(result.error || 'Не удалось сохранить статус');
+        document.querySelectorAll(`.onboarding-status-select[data-master-id="${CSS.escape(id)}"][data-field="${field}"]`).forEach(control => {
+            control.value = next;
+            control.dataset.savedValue = next;
+            control.classList.toggle('onboarding-status-select--pending', next === 'pending' || next === 'none');
+            control.classList.toggle('onboarding-status-select--done', next !== 'pending' && next !== 'none');
+        });
+        if (window.showToast) showToast('Статус мастера сохранён', 'success');
+        const cached = (window._masterOnboardingRecords || []).find(record => record.id === id);
+        if (cached) Object.assign(cached, result.record || {});
+        _refreshOnboardingSummary();
+    } catch (error) {
+        select.value = previous;
+        if (window.showToast) showToast(error.message, 'error');
+    } finally {
+        select.disabled = false;
+    }
+};
+
+function _renderAdapterOnboardingControls(records) {
+    const byId = new Map((records || []).map(record => [record.id, record]));
+    document.querySelectorAll('#adapter-gui-container .adapter-master').forEach(row => {
+        const record = byId.get(row.dataset.gromeId || '');
+        if (!record) return;
+        const panel = document.createElement('div');
+        panel.className = 'adapter-onboarding-panel';
+        panel.innerHTML = `
+            <div class="adapter-onboarding-heading">Оформление сотрудника</div>
+            <label><span>Документы</span>${_onboardingSelectHtml(record, 'documentsStatus')}</label>
+            <label><span>Форма</span>${_onboardingSelectHtml(record, 'uniformStatus')}</label>`;
+        row.append(panel);
+    });
+}
+
+function _renderAdapterGUI(adapterData, accounts = [], onboardingRecords = []) {
     const container = document.getElementById('adapter-gui-container');
     if (!container) return;
     let html = '';
@@ -281,11 +427,11 @@ function _renderAdapterGUI(adapterData) {
                         style="display:none;background:#ff4444;color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer">Удалить</button>
                 </div>
                 <div class="masters-list" style="padding-left:20px;border-left:2px solid #333;overflow-x:auto;padding-bottom:5px">
-                    <div style="display:grid;grid-template-columns:2fr 1.5fr 80px 80px 90px 42px;gap:10px;margin-bottom:8px;font-size:11px;color:#666;font-weight:600;min-width:590px;">
+                    <div class="adapter-master-header" style="display:grid;grid-template-columns:2fr 1.5fr 80px 80px 90px 42px;gap:10px;margin-bottom:8px;font-size:11px;color:#666;font-weight:600;min-width:590px;">
                         <span>ЭЛКАССА (через запятую)</span><span>YCLIENTS ID</span><span>ВЫХОД</span><span>%</span><span>СТАТУС</span><span></span>
                     </div>
                     ${masters.map(m => `
-                        <div class="adapter-master"
+                        <div class="adapter-master" data-grome-id="${_escapeOnboardingHtml(m.grome_id || '')}" data-identity-aliases="${encodeURIComponent(JSON.stringify(m.aliases || []))}"
                             style="display:grid;grid-template-columns:2fr 1.5fr 80px 80px 90px 42px;gap:10px;margin-bottom:8px;align-items:center;min-width:590px;">
                             <input type="text" class="m-el" value="${(m.el_kassa||[]).join(', ')}" style="width:100%;min-width:0;background:#000;border:1px solid #444;color:#fff;padding:6px;border-radius:4px" placeholder="Имена в элкассе через запятую">
                             <input type="text" class="m-yc" value="${m.yclients_id||''}" style="width:100%;min-width:0;background:#000;border:1px solid #444;color:#fff;padding:6px;border-radius:4px" placeholder="YClients ID">
@@ -308,7 +454,89 @@ function _renderAdapterGUI(adapterData) {
     }
 
     container.innerHTML = html;
+    _renderMasterCredentials(accounts);
+    _renderAdapterOnboardingControls(onboardingRecords);
 }
+
+function _renderMasterCredentials(accounts) {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const byName = new Map((accounts || []).map(account => [
+        String(account.name || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim(),
+        account
+    ]));
+
+    if (isMobile) {
+        document.querySelectorAll('#adapter-gui-container .adapter-master-header').forEach(header => {
+            header.style.display = 'none';
+        });
+    }
+
+    document.querySelectorAll('#adapter-gui-container .adapter-master').forEach(row => {
+        const masterName = String(row.querySelector('.m-el')?.value || '').split(',')[0].trim();
+        const key = masterName.toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim();
+        const account = byName.get(key) || {};
+        row.style.gridTemplateColumns = isMobile ? '1fr' : '2fr 1.5fr 80px 80px 90px 42px';
+        row.style.minWidth = isMobile ? '0' : '590px';
+        row.style.padding = isMobile ? '12px' : '0 0 12px';
+        row.style.borderBottom = '1px solid #333';
+
+        const credentials = document.createElement('div');
+        credentials.className = 'master-cabinet-credentials';
+        credentials.style.cssText = `grid-column:1/-1;display:grid;grid-template-columns:${isMobile ? '1fr' : 'repeat(2,minmax(0,1fr))'};gap:10px;padding:12px;background:rgba(232,255,56,0.06);border:1px solid rgba(232,255,56,0.28);border-radius:10px;`;
+
+        const createField = (labelText, value, placeholder, className) => {
+            const label = document.createElement('label');
+            label.style.cssText = 'display:flex;flex-direction:column;gap:6px;color:#E8FF38;font-size:11px;text-transform:uppercase';
+            const title = document.createElement('span');
+            title.textContent = labelText;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = className;
+            input.readOnly = true;
+            input.placeholder = placeholder;
+            input.value = value || '';
+            input.style.cssText = 'width:100%;background:#111;border:1px solid #555;color:#fff;padding:10px;border-radius:7px;font-size:14px';
+            label.append(title, input);
+            return label;
+        };
+
+        credentials.append(
+            createField('Логин кабинета мастера', account.login, 'Нет аккаунта', 'm-cabinet-login'),
+            createField('Пароль кабинета мастера', account.password, 'Нет пароля', 'm-cabinet-password')
+        );
+        row.append(credentials);
+    });
+}
+
+window.openMasterCabinetPicker = async function() {
+    document.getElementById('master-cabinet-picker')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'master-cabinet-picker';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px';
+    overlay.innerHTML = `<section role="dialog" aria-modal="true" aria-labelledby="master-cabinet-picker-title" style="width:min(520px,100%);max-height:min(680px,90vh);display:flex;flex-direction:column;background:#111;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 20px 70px rgba(0,0,0,.55);overflow:hidden"><header style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 20px 14px"><div><h2 id="master-cabinet-picker-title" style="margin:0;font-size:20px">Кабинеты мастеров</h2><p style="margin:5px 0 0;color:var(--text-muted);font-size:12px">Актуальный список из адаптера</p></div><button type="button" aria-label="Закрыть" style="border:0;background:none;color:#fff;font-size:26px;line-height:1;cursor:pointer">×</button></header><div id="master-cabinet-picker-list" style="overflow:auto;padding:0 12px 12px"><p style="color:var(--text-muted);padding:16px 8px">Загрузка списка…</p></div></section>`;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    overlay.querySelector('button').addEventListener('click', close);
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    try {
+        const response = await fetch('/api/master-preview/masters', { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Не удалось загрузить список мастеров');
+        const masters = Array.isArray(payload.masters) ? payload.masters : [];
+        const list = overlay.querySelector('#master-cabinet-picker-list');
+        list.innerHTML = masters.length ? masters.map(master => {
+            const name = escapeManagerHtml(master.name);
+            const locations = escapeManagerHtml((master.locations || []).join(', '));
+            const target = encodeURIComponent(master.name);
+            return `<button type="button" data-master="${target}" style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:14px 12px;margin:0 0 6px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(255,255,255,.03);color:#fff;text-align:left;cursor:pointer"><span><strong style="display:block;font-size:15px">${name}</strong><small style="display:block;margin-top:3px;color:var(--text-muted);font-size:11px">${locations || 'Филиал не указан'}</small></span><span aria-hidden="true" style="color:#E8FF38;font-size:20px">›</span></button>`;
+        }).join('') : '<p style="color:var(--text-muted);padding:16px 8px">В адаптере нет активных мастеров.</p>';
+        list.querySelectorAll('[data-master]').forEach(button => button.addEventListener('click', () => {
+            window.location.assign(`/master-mobile-current.html?master=${button.dataset.master}`);
+        }));
+    } catch (error) {
+        overlay.querySelector('#master-cabinet-picker-list').innerHTML = `<p style="color:#FF5A4F;padding:16px 8px">${escapeManagerHtml(error.message)}</p>`;
+    }
+};
 
 window.openAdapterModal = async function() {
     const container = document.getElementById('adapter-gui-container');
@@ -321,19 +549,24 @@ window.openAdapterModal = async function() {
     </div>`;
     document.getElementById('adapter-modal').classList.add('active');
 
-    // Use cached ADAPTER if available and non-empty, otherwise fetch fresh
+    // Load credentials even when the adapter itself is already cached.
     const cached = (typeof ADAPTER !== 'undefined') ? ADAPTER : {};
-    if (cached && Object.keys(cached).length > 0) {
-        _renderAdapterGUI(cached);
-        return;
-    }
-
-    // Fetch from server
     try {
-        const res  = await fetch('/api/adapter');
-        const data = res.ok ? await res.json() : {};
+        let data = cached;
+        if (!data || Object.keys(data).length === 0) {
+            const res = await fetch('/api/adapter');
+            data = res.ok ? await res.json() : {};
+        }
         if (typeof window !== 'undefined') window.ADAPTER = data;
-        _renderAdapterGUI(data);
+        const [accountsRes, onboardingRes] = await Promise.all([
+            fetch('/api/master-accounts'), fetch('/api/master-onboarding'),
+        ]);
+        if (!accountsRes.ok) throw new Error('Нет доступа к данным кабинетов мастеров');
+        if (!onboardingRes.ok) throw new Error('Нет доступа к статусам оформления');
+        const accountData = await accountsRes.json();
+        const onboardingData = await onboardingRes.json();
+        window._masterOnboardingRecords = onboardingData.records || [];
+        _renderAdapterGUI(data, accountData.accounts || [], window._masterOnboardingRecords);
     } catch(e) {
         console.error('[Adapter] fetch error:', e);
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#FF3B30;">
@@ -373,6 +606,8 @@ window.addAdapterMaster = function(btn) {
     const list = btn.closest('.masters-list');
     const div  = document.createElement('div');
     div.className = 'adapter-master';
+    div.dataset.gromeId = '';
+    div.dataset.identityAliases = encodeURIComponent('[]');
     div.style.cssText = 'display:grid;grid-template-columns:2fr 1.5fr 80px 80px 90px 42px;gap:10px;margin-bottom:8px;align-items:center;min-width:590px';
     div.innerHTML = `
         <input type="text" class="m-el" value="" placeholder="Имена в элкассе через запятую"
@@ -391,23 +626,50 @@ window.addAdapterMaster = function(btn) {
             style="background:transparent;color:#ff4444;border:1px solid #ff4444;padding:6px 0;border-radius:4px;cursor:pointer;text-align:center">✕</button>`;
     btn.parentNode.insertBefore(div, btn);
 
-    // Предложить загрузить фото нового мастера
-    const branchDiv  = btn.closest('.adapter-branch');
-    const locInput   = branchDiv ? branchDiv.querySelector('.branch-name-input') : null;
-    const location   = locInput ? locInput.value.trim() : '';
-    // Небольшая задержка чтобы пользователь успел ввести имя El.Kassa
-    setTimeout(() => {
-        const nameInput = div.querySelector('.m-el');
-        const masterName = nameInput ? nameInput.value.split(',').map(s => s.trim()).filter(Boolean)[0] : '';
-        if (typeof promptMasterPhoto === 'function') {
-            promptMasterPhoto(masterName || 'Новый мастер', location);
-        }
-    }, 300);
+    // Photo workflow starts only after the complete adapter passes server validation.
 };
 
 window.closeAdapterModal = function() {
     document.getElementById('adapter-modal').classList.remove('active');
 };
+
+function _refreshOnboardingSummary() {
+    const records = window._masterOnboardingRecords || [];
+    const pendingDocs = records.filter(record => record.documentsStatus !== 'completed').length;
+    const pendingUniform = records.filter(record => record.uniformStatus === 'none').length;
+    const el = document.getElementById('master-onboarding-summary');
+    if (el) el.textContent = pendingDocs || pendingUniform
+        ? `Требуют внимания: документы — ${pendingDocs}, форма — ${pendingUniform}`
+        : 'Все мастера оформлены и обеспечены формой';
+}
+
+function _renderMasterOnboardingModal(records) {
+    const container = document.getElementById('master-onboarding-list');
+    if (!container) return;
+    const sorted = [...records].sort((a, b) => {
+        const aPending = Number(a.documentsStatus !== 'completed' || a.uniformStatus === 'none');
+        const bPending = Number(b.documentsStatus !== 'completed' || b.uniformStatus === 'none');
+        return bPending - aPending || a.salon.localeCompare(b.salon, 'ru') || a.masterName.localeCompare(b.masterName, 'ru');
+    });
+    const groups = new Map();
+    sorted.forEach(record => {
+        if (!groups.has(record.salon)) groups.set(record.salon, []);
+        groups.get(record.salon).push(record);
+    });
+    container.innerHTML = [...groups.entries()].map(([salon, items]) => `
+        <section class="onboarding-branch">
+            <h3>${_escapeOnboardingHtml(salon)}</h3>
+            <div class="onboarding-rows">
+                ${items.map(record => `
+                    <div class="onboarding-row ${record.documentsStatus !== 'completed' || record.uniformStatus === 'none' ? 'onboarding-row--attention' : ''}">
+                        <div class="onboarding-master-name">${_escapeOnboardingHtml(record.masterName)}</div>
+                        <label><span>Документы</span>${_onboardingSelectHtml(record, 'documentsStatus')}</label>
+                        <label><span>Форма</span>${_onboardingSelectHtml(record, 'uniformStatus')}</label>
+                    </div>`).join('')}
+            </div>
+        </section>`).join('');
+    _refreshOnboardingSummary();
+}
 
 // ==== MANAGER CHECK MODAL (AI INSPECTION) ====
 
@@ -486,9 +748,16 @@ window.openManagerModal = function(checkToEdit) {
     </style>`;
     html += `<h3 style="font-size:18px;margin:30px 0 15px 0;">${stepLabel}: Чек-лист</h3>`;
     MANAGER_CHECK_FIELDS.forEach(f => {
+        const technicalTasksSpoiler = f.id === 6 ? `
+            <details id="manager-technical-tasks" style="margin:0 0 15px;background:rgba(0,0,0,0.28);border:1px solid rgba(100,210,255,0.22);border-radius:12px;padding:12px 14px">
+                <summary style="cursor:pointer;font-size:13px;font-weight:800;color:#fff">Задачи в работе (<span id="manager-technical-tasks-count">0</span>)</summary>
+                <div style="font-size:11px;line-height:1.4;color:var(--text-muted);margin:9px 0 3px">Источник — задачник Кирилла. Не добавляйте проблему повторно, если она уже есть ниже.</div>
+                <div id="manager-technical-tasks-list" style="margin-top:7px"></div>
+            </details>` : '';
         html += `
             <div class="form-field manager-check-field">
                 <label style="font-size:14px;margin-bottom:15px;display:block;font-weight:500;line-height:1.4;">${f.id}. ${f.label}</label>
+                ${technicalTasksSpoiler}
                 <div class="ios-segmented-control">
                     <label class="ios-radio"><input type="radio" name="check_${f.id}" value="yes" required><div class="ios-radio-inner">✅ Норма</div></label>
                     <label class="ios-radio"><input type="radio" name="check_${f.id}" value="no"><div class="ios-radio-inner">❌ Нарушение</div></label>
@@ -500,6 +769,10 @@ window.openManagerModal = function(checkToEdit) {
     });
 
     container.innerHTML = html;
+    if (locSelect) {
+        locSelect.onchange = () => loadManagerTechnicalTasksForSalon(locSelect.value);
+        loadManagerTechnicalTasksForSalon(locSelect.value);
+    }
     window._wpPhotos = {};
     if (checkToEdit) {
         (checkToEdit.items || []).forEach(item => {
@@ -527,74 +800,6 @@ window.editManagerCheck = function(id) {
     window.openManagerModal(check);
 };
 
-
-// ==== CAMERA CAPTURE ====
-window.openCamera = async function(zoneId) {
-    // Helper: apply captured photo to the UI
-    function applyPhoto(dataUrl) {
-        const btn = document.getElementById('btn-camera-' + zoneId);
-        if (btn) btn.style.display = 'none';
-        const preview = document.getElementById('preview-' + zoneId);
-        if (preview) { preview.src = dataUrl; preview.style.display = 'block'; }
-        const retake = document.getElementById('retake-' + zoneId);
-        if (retake) retake.style.display = 'block';
-    }
-
-    // Camera requires HTTPS — guide user to the secure URL
-    const isSecure = location.protocol === 'https:' || location.hostname === 'localhost';
-    if (!isSecure) {
-        if (window.showToast) showToast('Камера работает только по HTTPS. Открой app.grome.pro', 'error');
-        return;
-    }
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        if (window.showToast) showToast('Камера недоступна. Разреши доступ в настройках браузера.', 'error');
-        return;
-    }
-
-    // Build fullscreen camera overlay
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:999999;display:flex;flex-direction:column;';
-    const video = document.createElement('video');
-    video.autoplay = true; video.playsInline = true;
-    video.style.cssText = 'flex:1;width:100%;object-fit:cover;';
-    const controls = document.createElement('div');
-    controls.style.cssText = 'padding:30px;display:flex;justify-content:space-around;background:#111;';
-    const closeBtn = document.createElement('button');
-    closeBtn.innerText = 'Отмена';
-    closeBtn.style.cssText = 'padding:15px 30px;font-size:16px;border-radius:50px;background:#333;color:#fff;border:none;cursor:pointer;';
-    const snapBtn = document.createElement('button');
-    snapBtn.innerText = '📸 Сделать фото';
-    snapBtn.style.cssText = 'padding:15px 30px;font-size:16px;border-radius:50px;background:var(--accent);color:#000;border:none;font-weight:bold;cursor:pointer;';
-    controls.appendChild(closeBtn); controls.appendChild(snapBtn);
-    overlay.appendChild(video); overlay.appendChild(controls);
-    document.body.appendChild(overlay);
-
-    let stream = null;
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        video.srcObject = stream;
-    } catch(err) {
-        document.body.removeChild(overlay);
-        if (window.showToast) showToast('Нет доступа к камере. Разреши в настройках браузера.', 'error');
-        return;
-    }
-
-    closeBtn.onclick = () => {
-        if (stream) stream.getTracks().forEach(t => t.stop());
-        document.body.removeChild(overlay);
-    };
-    snapBtn.onclick = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 1080;
-        canvas.height = video.videoHeight || 1920;
-        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        if (stream) stream.getTracks().forEach(t => t.stop());
-        document.body.removeChild(overlay);
-        applyPhoto(dataUrl);
-    };
-};
 
 window.closeManagerModal = function() {
     const modal = document.getElementById('manager-modal');
@@ -778,8 +983,10 @@ window.saveAdapter = async function() {
                 const mDash = elNames[0] || '';
                 if (!mDash) return;
                 masters.push({
+                    grome_id:          mDiv.dataset.gromeId || '',
                     dash:              mDash,
                     el_kassa:          elNames,
+                    aliases:           JSON.parse(decodeURIComponent(mDiv.dataset.identityAliases || encodeURIComponent('[]'))),
                     yclients_id:       mDiv.querySelector('.m-yc').value.trim(),
                     payBase:           parseFloat(mDiv.querySelector('.m-base').value) || 3000,
                     payPercent:        parseFloat(mDiv.querySelector('.m-percent').value) || 40,
@@ -795,11 +1002,24 @@ window.saveAdapter = async function() {
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(newAdapter)
         });
+        const result = await res.json().catch(() => ({}));
         if (res.ok) {
+            const addedMasters = Array.isArray(result.addedMasters) ? result.addedMasters : [];
             btn.innerText = '✅ Сохранено';
-            setTimeout(() => { btn.innerText = 'Сохранить изменения'; closeAdapterModal(); location.reload(); }, 1500);
+            window.ADAPTER = newAdapter;
+            setTimeout(() => {
+                btn.innerText = 'Сохранить изменения';
+                closeAdapterModal();
+                if (addedMasters.length) {
+                    window._adapterPhotoQueue = addedMasters.slice();
+                    window.openNextAdapterPhotoPrompt();
+                } else {
+                    location.reload();
+                }
+            }, 700);
         } else {
-            throw new Error('Ошибка при сохранении на сервере');
+            const details = Array.isArray(result.details) ? '\n• ' + result.details.join('\n• ') : '';
+            throw new Error((result.error || 'Ошибка при сохранении на сервере') + details);
         }
     } catch(e) {
         showToast('Ошибка сохранения:\n' + e.message, 'error');
@@ -856,6 +1076,12 @@ window.loadManagerReactionStats = async function() {
 };
 
 // ==== ДИАЛОГ ФОТО МАСТЕРА (из адаптера) ====
+window.openNextAdapterPhotoPrompt = function() {
+    const next = (window._adapterPhotoQueue || []).shift();
+    if (next) return window.promptMasterPhoto(next.masterName, next.location);
+    location.reload();
+};
+
 window.promptMasterPhoto = function(masterName, location) {
     // Показываем модалку с выбором: добавить сейчас или позже
     const modal = document.createElement('div');
@@ -943,18 +1169,24 @@ window.saveMasterPhotos = async function(masterName, location) {
                 reader.onerror = reject;
                 reader.readAsDataURL(file);
             });
-            await fetch('/api/master_photos', {
+            const uploadResponse = await fetch('/api/master_photos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ masterName, base64 })
             });
+            if (!uploadResponse.ok) {
+                const uploadResult = await uploadResponse.json().catch(() => ({}));
+                throw new Error(uploadResult.error || 'Фото не сохранено');
+            }
         }
         // Убираем из очереди напоминаний
-        await fetch('/api/pending_photos?master=' + encodeURIComponent(masterName), { method: 'DELETE' });
+        const confirmResponse = await fetch('/api/pending_photos?master=' + encodeURIComponent(masterName), { method: 'DELETE' });
+        if (!confirmResponse.ok) throw new Error('Не удалось подтвердить загрузку фото');
 
         showToast(`✅ Фото мастера ${masterName} загружены!`, 'success');
         const modal = document.getElementById('master-photo-prompt');
         if (modal) modal.remove();
+        if (window._adapterPhotoQueue) window.openNextAdapterPhotoPrompt();
     } catch(e) {
         showToast('Ошибка загрузки: ' + e.message, 'error');
         if (btn) { btn.innerText = 'Загрузить фото'; btn.disabled = false; }
@@ -963,7 +1195,7 @@ window.saveMasterPhotos = async function(masterName, location) {
 
 window.remindLaterMasterPhoto = async function(masterName, location) {
     // Добавляем в очередь повторных напоминаний (каждые 24ч до загрузки)
-    await fetch('/api/pending_photos', {
+    const response = await fetch('/api/pending_photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -972,32 +1204,13 @@ window.remindLaterMasterPhoto = async function(masterName, location) {
             addedBy: window.USER ? window.USER.name : 'Менеджер'
         })
     });
-    showToast('Напомним через 24 часа', 'success');
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        showToast(result.error || 'Напоминание не создано', 'error');
+        return;
+    }
+    showToast('Напомним Игорю в его рабочий день', 'success');
     const modal = document.getElementById('master-photo-prompt');
     if (modal) modal.remove();
-};
-
-// ==== ПРОСМОТР ФОТО МАСТЕРА ====
-window.viewMasterPhotos = async function(masterName) {
-    try {
-        const res  = await fetch('/api/master_photos?master=' + encodeURIComponent(masterName));
-        const data = await res.json();
-        if (!data.photos || data.photos.length === 0) {
-            showToast('Фото пока не загружены', 'error');
-            return;
-        }
-        const modal = document.createElement('div');
-        modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:99999;
-            display:flex;align-items:center;justify-content:center;padding:20px;flex-direction:column;gap:16px`;
-        modal.onclick = () => modal.remove();
-        modal.innerHTML = `
-            <div style="font-size:16px;font-weight:700;color:#fff">${masterName} — работы</div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-                ${data.photos.map(url => `<img src="${url}" style="height:220px;width:auto;border-radius:12px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.5)">`).join('')}
-            </div>
-            <div style="font-size:12px;color:#666">Нажмите в любое место, чтобы закрыть</div>`;
-        document.body.appendChild(modal);
-    } catch(e) {
-        showToast('Ошибка загрузки фото', 'error');
-    }
+    if (window._adapterPhotoQueue) window.openNextAdapterPhotoPrompt();
 };

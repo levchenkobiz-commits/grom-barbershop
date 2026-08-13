@@ -1,0 +1,82 @@
+/* Manager inspection history: static styles, rather than runtime-injected CSS. */
+.manager-history-grouped {
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.manager-history-grouped th {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.manager-date-row td {
+    padding: 16px 18px 8px;
+    border: 0;
+    background: linear-gradient(90deg, rgba(232, 255, 56, 0.12), rgba(255, 255, 255, 0.035));
+    border-top: 1px solid rgba(232, 255, 56, 0.18);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+}
+
+.manager-date-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.manager-date-title {
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.manager-date-meta {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.manager-check-row {
+    background: rgba(255, 255, 255, 0.022);
+}
+
+.manager-check-row:hover {
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.manager-check-row td {
+    border-top: 1px solid rgba(255, 255, 255, 0.045);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    vertical-align: middle;
+}
+
+.manager-check-row td:first-child {
+    border-left: 1px solid rgba(255, 255, 255, 0.045);
+    border-radius: 10px 0 0 10px;
+}
+
+.manager-check-row td:last-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.045);
+    border-radius: 0 10px 10px 0;
+}
+
+@media (max-width: 768px) {
+    .manager-history-grouped {
+        border-spacing: 0;
+    }
+
+    .manager-date-row {
+        display: block;
+        margin: 0 0 10px;
+    }
+
+    .manager-date-row td {
+        display: block;
+        width: 100%;
+    }
+
+    .manager-check-row {
+        margin-bottom: 12px;
+    }
+}

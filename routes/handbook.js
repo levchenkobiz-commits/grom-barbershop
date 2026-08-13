@@ -5,28 +5,22 @@
 
 const fs    = require('fs');
 const PATHS = require('./paths');
-
-const DEFAULT_HANDBOOK = {
-  'Опоздание':              300,
-  'Невыход':                5000,
-  'Воровство':              5000,
-  'Грязное место':          500,
-  'Без формы':              500,
-  'Отказ клиенту':          1000,
-  'Разговор на нац. языке': 500,
-  'Жалоба':                 1000,
-  'Поломка':                0,
-  'Другое':                 0,
-};
+const VIOLATION_RULES = require('../public/js/violation-rules');
 
 // GET /api/handbook
 function handleGet(req, res) {
   if (!fs.existsSync(PATHS.handbook)) {
-    fs.writeFileSync(PATHS.handbook, JSON.stringify(DEFAULT_HANDBOOK, null, 2));
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ error: 'Штрафной лист недоступен' }));
   }
-  const hb = fs.readFileSync(PATHS.handbook, 'utf-8');
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(hb);
+  try {
+    const hb = VIOLATION_RULES.canonicalizeHandbook(JSON.parse(fs.readFileSync(PATHS.handbook, 'utf-8')));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(hb));
+  } catch (error) {
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ error: error.message || 'Штрафной лист повреждён' }));
+  }
 }
 
 // POST /api/handbook
@@ -35,13 +29,14 @@ function handlePost(req, res) {
   req.on('data', chunk => { body += chunk.toString(); });
   req.on('end', () => {
     try {
-      const hb = JSON.parse(body);
+      const hb = VIOLATION_RULES.canonicalizeHandbook(JSON.parse(body));
+      if (!Object.keys(hb).length) throw new Error('Пустой штрафной лист');
       fs.writeFileSync(PATHS.handbook, JSON.stringify(hb, null, 2));
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'success' }));
     } catch (e) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      res.end(JSON.stringify({ error: e.message || 'Invalid JSON' }));
     }
   });
 }

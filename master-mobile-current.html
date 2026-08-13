@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080909">
+  <title>GROME - новый кабинет мастера</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" href="public/css/master-mobile.css?v=20260812-balanced-tray-v1">
+  <link rel="stylesheet" href="public/css/master-mobile-current.css?v=20260718-online-scale">
+  <style>
+    /* Детализация ЗП по дням */
+    .salary-details-toggle{
+      display:flex;align-items:center;justify-content:space-between;width:100%;
+      background:transparent;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);
+      padding:9px 12px;border-radius:10px;cursor:pointer;margin-top:10px;font-size:12px;font-weight:600;font-family:inherit;
+    }
+    .salary-details-toggle:active{background:rgba(255,255,255,0.04)}
+    .salary-details-toggle .toggle-arrow{transition:transform .2s ease;font-size:10px;opacity:.7}
+    .salary-details-toggle.is-open .toggle-arrow{transform:rotate(180deg)}
+    .salary-details{margin-top:10px;max-height:0;overflow:hidden;transition:max-height .25s ease;opacity:0}
+    .salary-details.is-open{max-height:1400px;opacity:1}
+    .salary-day{
+      display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;
+      padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;
+    }
+    .salary-day:last-child{border-bottom:none}
+    .salary-day-date{color:rgba(255,255,255,0.55);font-size:11px;line-height:1.4}
+    .salary-day-date b{display:block;color:rgba(255,255,255,0.9);font-size:13px;font-weight:700}
+    .salary-day-meta{color:rgba(255,255,255,0.55);font-size:11px;line-height:1.5}
+    .salary-day-meta b{color:rgba(255,255,255,0.85);font-weight:600}
+    .salary-day-amount{font-weight:800;color:#34C759;font-size:14px;text-align:right;white-space:nowrap}
+    .salary-day-tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:5px;margin-right:4px;font-weight:600;vertical-align:middle}
+    .tag-percent{background:rgba(0,122,255,0.18);color:#0a84ff}
+    .tag-base{background:rgba(52,199,89,0.15);color:#34C759}
+    .tag-replacement{background:rgba(255,159,10,0.18);color:#ff9f0a}
+    .salary-day-note{display:block;color:rgba(255,255,255,0.4);font-size:10px;margin-top:3px;font-weight:400}
+    .salary-total-row{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px;margin-top:6px;background:rgba(52,199,89,0.08);border-radius:8px;
+      font-size:13px;font-weight:700;
+    }
+    .salary-total-row .label{color:rgba(255,255,255,0.7)}
+    .salary-total-row .value{color:#34C759;font-size:15px}
+    .salary-total-note{
+      margin-top:8px;padding:8px 10px;border-radius:7px;
+      background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.2);
+      color:rgba(255,255,255,0.6);font-size:10px;line-height:1.5;
+    }
+    .salary-summary{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;font-size:11px}
+    .salary-summary-cell{padding:7px 9px;background:rgba(255,255,255,0.03);border-radius:7px}
+    .salary-summary-cell .lbl{color:rgba(255,255,255,0.45);font-size:10px;display:block;margin-bottom:2px}
+    .salary-summary-cell .val{color:rgba(255,255,255,0.9);font-weight:700}
+    .salary-summary-cell .val.neg{color:#ff5a4f}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/customParseFormat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isoWeek.js"></script>
+  <script>
+    dayjs.extend(window.dayjs_plugin_customParseFormat);
+    dayjs.extend(window.dayjs_plugin_isoWeek);
+  </script>
+  <script src="adapter.js?v=20260809-adapter-truth-v5"></script>
+  <script src="public/js/permissions.js?v=20260718-master-scope"></script>
+  <script src="public/js/violation-rules.js?v=20260810-aliases-v1"></script>
+  <script src="public/js/config.js?v=20260810-aliases-v6"></script>
+  <script src="public/js/i18n.js?v=20260813-punctuality-v1"></script>
+  <script src="public/js/fines.js?v=20260813-punctuality-v12"></script>
+  <script src="public/js/salary.js?v=20260810-salary-ledger-v1"></script>
+</head>
+<body>
+  <main id="app-view" class="phone-shell" hidden>
+    <section class="phone-frame" aria-label="Новый мобильный кабинет мастера">
+      <header class="mobile-header">
+        <div class="brand-row">
+          <div class="brand-lockup">
+            <div class="brand-mark" aria-hidden="true">G</div>
+            <div>
+              <p class="kicker brand-wordmark">GROME</p>
+              <h1 id="master-name">Кабинет мастера</h1>
+              <p id="last-updated" class="header-meta">Обновляю данные</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button id="logout-btn" class="icon-btn exit-btn" type="button" aria-label="Выйти" title="Выйти"><span class="logout-glyph" aria-hidden="true"></span></button>
+          </div>
+        </div>
+
+        <button id="preview-back-btn" type="button" hidden style="width:100%;margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(232,255,56,.45);background:rgba(232,255,56,.08);color:#E8FF38;font:700 13px inherit">← К кабинету менеджера</button>
+
+        <div id="language-slot" class="language-slot" aria-label="Выбор языка"></div>
+
+        <div class="hero-card" id="zone-card">
+          <div>
+            <p class="hero-label">Текущая зона</p>
+            <div class="zone-line">
+              <span id="zone-dot" class="zone-dot"></span>
+              <strong id="zone-label">Загрузка</strong>
+            </div>
+            <p id="zone-hint" class="muted">По нарушениям текущей недели</p>
+          </div>
+          <div class="zone-orbit" aria-hidden="true">
+            <div class="zone-orbit-inner"></div>
+          </div>
+        </div>
+      </header>
+
+      <section id="summary-section" class="card-stack">
+        <article id="salary-card" class="metric-card salary-card">
+          <div class="card-head">
+            <div>
+              <p class="card-title">Зарплата за эту неделю</p>
+              <strong id="salary-value">Считаю...</strong>
+            </div>
+          </div>
+          <p id="salary-sub" class="muted">По завершённым дням</p>
+          <button id="salary-details-toggle" class="salary-details-toggle" type="button" hidden>
+            <span class="toggle-label">Детализация по дням</span>
+            <span class="toggle-arrow">▾</span>
+          </button>
+          <div id="salary-details" class="salary-details" hidden></div>
+        </article>
+
+        <article class="metric-card progress-card occupancy-card">
+          <p class="card-title">Заполняемость смены</p>
+          <strong id="occupancy-value">0 ч/д</strong>
+          <div class="benchmark-bar occupancy-progress" id="occupancy-progress" role="progressbar" aria-label="Заполняемость смены" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0">
+            <span class="benchmark-fill"></span>
+            <span class="benchmark-marker" aria-hidden="true"><small>Топ барбер</small></span>
+          </div>
+          <p class="muted">Только ваши рабочие дни</p>
+        </article>
+      </section>
+
+      <section id="quality-section" class="card-stack">
+        <article class="metric-card progress-card">
+          <p class="card-title">Качество сервиса ОВН</p>
+          <strong id="ovn-value">0%</strong>
+          <div class="benchmark-bar ovn-progress" id="ovn-progress" role="progressbar" aria-label="Качество сервиса ОВН" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="benchmark-fill"></span>
+            <span class="benchmark-marker" aria-hidden="true"><small>Топ мастер</small></span>
+          </div>
+          <p id="ovn-sub" class="muted">Текущий календарный месяц</p>
+        </article>
+
+        <article class="metric-card compact-metric-card return-card">
+          <p class="card-title">Возвращаемость</p>
+          <strong id="rr-value">0%</strong>
+          <p class="muted">Личная возвращаемость клиентов</p>
+        </article>
+
+        <article class="metric-card progress-card online-card">
+          <p class="card-title">Онлайн-запись</p>
+          <strong id="online-value">0%</strong>
+          <div class="benchmark-bar online-progress" id="online-progress" role="progressbar" aria-label="Онлайн-запись" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="benchmark-fill"></span>
+            <span class="benchmark-marker" aria-hidden="true"><small>Топ барбер</small></span>
+          </div>
+          <p class="muted">За текущий календарный месяц</p>
+        </article>
+
+        <article id="punctuality-card" class="metric-card progress-card punctuality-card">
+          <p class="card-title">Без опозданий</p>
+          <strong id="punctuality-value">Нет данных</strong>
+          <div class="benchmark-bar punctuality-progress" id="punctuality-progress" style="--threshold:85" role="progressbar" aria-label="Без опозданий" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="benchmark-fill"></span>
+            <span class="benchmark-marker" aria-hidden="true"><small>85% · Топ барбер</small></span>
+          </div>
+          <p class="muted">Проверки прихода за текущий календарный месяц</p>
+        </article>
+
+        <div class="mini-grid">
+          <article class="mini-card">
+            <span>Нарушения за месяц</span>
+            <strong id="week-violations">0</strong>
+          </article>
+          <article class="mini-card warn">
+            <span>Сумма штрафов (нед)</span>
+            <strong id="fines-value">0 ₽</strong>
+          </article>
+        </div>
+      </section>
+
+      <section id="schedule-section" class="schedule-panel">
+        <div class="section-head">
+          <div>
+            <p class="kicker">График</p>
+            <h2>Мои смены</h2>
+          </div>
+          <span id="schedule-period" class="status-pill">7 дней</span>
+        </div>
+        <div class="schedule-controls">
+          <label for="schedule-start">Начало недели</label>
+          <div class="schedule-control-row">
+            <input id="schedule-start" type="date">
+            <button id="schedule-apply" type="button">Показать</button>
+          </div>
+        </div>
+        <div id="schedule-list" class="schedule-list" aria-live="polite">
+          <div class="schedule-skeleton"></div>
+          <div class="schedule-skeleton"></div>
+          <div class="schedule-skeleton short"></div>
+        </div>
+      </section>
+
+      <section id="violations-section" class="journal-panel">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Журнал</p>
+            <h2>Нарушения за месяц</h2>
+          </div>
+          <span id="period-label" class="status-pill">месяц</span>
+        </div>
+        <div id="violations-list" class="violations-list" aria-live="polite">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </section>
+
+      <footer class="bottom-nav" aria-label="Быстрые действия">
+        <button class="bottom-item active" type="button" data-scroll="#summary-section"><span aria-hidden="true">⌂</span><small>Сводка</small></button>
+        <button class="bottom-item" type="button" data-scroll="#quality-section"><span aria-hidden="true">◫</span><small>Метрики</small></button>
+        <button id="bottom-top" class="bottom-center" type="button" aria-label="Наверх" title="Наверх"><span aria-hidden="true">↑</span></button>
+        <button class="bottom-item bottom-schedule" type="button" data-scroll="#schedule-section"><span aria-hidden="true">▦</span><small>График</small></button>
+        <button class="bottom-item bottom-journal" type="button" data-scroll="#violations-section"><span aria-hidden="true">≡</span><small>Журнал</small></button>
+      </footer>
+    </section>
+  </main>
+
+  <div class="sr-only" aria-hidden="true" hidden>
+    <span id="master-week-salary"></span>
+    <span id="master-week-salary-sub"></span>
+  </div>
+
+  <script src="public/js/master-mobile-current.js?v=20260813-manager-preview-v1"></script>
+</body>
+</html>

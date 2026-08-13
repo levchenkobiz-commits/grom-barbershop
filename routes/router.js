@@ -15,14 +15,23 @@ const handbook    = require('./handbook');
 const uploads     = require('./uploads');
 const sync        = require('./sync');
 const manager     = require('./manager');
+const technicalTasks = require('./technical_tasks');
+const masterOnboarding = require('./master_onboarding');
 const adapter     = require('./adapter');
 const masterPhotos = require('./master_photos');
 const mgrSchedule  = require('./manager_schedule');
 const login        = require('./login');
 const auth         = require('./auth');
 const elkassa      = require('./elkassa');
+const comeback     = require('./comeback');
 const videoAudit   = require('./video_audit');
-
+const dashboardData = require('./dashboard_data');
+const analyticsHistory = require('./analytics_history');
+const clientAdapter = require('./client_adapter');
+const password     = require('./password');
+const users        = require('./users');
+const masterAccounts = require('./master_accounts');
+const retentionEngine = require('./retention_engine');
 
 /**
  * Таблица маршрутов: { метод, путь, обработчик }
@@ -30,11 +39,22 @@ const videoAudit   = require('./video_audit');
  */
 const ROUTES = [
   { method: 'POST',   path: '/api/login',             handler: (q, r) => login.handleLogin(q, r) },
+  { method: 'POST',   path: '/api/me/password',       handler: (q, r, u) => password.handleChangePassword(q, r, u) },
+  { method: 'GET',    path: '/api/admin/users',       handler: (q, r, u) => users.handleListUsers(q, r, u) },
+  { method: 'GET',    path: '/api/master-accounts',   handler: (q, r, u) => masterAccounts.handleGet(q, r, u) },
+  { method: 'GET',    path: '/api/master-preview/masters', handler: (q, r, u) => masterAccounts.handlePreviewList(q, r, u) },
+  { method: 'GET',    path: '/api/retention',         handler: (q, r, u) => retentionEngine.handleGet(q, r, u) },
+  { method: 'POST',   path: '/api/admin/reset-password', handler: (q, r, u) => password.handleAdminResetPassword(q, r, u) },
+
+  { method: 'GET',    path: '/api/data',              handler: (q, r) => dashboardData.handleGet(q, r) },
+  { method: 'GET',    path: '/api/analytics-history', handler: (q, r) => analyticsHistory.handleGet(q, r) },
+  { method: 'GET',    path: '/api/adapter-config',    handler: (q, r) => clientAdapter.handleConfig(q, r) },
 
   { method: 'POST',   path: '/api/sync',              handler: (q, r) => sync.handlePost(q, r) },
   { method: 'GET',    path: '/api/sync_status',       handler: (q, r) => sync.handleGetStatus(q, r) },
 
   { method: 'GET',    path: '/api/ovn',               handler: (q, r) => ovn.handleGet(q, r) },
+  { method: 'GET',    path: '/api/ovn/analytics',     handler: (q, r, u) => ovn.handleGetAnalytics(q, r, u) },
   { method: 'POST',   path: '/api/ovn',               handler: (q, r) => ovn.handlePost(q, r) },
   { method: 'PUT',    path: '/api/ovn',               handler: (q, r) => ovn.handlePut(q, r) },
   { method: 'PATCH',  path: '/api/ovn/reaction',      handler: (q, r) => ovn.handlePatchReaction(q, r) },
@@ -55,6 +75,11 @@ const ROUTES = [
   { method: 'GET',    path: '/api/manager_checks',    handler: (q, r) => manager.handleGet(q, r) },
   { method: 'POST',   path: '/api/manager_checks',    handler: (q, r) => manager.handlePost(q, r) },
   { method: 'PUT',    path: '/api/manager_checks',    handler: (q, r) => manager.handlePut(q, r) },
+  { method: 'GET',    path: '/api/technical_tasks',   handler: (q, r, u) => technicalTasks.handleGet(q, r, u) },
+  { method: 'PATCH',  path: '/api/technical_tasks',   handler: (q, r) => technicalTasks.handlePatch(q, r) },
+  { method: 'POST',   path: '/api/technical_tasks/defer', handler: (q, r) => technicalTasks.handleDefer(q, r) },
+  { method: 'GET',    path: '/api/master-onboarding', handler: (q, r) => masterOnboarding.handleGet(q, r) },
+  { method: 'PATCH',  path: '/api/master-onboarding', handler: (q, r) => masterOnboarding.handlePatch(q, r) },
 
   { method: 'POST',   path: '/api/adapter',           handler: (q, r) => adapter.handlePost(q, r) },
   // ===== Фото мастеров =====
@@ -70,12 +95,16 @@ const ROUTES = [
   { method: 'PATCH',  path: '/api/manager-schedule',  handler: (q, r) => mgrSchedule.handlePatch(q, r) },
 
   // ===== El-Kassa API (прямая интеграция) =====
+  // ===== Возврат клиентов =====
+  { method: 'GET',    path: '/api/comeback',            handler: (q, r, u) => comeback.handleGet(q, r, u) },
+
   { method: 'GET',    path: '/api/elkassa/terminals',           handler: (q, r, u) => elkassa.handleTerminals(q, r, u) },
   { method: 'GET',    path: '/api/elkassa/orders',              handler: (q, r, u) => elkassa.handleOrders(q, r, u) },
   { method: 'GET',    path: '/api/elkassa/customers',           handler: (q, r, u) => elkassa.handleCustomers(q, r, u) },
   { method: 'GET',    path: '/api/elkassa/customer-orders',     handler: (q, r, u) => elkassa.handleCustomerOrders(q, r, u) },
   { method: 'GET',    path: '/api/elkassa/customer-orders-last',handler: (q, r, u) => elkassa.handleCustomerOrdersLast(q, r, u) },
   { method: 'POST',   path: '/api/elkassa/salary',              handler: (q, r, u) => elkassa.handleSalary(q, r, u) },
+  { method: 'GET',    path: '/api/elkassa/staff',               handler: (q, r, u) => elkassa.handleStaff(q, r, u) },
 ];
 
 /**

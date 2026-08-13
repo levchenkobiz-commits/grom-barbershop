@@ -9,6 +9,7 @@
 
 const fs    = require('fs');
 const PATHS = require('./paths');
+const { canonicalMasterName } = require('./master_scope');
 
 function handleLogin(req, res) {
     let body = '';
@@ -37,6 +38,14 @@ function handleLogin(req, res) {
 
             // Возвращаем профиль без поля password
             const { password: _omit, ...profile } = user;
+            if (profile.role === 'master') {
+                const canonical = canonicalMasterName(profile.name);
+                if (!canonical) {
+                    res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+                    return res.end(JSON.stringify({ error: 'Кабинет мастера не активирован в адаптере' }));
+                }
+                profile.name = canonical;
+            }
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ status: 'ok', key, user: profile }));
 

@@ -5,10 +5,45 @@
 
 const fs    = require('fs');
 const path  = require('path');
+const https = require('https');
 const PATHS = require('./paths');
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'sk-viwZET4irKbhBSTEQ2n9D1j49Nw1FfkK';
-const OPENAI_URL     = 'https://api.proxyapi.ru/openai/v1/chat/completions';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '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';
+const OPENAI_URL     = 'https://openrouter.ai/api/v1/chat/completions';
+
+// ──  Telegram-уведомления при проблемах с API  ──────────────────────────────
+const TG_TOKEN  = process.env.TG_TOKEN  || '8264809973:AAGI-YhU8LItlRULVgTfk44y30pTR85Vft4';
+const TG_CHAT   = process.env.TG_CHAT_ID || '476578323';
+
+let _lastApiAlert = 0; // throttle: не чаще раза в 5 минут
+
+function sendTgAlert(text) {
+  const now = Date.now();
+  if (now - _lastApiAlert < 5 * 60 * 1000) return; // throttle
+  _lastApiAlert = now;
+
+  const body = JSON.stringify({ chat_id: TG_CHAT, text, parse_mode: 'HTML' });
+  const opts = {
+    hostname: 'api.telegram.org',
+    path: `/bot${TG_TOKEN}/sendMessage`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+  };
+  const req = https.request(opts, (res) => {
+    res.resume(); // drain
+  });
+  req.on('error', (e) => console.error('[TG alert] error:', e.message));
+  req.write(body);
+  req.end();
+}
+
+// Определяем, является ли ошибка API проблемой с ключом/балансом
+function isApiKeyError(status, body) {
+  if ([401, 402, 403].includes(status)) return true;
+  const msg = (typeof body === 'string' ? body : JSON.stringify(body)).toLowerCase();
+  return msg.includes('insufficient') || msg.includes('balance') || msg.includes('quota')
+    || msg.includes('invalid api key') || msg.includes('no auth') || msg.includes('credit');
+}
 
 const ZONE_RULES = {
   reklama: 'Проверь, что наружная реклама попала в кадр, выглядит целой и чистой.',
@@ -71,7 +106,9 @@ async function handleVision(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'HTTP-Referer': 'https://app.grome.pro',
+          'X-Title': 'Grome Dashboard',
         },
         body: JSON.stringify(payload),
       });
@@ -79,9 +116,35 @@ async function handleVision(req, res) {
       const resultMsg = await response.json();
       let resultData;
 
+      // ── Проверяем ошибку ключа/баланса ──────────────────────────────────
+      if (isApiKeyError(response.status, resultMsg)) {
+        const errDetail = resultMsg?.error?.message || `HTTP ${response.status}`;
+        console.error('[Vision] API key/balance error:', errDetail);
+        sendTgAlert(
+          `🔴 <b>Grome Dashboard — ошибка API Vision</b>\n\n` +
+          `Фотопроверка менеджера не работает.\n` +
+          `Причина: <code>${errDetail}</code>\n\n` +
+          `Проверьте баланс OpenRouter: https://openrouter.ai/account`
+        );
+        res.writeHead(402, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'недостаточно баланса API', api_error: true }));
+        return;
+      }
+
       if (resultMsg.choices && resultMsg.choices[0]) {
         resultData = JSON.parse(resultMsg.choices[0].message.content);
       } else if (resultMsg.error) {
+        // Дополнительная проверка в теле ответа
+        if (isApiKeyError(200, resultMsg.error.message || '')) {
+          sendTgAlert(
+            `🔴 <b>Grome Dashboard — ошибка API Vision</b>\n\n` +
+            `Фотопроверка менеджера не работает.\n` +
+            `Причина: <code>${resultMsg.error.message}</code>`
+          );
+          res.writeHead(402, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'недостаточно баланса API', api_error: true }));
+          return;
+        }
         throw new Error(resultMsg.error.message);
       } else {
         throw new Error(JSON.stringify(resultMsg));

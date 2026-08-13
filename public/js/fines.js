@@ -1,12 +1,15 @@
 /**
  * public/js/fines.js
+ * ФИНАНСОВОЕ ЯДРО — НЕ ТРОГАТЬ / DO NOT TOUCH.
+ * Менять только по прямой просьбе пользователя изменить финансовую механику.
+ * UI, аналитика, рефакторинг и соседние задачи не дают разрешения менять этот файл.
+ * Mandatory instructions: /root/grom-dashboard/AGENTS.md
  * =====================================================
  * Модуль штрафов: расчёт, таблица, ручное начисление, справочник.
  *
  * Экспортирует глобально:
  *   calculateFines, getViolationFine, isMandatoryFine
  *   openFinesModal, renderFinesTable
- *   openManualFineModal, closeManualFineModal, submitManualFine
  *   openHandbookConfigModal, closeHandbookConfigModal,
  *   renderHandbookEditor, saveHandbookConfig, deleteHandbookItem
  *
@@ -14,6 +17,29 @@
  */
 
 // ==== FINE CALCULATION HELPERS ====
+
+// Версия входит в ключ локального кэша зарплаты. При любом изменении
+// финансовой формулы её обязательно нужно повысить, чтобы старый расчёт
+// никогда не отображался после обновления кода.
+window.FINANCIAL_CALC_VERSION = '20260813-punctuality-v12';
+
+function canonicalizeViolation(violationRaw) {
+    return window.VIOLATION_RULES
+        ? window.VIOLATION_RULES.canonicalizeViolation(violationRaw)
+        : String(violationRaw || '').trim();
+}
+
+function splitCanonicalViolations(violationRaw) {
+    return window.VIOLATION_RULES
+        ? window.VIOLATION_RULES.splitViolations(violationRaw)
+        : (Array.isArray(violationRaw) ? violationRaw : String(violationRaw || '').split(',')).map(canonicalizeViolation).filter(Boolean);
+}
+
+function isZoneExcludedViolation(violationRaw) {
+    if (window.VIOLATION_RULES) return window.VIOLATION_RULES.isZoneExcludedViolation(violationRaw);
+    const text = canonicalizeViolation(violationRaw).toLowerCase();
+    return text.includes('опоздал') || text === 'отказ клиенту';
+}
 
 function isFineWaivedByForceMajeure(r, violationRaw, notesRaw) {
     const text = `${violationRaw || ''} ${notesRaw || ''} ${(r && r.forceMajeureType) || ''}`.toLowerCase();
@@ -27,36 +53,42 @@ function getViolationFine(violationRaw, notesRaw, r) {
     if (isFineWaivedByForceMajeure(r, violationRaw, notesRaw)) return 0;
     if (r && r.isManualFine) return Number(r.cost) || 0;
 
-    let violations = [];
-    if      (Array.isArray(violationRaw)) violations = violationRaw;
-    else if (typeof violationRaw === 'string' && violationRaw.includes(','))
-        violations = violationRaw.split(',').map(v => v.trim());
-    else
-        violations = [violationRaw];
+    const recordedText = splitCanonicalViolations((r && r.violation) || violationRaw).join(' ').toLowerCase();
+    const recordedMandatory = !!(r && r.schedTime) ||
+        recordedText.includes('опоздал') ||
+        recordedText.includes('отказ клиенту') ||
+        recordedText.includes('не вышел') || recordedText.includes('невыход') ||
+        recordedText.includes('воровство') || recordedText.includes('неоплаченная') ||
+        recordedText.includes('терминал') || recordedText.includes('пробит');
+    if (recordedMandatory && hasActualFine(r)) return Math.max(0, getActualFine(r));
+
+    const violations = splitCanonicalViolations(violationRaw);
 
     let maxFine = 0;
 
     for (const raw of violations) {
-        const v = (raw || '').toLowerCase();
+        const v = canonicalizeViolation(raw).toLowerCase();
         const n = (notesRaw || '').toLowerCase();
         let currentFine = 0;
 
         const handbook = window.GLOBAL_HANDBOOK || {};
         const isSecondMaster = r && String(r.slot || '') === '2';
         for (const [key, value] of Object.entries(handbook)) {
-            if (v.includes(key.toLowerCase()) || n.includes(key.toLowerCase())) {
+            if (v.includes(canonicalizeViolation(key).toLowerCase())) {
                 currentFine = value; break;
             }
         }
 
         // Unpaid services — extract exact amount
         if (v.includes('пробиты не все услуги')) {
-            const m = (n + ' ' + v).match(/Сумма непробитых услуг: (\d+)/);
-            if (m) currentFine = parseInt(m[1], 10);
+            const explicitAmount = Number(r && r.unpaidAmount);
+            const m = (n + ' ' + v).match(/сумма непробитых услуг:\s*(\d+)/i);
+            if (explicitAmount > 0) currentFine = explicitAmount;
+            else if (m) currentFine = parseInt(m[1], 10);
         }
 
         // Опоздания всегда берут сумму из справочника по диапазону.
-        if (v.includes('опоздал') || n.includes('опоздани')) {
+        if (v.includes('опоздал')) {
             const match = n.match(/на\s+(\d+)\s+мин/);
             const minutes = match ? parseInt(match[1]) : 0;
             let key = '';
@@ -64,6 +96,8 @@ function getViolationFine(violationRaw, notesRaw, r) {
             else if (minutes >= 31) key = 'Опоздание 31-60 мин';
             else if (minutes >= 21) key = 'Опоздание 21-30 мин';
             else if (minutes >= 11) key = 'Опоздание 11-20 мин';
+            else if (minutes >= 4)  key = 'Опоздание 4-10 мин';
+            else if (minutes >= 1)  key = 'Опоздание 1-3 мин';
             if (key) {
                 const secondKey = `Опоздание второй мастер ${key.replace('Опоздание ', '')}`;
                 currentFine = Number(handbook[isSecondMaster ? secondKey : key]) || 0;
@@ -90,16 +124,13 @@ function getActualFine(r) {
 function isMandatoryFine(vRaw, nRaw, r) {
     if (isFineWaivedByForceMajeure(r, vRaw, nRaw)) return false;
     if (r && r.isManualFine) return true;
-    let violations = [];
-    if      (Array.isArray(vRaw)) violations = vRaw;
-    else if (typeof vRaw === 'string' && vRaw.includes(',')) violations = vRaw.split(',').map(v => v.trim());
-    else violations = [vRaw];
+    const violations = splitCanonicalViolations(vRaw);
 
     for (const raw of violations) {
-        const v = (raw || '').toLowerCase();
-        const n = (nRaw || '').toLowerCase();
+        const v = canonicalizeViolation(raw).toLowerCase();
         if (v.includes('пробит'))    return true;
-        if (v.includes('опоздал') || n.includes('опоздани')) return true;
+        if (v.includes('опоздал')) return true;
+        if (v.includes('отказ клиенту')) return true;
         if (v.includes('воровство') || v.includes('неоплаченная') || v.includes('терминал')) return true;
         if (v.includes('не вышел') || v.includes('не выход') || v.includes('невыход')) return true;
     }
@@ -113,33 +144,13 @@ function isMandatoryFine(vRaw, nRaw, r) {
  * @returns {Object} { masterName: { loc, state, weekViolations, monthFines, details: [...] } }
  */
 function getAdapterMasterCanonical(name) {
-    if (!name || typeof ADAPTER === 'undefined') return null;
-    const n = String(name).toLowerCase().trim();
-    const candidates = [];
-
-    for (const loc in ADAPTER) {
-        if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
-        for (const m of ADAPTER[loc].masters) {
-            const dash = (m.dash || '').toLowerCase().trim();
-            const aliases = (m.el_kassa || []).map(x => String(x).toLowerCase().trim());
-            if (dash === n || aliases.some(a => n.includes(a) || a.includes(n))) return m.dash;
-            const dashFirst = dash.split(/\s+/)[0];
-            const nameFirst = n.split(/\s+/)[0];
-            if (dashFirst && nameFirst && dashFirst === nameFirst) candidates.push(m.dash);
-        }
-    }
-    const uniqueCandidates = Array.from(new Set(candidates));
-    if (uniqueCandidates.length === 1) return uniqueCandidates[0];
-    return null;
+    if (!name || typeof window.findAdapterMaster !== 'function') return null;
+    return window.findAdapterMaster(name)?.dash || null;
 }
 
 function getAdapterMasterLocation(name) {
-    if (!name || typeof ADAPTER === 'undefined') return '';
-    for (const loc in ADAPTER) {
-        if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
-        if (ADAPTER[loc].masters.some(m => m.dash === name)) return loc;
-    }
-    return '';
+    if (!name || typeof window.findAdapterMaster !== 'function') return '';
+    return window.findAdapterMaster(name)?.location || '';
 }
 
 function normalizeFinesPeriod(targetPeriod) {
@@ -170,8 +181,10 @@ function calculateFines(reports, targetPeriod) {
     const period = normalizeFinesPeriod(targetPeriod);
 
     const masters = {};
+    const adapterMasterNames = new Set();
     if (typeof getAdapterMasterNames === 'function') {
         getAdapterMasterNames().forEach(name => {
+            adapterMasterNames.add(name);
             masters[name] = { reports: [], loc: getAdapterMasterLocation(name) };
         });
     }
@@ -179,8 +192,7 @@ function calculateFines(reports, targetPeriod) {
     reports.forEach(r => {
         if (!r.barber) return;
         const name = getAdapterMasterCanonical(r.barber);
-        if (!name) return;
-        if (!masters[name]) masters[name] = { reports: [], loc: r.location };
+        if (!name || !adapterMasterNames.has(name)) return;
         masters[name].reports.push(r);
     });
 
@@ -190,60 +202,68 @@ function calculateFines(reports, targetPeriod) {
         const mReports = masters[master].reports.sort((a, b) => dayjs(a.date || a.createdAt).valueOf() - dayjs(b.date || b.createdAt).valueOf());
         let state              = 'Green';
         let displayState       = 'Green';
-        let targetWeekSeen     = false;
+        let displayBasisCount  = 0;
+        let displayBasisWeek   = '';
         let currentMonthFines  = 0;
         const weeks            = {};
         const details          = []; // детализация штрафов
-        const monthlyLateCounts = {};
-        const currentLateGraceMonth = dayjs().format('YYYY-MM');
+        const zoneDetails      = []; // нарушения периода, влияющие на зону
 
         mReports.forEach(r => {
             const d   = dayjs(r.date || r.createdAt);
             if (!d.isValid() || d.isAfter(period.end)) return;
-            const wId = d.isoWeek() + '-' + d.year();
+            const wId = d.startOf('isoWeek').format('YYYY-MM-DD');
             if (!weeks[wId]) weeks[wId] = [];
             weeks[wId].push(r);
         });
 
-        const sortedWeeks = Object.keys(weeks).sort((a, b) => {
-            const [wA, yA] = a.split('-'), [wB, yB] = b.split('-');
-            if (yA !== yB) return yA - yB;
-            return wA - wB;
-        });
+        const reportWeekIds = Object.keys(weeks).sort();
+        const targetWeek = period.end.startOf('isoWeek');
+        const targetWeekId = targetWeek.format('YYYY-MM-DD');
+        let cursor = reportWeekIds.length ? dayjs(reportWeekIds[0]) : targetWeek;
+        if (cursor.isAfter(targetWeek, 'day')) cursor = targetWeek;
+        const sortedWeeks = [];
+        while (!cursor.isAfter(targetWeek, 'day')) {
+            sortedWeeks.push(cursor.format('YYYY-MM-DD'));
+            cursor = cursor.add(1, 'week');
+        }
 
         let periodViolationsCount = 0;
+        let previousWeekViolations = 0;
 
         for (const wId of sortedWeeks) {
-            const weekReports   = weeks[wId];
-            let violationsCount = 0, lateCount = 0;
+            const weekReports   = weeks[wId] || [];
+            let violationsCount = 0;
             const weekViolationsList = [];
 
             weekReports.forEach(r => {
                 const inPeriod = isFineReportInPeriod(r, period);
-                const vList = Array.isArray(r.violation)
-                    ? r.violation
-                    : (r.violation ? String(r.violation).split(',').map(v => v.trim()) : []);
+                const vList = splitCanonicalViolations(r.violation);
 
                 vList.forEach(vName => {
                     if (!vName) return;
                     if (isFineWaivedByForceMajeure(r, vName, r.notes)) return;
+                    if (window.VIOLATION_RULES ? window.VIOLATION_RULES.isNoViolation(vName) : (vName.toLowerCase().includes('замечаний нет') || vName.toLowerCase().includes('нет нарушений') || vName.includes('✅'))) return;
                     const fine        = getViolationFine(vName, r.notes, r);
                     const isMandatory = isMandatoryFine(vName, r.notes, r);
 
-                    if (!vName.toLowerCase().includes('замечаний нет')) {
+                    const affectsZone = !isZoneExcludedViolation(vName);
+                    if (affectsZone) {
                         violationsCount++;
-                        if (inPeriod) periodViolationsCount++;
+                        if (inPeriod) {
+                            periodViolationsCount++;
+                            zoneDetails.push({
+                                id: r.id,
+                                date: dayjs(r.date || r.createdAt).format('DD.MM.YYYY'),
+                                violation: vName,
+                                notes: r.notes || '',
+                                location: r.location || ''
+                            });
+                        }
                     }
 
                     if (isMandatory) {
                         let finalFine = fine;
-                        if (vName.toLowerCase().includes('опоздал') || (r.notes||'').toLowerCase().includes('опоздани')) {
-                            lateCount++;
-                            const lateMonth = dayjs(r.date || r.createdAt).format('YYYY-MM');
-                            monthlyLateCounts[lateMonth] = (monthlyLateCounts[lateMonth] || 0) + 1;
-                            if (lateCount >= 2) finalFine *= 2;
-                            if (lateMonth === currentLateGraceMonth && monthlyLateCounts[lateMonth] === 1) finalFine = 0;
-                        }
                         if (inPeriod && finalFine > 0) {
                             currentMonthFines += finalFine;
                             details.push({
@@ -263,36 +283,32 @@ function calculateFines(reports, targetPeriod) {
             });
 
             const activeState = state;
-            if (weekReports.some(r => isFineReportInPeriod(r, period))) {
+            if (wId === targetWeekId) {
                 displayState = activeState;
-                targetWeekSeen = true;
+                displayBasisCount = previousWeekViolations;
+                displayBasisWeek = dayjs(wId).subtract(1, 'week').format('DD.MM.YYYY');
             }
             let zoneFine = 0;
             const finesApplied = [];
             if (activeState === 'Yellow' && weekViolationsList.length > 0) {
                 const freq = {};
                 weekViolationsList.forEach(v => { freq[v.type] = (freq[v.type]||0)+1; });
-                let topType='', maxF=0;
-                for (let t in freq) { if (freq[t] > maxF) { maxF = freq[t]; topType = t; } }
-                const topV = weekViolationsList.find(x => x.type === topType);
-                if (topV) { zoneFine += topV.fine; finesApplied.push(topV); }
+                const maxFrequency = Math.max(...Object.values(freq));
+                const topTypes = new Set(Object.keys(freq).filter(type => freq[type] === maxFrequency));
+                weekViolationsList.forEach(v => {
+                    if (!topTypes.has(v.type)) return;
+                    zoneFine += v.fine;
+                    finesApplied.push(v);
+                });
             } else if (activeState === 'Red') {
                 weekViolationsList.forEach(v => { zoneFine += v.fine; finesApplied.push(v); });
             }
 
             // Нарушения этой недели определяют зону только следующей недели.
-            if (activeState === 'Green') {
-                if (violationsCount >= 14) state = 'Red';
-                else if (violationsCount > 9) state = 'Yellow';
-                else state = 'Green';
-            } else if (activeState === 'Yellow') {
-                if (violationsCount > 9) state = 'Red';
-                else if (violationsCount === 0) state = 'Green';
-                else state = 'Yellow';
-            } else {
-                if (violationsCount === 0) state = 'Green';
-                else state = 'Red';
-            }
+            if (violationsCount >= 14) state = 'Red';
+            else if (violationsCount >= 10) state = 'Yellow';
+            else state = 'Green';
+            previousWeekViolations = violationsCount;
 
             if (zoneFine > 0) {
                 finesApplied.forEach(v => {
@@ -313,9 +329,16 @@ function calculateFines(reports, targetPeriod) {
 
         results[master] = {
             loc:            masters[master].loc,
-            state:          targetWeekSeen ? displayState : state,
+            state:          displayState,
+            zoneBasisViolations: displayBasisCount,
+            zoneBasisWeek:  displayBasisWeek,
             weekViolations: periodViolationsCount,
             monthFines:     currentMonthFines,
+            zoneDetails:    zoneDetails.sort((a, b) => {
+                const da = a.date.split('.').reverse().join('');
+                const db = b.date.split('.').reverse().join('');
+                return da.localeCompare(db);
+            }),
             details:        details.sort((a, b) => {
                 const da = a.date.split('.').reverse().join('');
                 const db = b.date.split('.').reverse().join('');
@@ -330,11 +353,29 @@ window.calculateFines = calculateFines;
 window.getViolationFine = getViolationFine;
 window.isMandatoryFine = isMandatoryFine;
 window.isFineWaivedByForceMajeure = isFineWaivedByForceMajeure;
+window.isZoneExcludedViolation = isZoneExcludedViolation;
 
 // ==== FINES MODAL ====
 // Хранение отчётов для детализации
 let _finesAllReports = [];
 let _finesResults    = {};
+let _finesSortKey    = 'fine';
+
+function updateFinesSortHeaders() {
+    document.querySelectorAll('[data-fines-sort-header]').forEach(header => {
+        const isActive = header.dataset.finesSortHeader === _finesSortKey;
+        header.setAttribute('aria-sort', isActive ? 'descending' : 'none');
+        const button = header.querySelector('.fines-sort-button');
+        if (button) button.classList.toggle('is-active', isActive);
+    });
+}
+
+window.setFinesSort = function(sortKey) {
+    if (sortKey !== 'fine' && sortKey !== 'violations') return;
+    _finesSortKey = sortKey;
+    updateFinesSortHeaders();
+    renderFinesTable();
+};
 
 window.openFinesModal = function() {
     document.getElementById('fines-modal').classList.add('active');
@@ -400,6 +441,7 @@ async function renderFinesTable() {
     if (detailBlock) detailBlock.style.display = 'none';
 
     try {
+        if (window.HANDBOOK_READY) await window.HANDBOOK_READY;
         const res     = await fetch('/api/ovn');
         const reports = await res.json();
         _finesAllReports = reports;
@@ -410,29 +452,6 @@ async function renderFinesTable() {
         const targetPeriod = getSelectedFinesPeriod();
         const results = calculateFines(reports, targetPeriod);
         _finesResults = results;
-
-        // Ручные штрафы за выбранный период
-        const manualTbody = document.getElementById('manual-fines-table-body');
-        if (manualTbody) {
-            let mHtml = '';
-            reports.forEach(r => {
-                if (!r.isManualFine) return;
-                const canonicalMaster = getAdapterMasterCanonical(r.barber);
-                if (!canonicalMaster) return;
-                const d = dayjs(r.date || r.createdAt);
-                if (!isFineReportInPeriod(r, targetPeriod)) return;
-                let dateStr = d.format('DD.MM.YYYY');
-                mHtml += `<tr>
-                    <td>${dateStr}</td><td>${r.location||'-'}</td>
-                    <td style="font-weight:700">${canonicalMaster}</td>
-                    <td>${r.violation||r.notes}</td>
-                    <td style="color:#FF3B30;font-weight:bold;white-space:nowrap;">${r.cost} ₽
-                        ${PERM.can('editOvnCheck') ? `<button onclick="editOvnFromFines('${r.id}', event)" title="Редактировать ОВН" style="margin-left:8px;background:transparent;border:none;color:#E8FF38;cursor:pointer;font-size:13px">✎</button>` : ''}
-                    </td>
-                </tr>`;
-            });
-            manualTbody.innerHTML = mHtml || '<tr><td colspan="5" style="text-align:center;color:#888;">Ручных штрафов нет</td></tr>';
-        }
 
         if (Object.keys(results).length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Нет данных за этот период</td></tr>';
@@ -446,15 +465,25 @@ async function renderFinesTable() {
             'Red':    `<span style="color:#FF3B30;background:rgba(255,59,48,0.15);padding:4px 10px;border-radius:6px;font-weight:800;font-size:12px;">🔴 КРАСНАЯ</span>`
         };
 
-        // Сортируем по сумме штрафа (от большего)
-        const sorted = Object.entries(results).sort((a, b) => b[1].monthFines - a[1].monthFines);
+        // Оба режима сортируются только по убыванию.
+        const sorted = Object.entries(results).sort((a, b) => {
+            const primary = _finesSortKey === 'violations'
+                ? b[1].weekViolations - a[1].weekViolations
+                : b[1].monthFines - a[1].monthFines;
+            if (primary !== 0) return primary;
+            const secondary = _finesSortKey === 'violations'
+                ? b[1].monthFines - a[1].monthFines
+                : b[1].weekViolations - a[1].weekViolations;
+            return secondary || a[0].localeCompare(b[0], 'ru');
+        });
+        updateFinesSortHeaders();
 
         tbody.innerHTML = sorted.map(([m, data]) => `
             <tr onclick="showFineDetail('${m.replace(/'/g, "\\'")}')" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
                 <td>${displayPeriod}</td>
                 <td style="font-weight:700;color:#E8FF38;text-decoration:underline;text-underline-offset:3px">${m}</td>
                 <td>${zoneBadge[data.state]}</td>
-                <td><strong style="color:white;font-size:15px;">${data.weekViolations}</strong></td>
+                <td title="Количество нарушений, влияющих на зону"><strong style="color:white;font-size:15px;">${data.weekViolations}</strong></td>
                 <td style="color:#FF3B30;font-weight:700;font-size:15px;">${data.monthFines.toLocaleString()} ₽</td>
             </tr>`).join('');
 
@@ -505,35 +534,79 @@ window.showFineDetail = function(masterName) {
     const tbody = document.getElementById('fines-detail-tbody');
     if (!block || !tbody) return;
 
-    title.textContent = `Штрафы: ${masterName}`;
+    title.textContent = `Нарушения: ${masterName}`;
 
-    if (data.details.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:20px;">Штрафов за этот период нет</td></tr>';
+    const rowsBySource = new Map();
+    const detailKey = d => `${d.id || ''}|${d.date || ''}|${d.location || ''}|${d.violation || ''}`;
+    (data.zoneDetails || []).forEach(d => {
+        rowsBySource.set(detailKey(d), { ...d, affectsZone: true, fine: 0 });
+    });
+    (data.details || []).forEach(d => {
+        const key = detailKey(d);
+        const existing = rowsBySource.get(key);
+        if (existing) {
+            existing.fine = Number(d.fine) || 0;
+            existing.fineType = d.type;
+        } else {
+            rowsBySource.set(key, { ...d, affectsZone: false, fine: Number(d.fine) || 0 });
+        }
+    });
+    const displayDetails = Array.from(rowsBySource.values()).sort((a, b) => {
+        const da = String(a.date || '').split('.').reverse().join('');
+        const db = String(b.date || '').split('.').reverse().join('');
+        return da.localeCompare(db);
+    });
+
+    if (displayDetails.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#888;padding:20px;">Нарушений и штрафов за этот период нет</td></tr>';
     } else {
         let total = 0;
-        tbody.innerHTML = data.details.map(d => {
-            total += d.fine;
-            const typeIcon = d.type === 'mandatory' ? '⚠️' : '🔶';
-            const typeLabel = d.type === 'mandatory' ? 'Авто' : 'Зона';
+        const renderDetailRows = rows => rows.map(d => {
+            total += Number(d.fine) || 0;
             const editId = d.id || findFineSourceReportId(masterName, d);
             const editButton = editId
                 ? `<button onclick="editOvnFromFines('${editId}', event)" title="Открыть исходную ОВН-проверку" style="margin-top:7px;background:rgba(232,255,56,0.14);border:1px solid rgba(232,255,56,0.55);color:#E8FF38;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:800;white-space:nowrap">Редактировать ОВН</button>`
                 : '';
             return `<tr>
                 <td style="white-space:nowrap">${d.date}</td>
-                <td>${d.location}</td>
-                <td style="max-width:250px">
+                <td>
                     <div>${d.violation}</div>
                     ${editButton}
                 </td>
-                <td><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${d.type === 'mandatory' ? 'rgba(255,59,48,0.15);color:#FF3B30' : 'rgba(255,159,10,0.15);color:#FF9F0A'}">${typeIcon} ${typeLabel}</span></td>
-                <td style="color:#FF3B30;font-weight:700;text-align:right;white-space:nowrap">${d.fine.toLocaleString()} ₽</td>
+                <td style="color:#FF3B30;font-weight:700;text-align:right;white-space:nowrap">${d.fine > 0 ? d.fine.toLocaleString() + ' ₽' : '—'}</td>
             </tr>`;
         }).join('');
 
+        const zoneRows = displayDetails.filter(d => d.affectsZone);
+        const lateRows = displayDetails.filter(d => !d.affectsZone && /опоздал/i.test(String(d.violation || '')));
+        const refusalRows = displayDetails.filter(d => !d.affectsZone && /отказ клиенту/i.test(String(d.violation || '')));
+        const detailGroups = [];
+        if (zoneRows.length) {
+            detailGroups.push(`
+                <tr class="fines-detail-group fines-detail-group-zone">
+                    <td colspan="3">Влияют на зону</td>
+                </tr>
+                ${renderDetailRows(zoneRows)}`);
+        }
+        if (refusalRows.length) {
+            detailGroups.push(`
+                <tr class="fines-detail-group fines-detail-group-nonzone">
+                    <td colspan="3">Отказ клиенту <span>(не влияет на зону)</span></td>
+                </tr>
+                ${renderDetailRows(refusalRows)}`);
+        }
+        if (lateRows.length) {
+            detailGroups.push(`
+                <tr class="fines-detail-group fines-detail-group-lates">
+                    <td colspan="3">Опоздания <span>(не влияют на зону)</span></td>
+                </tr>
+                ${renderDetailRows(lateRows)}`);
+        }
+        tbody.innerHTML = detailGroups.join('');
+
         // Итого
         tbody.innerHTML += `<tr style="border-top:2px solid #444">
-            <td colspan="4" style="text-align:right;font-weight:700;color:#fff;padding:10px">ИТОГО:</td>
+            <td colspan="2" style="text-align:right;font-weight:700;color:#fff;padding:10px">ИТОГО:</td>
             <td style="color:#FF3B30;font-weight:800;font-size:16px;text-align:right;padding:10px">${total.toLocaleString()} ₽</td>
         </tr>`;
     }
@@ -591,62 +664,21 @@ window.hideFineDetail = function() {
     if (block) block.style.display = 'none';
 };
 
-// ==== MANUAL FINE MODAL ====
-window.openManualFineModal = function() {
-    document.getElementById('manual-fine-modal').classList.add('active');
-    document.getElementById('mf-date').value = dayjs().format('YYYY-MM-DD');
-};
-window.closeManualFineModal = function() {
-    document.getElementById('manual-fine-modal').classList.remove('active');
-};
+// Remove legacy manual-fine markup so the retired UI cannot be opened.
+function removeManualFineUi() {
+    document.getElementById('manual-fine-modal')?.remove();
+    const table = document.getElementById('manual-fines-table');
+    const container = table?.closest('.ovn-matrix-container');
+    const title = container?.previousElementSibling;
+    if (title && /ручн/i.test(title.textContent || '')) title.remove();
+    container?.remove();
+}
 
-window.updateManualFineAmount = function() {
-    const v        = document.getElementById('mf-violation').value;
-    const costInput = document.getElementById('mf-cost');
-    if ((window.GLOBAL_HANDBOOK || {})[v] !== undefined) costInput.value = window.GLOBAL_HANDBOOK[v];
-    else costInput.value = '';
-};
-
-window.updateMFMastersDropdown = function() {
-    const loc = document.getElementById('mf-location').value;
-    const sel = document.getElementById('mf-barber');
-    sel.innerHTML = '<option value="">Выберите мастера</option>';
-    if (loc && typeof ADAPTER !== 'undefined' && ADAPTER[loc]) {
-        ADAPTER[loc].masters.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m.dash; opt.textContent = m.dash;
-            sel.appendChild(opt);
-        });
-    }
-};
-
-window.submitManualFine = async function(e) {
-    e.preventDefault();
-    const btn = e.target.querySelector('button[type="submit"]');
-    btn.disabled = true; btn.textContent = 'Сохранение...';
-    const payload = {
-        location:     document.getElementById('mf-location').value,
-        barber:       document.getElementById('mf-barber').value,
-        date:         document.getElementById('mf-date').value,
-        violation:    document.getElementById('mf-violation').value,
-        cost:         document.getElementById('mf-cost').value,
-        notes:        document.getElementById('mf-notes').value,
-        isManualFine: true
-    };
-    try {
-        const res = await fetch('/api/ovn', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) {
-            showToast('Ручной штраф успешно добавлен!', 'success');
-            document.getElementById('manual-fine-form').reset();
-            closeManualFineModal();
-            if (document.getElementById('fines-modal').classList.contains('active')) renderFinesTable();
-            if (window.SALARY_MODE_MANAGER || (document.getElementById('salary-modal') && document.getElementById('salary-modal').classList.contains('active'))) {
-                if (typeof window.renderSalaryTable === 'function') window.renderSalaryTable();
-            }
-        } else { showToast('Ошибка при сохранении ручного штрафа', 'error'); }
-    } catch (err) { console.error(err); showToast('Ошибка сети', 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Начислить штраф'; }
-};
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', removeManualFineUi, { once: true });
+} else {
+    removeManualFineUi();
+}
 
 // ==== HANDBOOK SETTINGS MODAL ====
 window.openHandbookConfigModal = function() {
@@ -663,13 +695,14 @@ window.renderHandbookEditor = function() {
     const hb = window.GLOBAL_HANDBOOK || {};
 
     // Auto-seed commonly used keys
-    ['Опоздание 11-20 мин','Опоздание 21-30 мин','Опоздание 31-60 мин','Опоздание 61+ мин (Невыход)',
+    ['Опоздание 1-3 мин','Опоздание 4-10 мин','Опоздание 11-20 мин','Опоздание 21-30 мин','Опоздание 31-60 мин','Опоздание 61+ мин (Невыход)',
+     'Опоздание второй мастер 1-3 мин','Опоздание второй мастер 4-10 мин',
      'Опоздание второй мастер 11-20 мин','Опоздание второй мастер 21-30 мин',
      'Опоздание второй мастер 31-60 мин','Опоздание второй мастер 61+ мин (Невыход)',
      'Невыход','Услуга не проведена через терминал','Грязное рабочее место','Без формы',
      'Еда / напитки на рабочем месте','Разговор на нац. языке','Отказ клиенту','Поломка',
      'Про акцию не сказал','Телефон при клиенте',
-     'Не показал зеркало заднего вида','Не обработан инструмент','Другое'
+     'Не показал зеркало заднего вида','Не обработал инструмент','Другое'
     ].forEach(k => { if (hb[k] === undefined) hb[k] = 0; });
 
     let html = Object.entries(hb).map(([key, val]) => `

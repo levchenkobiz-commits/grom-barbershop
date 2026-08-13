@@ -1,18 +1,121 @@
 /**
  * routes/ovn.js
+ * FINANCIAL INPUT — DO NOT TOUCH fine normalization or master scoping without explicit user authorization.
+ * Mandatory instructions: /root/grom-dashboard/AGENTS.md
  * Маршруты: GET /api/ovn, POST /api/ovn, PUT /api/ovn
  */
 
 const fs    = require('fs');
 const PATHS = require('./paths');
+const { canonicalMasterName, getMasterAliases, matchesMaster, resolveAuthorizedMasterPreview } = require('./master_scope');
+const VIOLATION_RULES = require('../public/js/violation-rules');
+const OVN_TOP3 = require('../public/js/ovn-top3');
+
+function normalizeReportViolations(report) {
+  if (report && report.violation !== undefined) {
+    report.violation = VIOLATION_RULES.canonicalizeViolationList(report.violation);
+  }
+  return report;
+}
+
+function requireDynamicViolationAmounts(report) {
+  const violations = VIOLATION_RULES.splitViolations(report && report.violation);
+  if (violations.includes('Пробиты не все услуги') && !(Number(report && report.unpaidAmount) > 0)) {
+    throw new Error('Укажите сумму непробитых услуг');
+  }
+}
+
+function canonicalReportMaster(report) {
+  if (!report) return null;
+  return canonicalMasterName(report.barber, report.location) || canonicalMasterName(report.barber);
+}
 
 function readReports() {
   if (!fs.existsSync(PATHS.ovn)) fs.writeFileSync(PATHS.ovn, '[]');
   return JSON.parse(fs.readFileSync(PATHS.ovn, 'utf-8'));
 }
 
+function buildAnalyticsTop3(monthKey) {
+  const reports = readReports()
+    .map(report => {
+      const canonical = canonicalReportMaster(report);
+      return canonical ? normalizeReportViolations({ ...report, barber: canonical }) : null;
+    })
+    .filter(Boolean);
+  return OVN_TOP3.build(reports, monthKey, null, VIOLATION_RULES);
+}
+
+function handleGetAnalytics(req, res, parsedUrl) {
+  const requestedMonth = String(parsedUrl?.searchParams?.get('month') || '').trim();
+  const month = /^\d{4}-\d{2}$/.test(requestedMonth)
+    ? requestedMonth
+    : new Date().toISOString().slice(0, 7);
+  try {
+    const result = buildAnalyticsTop3(month);
+    const sourceUpdatedAt = fs.existsSync(PATHS.ovn) ? fs.statSync(PATHS.ovn).mtime.toISOString() : null;
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    });
+    res.end(JSON.stringify({
+      ...result,
+      month,
+      source: 'ovn_reports',
+      sourceUpdatedAt,
+      generatedAt: new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.error('[OVN analytics] source read failed:', error);
+    res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ error: 'Не удалось прочитать актуальные проверки ОВН' }));
+  }
+}
+
 function writeReports(reports) {
   fs.writeFileSync(PATHS.ovn, JSON.stringify(reports, null, 2));
+}
+
+function readHandbook() {
+  try { return VIOLATION_RULES.canonicalizeHandbook(JSON.parse(fs.readFileSync(PATHS.handbook, 'utf-8'))); }
+  catch (_) { return {}; }
+}
+
+function calculateMandatoryFine(report) {
+  const text = VIOLATION_RULES.canonicalizeViolationList(report && report.violation).toLowerCase();
+  const notes = String(report && report.notes || '').toLowerCase();
+  if (!report || report.isForceMajeure || report.fineWaived || text.includes('замечаний нет') || text.includes('нет нарушений')) return null;
+  if (report.isManualFine) return Math.max(0, Number(report.cost) || 0);
+  const handbook = readHandbook();
+  if (text.includes('опоздал')) {
+    const match = notes.match(/на\s+(\d+)\s+мин/);
+    const minutes = match ? Number(match[1]) : 0;
+    let range = '';
+    if (minutes >= 61) range = '61+ мин (Невыход)';
+    else if (minutes >= 31) range = '31-60 мин';
+    else if (minutes >= 21) range = '21-30 мин';
+    else if (minutes >= 11) range = '11-20 мин';
+    else if (minutes >= 4) range = '4-10 мин';
+    else if (minutes >= 1) range = '1-3 мин';
+    if (!range) return 0;
+    const key = String(report.slot || '') === '2' ? `Опоздание второй мастер ${range}` : `Опоздание ${range}`;
+    return Math.max(0, Number(handbook[key]) || 0);
+  }
+  if (text.includes('не вышел') || text.includes('не выход') || text.includes('невыход')) return Math.max(0, Number(handbook['Невыход']) || 0);
+  if (text.includes('пробиты не все услуги')) {
+    const amountMatch = `${notes} ${text}`.match(/сумма непробитых услуг:\s*(\d+)/i);
+    return Math.max(0, Number(report.unpaidAmount) || (amountMatch ? Number(amountMatch[1]) : 0));
+  }
+  if (text.includes('воровство') || text.includes('неоплаченная') || text.includes('терминал')) return Math.max(0, Number(handbook['Услуга не проведена через терминал']) || 0);
+  if (text.includes('отказ клиенту')) return Math.max(0, Number(handbook['Отказ клиенту']) || 0);
+  return null;
+}
+
+function synchronizeStoredFine(report) {
+  const fine = calculateMandatoryFine(report);
+  if (fine === null) delete report.fine;
+  else report.fine = fine;
 }
 
 function isLatesReport(report) {
@@ -47,15 +150,12 @@ function hasQueryFlag(req, name) {
 }
 
 function isNoViolation(value) {
-  const text = String(value || '').toLowerCase();
-  return text.includes('замечаний нет') || text.includes('нет нарушений') || text.includes('✅');
+  const violations = VIOLATION_RULES.splitViolations(value);
+  return violations.length > 0 && violations.every(VIOLATION_RULES.isNoViolation);
 }
 
 function splitViolations(value) {
-  return String(value || '')
-    .split(',')
-    .map(v => v.replace(/^✅\s*/, '').trim())
-    .filter(Boolean);
+  return VIOLATION_RULES.splitViolations(value);
 }
 
 function buildViolationEditNote(beforeRaw, afterRaw) {
@@ -87,7 +187,22 @@ function buildViolationEditNote(beforeRaw, afterRaw) {
 
 // GET /api/ovn — вернуть все отчёты
 function handleGet(req, res) {
-  let reports = readReports();
+  let reports = readReports()
+    .map(report => {
+      const canonical = canonicalReportMaster(report);
+      return canonical ? normalizeReportViolations({ ...report, barber: canonical }) : null;
+    })
+    .filter(Boolean);
+  const preview = resolveAuthorizedMasterPreview(req);
+  if (preview.requested && !preview.master) {
+    res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ error: preview.error }));
+  }
+  const personalMaster = preview.master || (req.authUser && req.authUser.role === 'master' ? req.authUser.name : null);
+  if (personalMaster) {
+    const aliases = getMasterAliases(personalMaster);
+    reports = reports.filter(report => matchesMaster(report.barber, aliases));
+  }
   if (hasQueryFlag(req, 'video_only')) {
     reports = reports.filter(report => !isLatesReport(report));
   }
@@ -102,8 +217,21 @@ function handlePost(req, res) {
   req.on('end', () => {
     try {
       const report = JSON.parse(body);
+      if (report.isManualFine) {
+        res.writeHead(410, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Ручные штрафы отключены' }));
+      }
+      normalizeReportViolations(report);
+      requireDynamicViolationAmounts(report);
+      const canonical = canonicalReportMaster(report);
+      if (!canonical) {
+        res.writeHead(422, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Мастер отсутствует в адаптере' }));
+      }
+      report.barber = canonical;
       report.id = Date.now();
       report.createdAt = new Date().toISOString();
+      synchronizeStoredFine(report);
 
       let reports = readReports();
 
@@ -111,7 +239,7 @@ function handlePost(req, res) {
       if (report.schedTime) {
         reports = reports.filter(r =>
           !(r.date === report.date &&
-            r.barber === report.barber &&
+            canonicalReportMaster(r) === report.barber &&
             r.location === report.location &&
             r.schedTime)
         );
@@ -126,7 +254,7 @@ function handlePost(req, res) {
     } catch (e) {
       console.error('[OVN] POST error:', e);
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      res.end(JSON.stringify({ error: e.message || 'Invalid JSON' }));
     }
   });
 }
@@ -142,6 +270,12 @@ function handlePut(req, res) {
   req.on('end', () => {
     try {
       const upd = JSON.parse(body);
+      if (upd.isManualFine) {
+        res.writeHead(410, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Ручные штрафы отключены' }));
+      }
+      normalizeReportViolations(upd);
+      requireDynamicViolationAmounts(upd);
       if (!upd.id || !upd.editorName) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Missing id or editorName' }));
@@ -173,7 +307,14 @@ function handlePut(req, res) {
           const previousViolation = reports[i].violation || '';
           const time = new Date().toLocaleTimeString('ru-RU', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit' });
           if (upd.location)           reports[i].location  = upd.location;
-          if (upd.barber)             reports[i].barber    = upd.barber;
+          if (upd.barber) {
+            const canonical = canonicalMasterName(upd.barber, upd.location || reports[i].location) || canonicalMasterName(upd.barber);
+            if (!canonical) {
+              blocked = 'Мастер отсутствует в адаптере';
+              break;
+            }
+            reports[i].barber = canonical;
+          }
           if (upd.date)               reports[i].date      = upd.date;
           if (upd.time)               reports[i].time      = upd.time;
           if (upd.cost !== undefined) reports[i].cost      = upd.cost;
@@ -193,6 +334,7 @@ function handlePut(req, res) {
           } else if (Object.prototype.hasOwnProperty.call(reports[i], 'fineWaived')) {
             delete reports[i].fineWaived;
           }
+          synchronizeStoredFine(reports[i]);
 
           // audit trail: append editor info
           const baseNotes = (upd.notes || '').replace(/ \(отредактировано[^)]*\)/g, '').trim();
@@ -223,8 +365,8 @@ function handlePut(req, res) {
       }
     } catch (e) {
       console.error('[OVN] PUT error:', e);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Server error' }));
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message || 'Server error' }));
     }
   });
 }
@@ -313,4 +455,14 @@ function handlePatchReaction(req, res) {
   });
 }
 
-module.exports = { handleGet, handlePost, handlePut, handlePatchReaction };
+module.exports = {
+  handleGet,
+  handleGetAnalytics,
+  handlePost,
+  handlePut,
+  handlePatchReaction,
+  calculateMandatoryFine,
+  normalizeReportViolations,
+  requireDynamicViolationAmounts,
+  buildAnalyticsTop3,
+};

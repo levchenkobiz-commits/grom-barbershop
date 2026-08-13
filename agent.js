@@ -1,13 +1,26 @@
-const { chromium } = require('playwright');
+let chromium = null;
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 const quarterOfYear = require('dayjs/plugin/quarterOfYear');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 dayjs.extend(customParseFormat);
 dayjs.extend(quarterOfYear);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
-const ADAPTER = require('./adapter');
+const { ekGetAll } = require('./routes/elkassa');
+const { calculateAppointmentShare } = require('./routes/appointments_metric');
+const { getCompletedRollingPeriod, calculateVisitCycle, median } = require('./routes/visit_cycle');
+let ADAPTER = null;
+
+function loadCurrentAdapterApi() {
+    const adapterPath = require.resolve('./adapter');
+    delete require.cache[adapterPath];
+    return require('./adapter');
+}
 
 const CONFIG = {
     url: 'http://el-kassa.online/login',
@@ -27,6 +40,56 @@ if (!fs.existsSync(CONFIG.downloadDir)) {
 }
 
 const lockPath = path.join(__dirname, 'scraping_lock');
+const ANALYTICS_TIMEZONE = 'Europe/Moscow';
+
+function getAnalyticsNow(reference = null) {
+    return (reference ? dayjs(reference) : dayjs()).tz(ANALYTICS_TIMEZONE);
+}
+
+// QTD intentionally includes only completed Moscow days.  The comparison is
+// the same calendar interval one year earlier; it is never the previous Q.
+function getRevenueComparisonPeriod(reference = null) {
+    const now = getAnalyticsNow(reference);
+    const currentStart = now.startOf('quarter');
+    const currentEnd = now.startOf('day').subtract(1, 'day');
+    const previousStart = currentStart.subtract(1, 'year');
+    const previousEnd = currentEnd.subtract(1, 'year');
+    return {
+        now,
+        currentStart,
+        currentEnd,
+        previousStart,
+        previousEnd,
+        hasCompletedDays: !currentEnd.isBefore(currentStart, 'day'),
+        label: !currentEnd.isBefore(currentStart, 'day')
+            ? `${currentStart.format('DD.MM')}-${currentEnd.format('DD.MM')}`
+            : ''
+    };
+}
+
+function noComparableRevenue(period, reason) {
+    return {
+        noData: true,
+        current: null,
+        previous: null,
+        growth: null,
+        period: period.label,
+        reason,
+        drilldown: []
+    };
+}
+
+// A reader either gets the complete previous snapshot or the complete new one.
+// rename(2) is atomic when both files are in the same directory.
+function writeJsonAtomically(filePath, value) {
+    const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+    try {
+        fs.writeFileSync(tempPath, JSON.stringify(value, null, 2));
+        fs.renameSync(tempPath, filePath);
+    } finally {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    }
+}
 
 function acquireScrapingLock() {
     if (fs.existsSync(lockPath)) {
@@ -68,12 +131,16 @@ function releaseScrapingLock() {
 
 async function run() {
     if (!acquireScrapingLock()) return;
+    // ADAPTER может измениться без перезапуска долгоживущего агента.
+    // Каждый цикл обязан перечитать единый реестр с диска.
+    ADAPTER = loadCurrentAdapterApi();
     console.log(`\n=== [${dayjs().format('HH:mm:ss')}] GROME FULL SYNC (EXCEL EXTRACTOR) ===`);
     let browser;
 
     let loadErrors = { yclients: false, elkassa: false };
 
     try {
+        if (!chromium) ({ chromium } = require('playwright'));
         browser = await chromium.launch({ headless: true, timeout: 90000 });
         const context = await browser.newContext({ acceptDownloads: true });
         const page = await context.newPage();
@@ -116,14 +183,18 @@ async function run() {
             throw e;
         }
 
-        const now = dayjs().subtract(9, 'hours');
+        const revenuePeriod = getRevenueComparisonPeriod();
+        const now = revenuePeriod.now;
+        const cyclePeriod = getCompletedRollingPeriod(now);
         const todayStr = now.format('DD.MM.YYYY');
-        const yesterdayStr = now.subtract(1, 'day').format('DD.MM.YYYY');
-        const startQ = now.startOf('quarter').format('DD.MM.YYYY');
-        const startPrevQ = now.subtract(1, 'year').startOf('quarter').format('DD.MM.YYYY');
-        // If yesterday is what we use for current Q, let's use corresponding day for prev Q
-        const endPrevQ = now.subtract(1, 'year').subtract(1, 'day').format('DD.MM.YYYY');
-        const ninetyDaysAgo = now.subtract(91, 'day').format('DD.MM.YYYY');
+        const yesterdayStr = revenuePeriod.currentEnd.format('DD.MM.YYYY');
+        const startQ = revenuePeriod.currentStart.format('DD.MM.YYYY');
+        const startPrevQ = revenuePeriod.previousStart.format('DD.MM.YYYY');
+        const endPrevQ = revenuePeriod.previousEnd.format('DD.MM.YYYY');
+        // Return Rate keeps its existing 91-day source window. Keep this as a
+        // Dayjs value too: comparing against a formatted string is locale
+        // dependent and can silently widen or shorten the cohort window.
+        const rrStart = now.subtract(91, 'day').startOf('day');
         
         const startQMoment = dayjs(startQ, 'DD.MM.YYYY');
         const todayMoment = dayjs(todayStr, 'DD.MM.YYYY');
@@ -225,17 +296,21 @@ async function run() {
         }
 
         
-        const runClients = !process.argv.includes('--module=finance') && !process.argv.includes('--module=online') && !process.argv.includes('--module=salary');
-        const runFinance = !process.argv.includes('--module=clients') && !process.argv.includes('--module=online') && !process.argv.includes('--module=salary');
-        const runOnline = !process.argv.includes('--module=clients') && !process.argv.includes('--module=finance') && !process.argv.includes('--module=salary');
+        let runClients = !process.argv.includes('--module=finance') && !process.argv.includes('--module=online') && !process.argv.includes('--module=salary');
+        let runFinance = !process.argv.includes('--module=clients') && !process.argv.includes('--module=online') && !process.argv.includes('--module=salary');
+        let runOnline = !process.argv.includes('--module=clients') && !process.argv.includes('--module=finance') && !process.argv.includes('--module=salary');
         const runSalary = process.argv.includes('--module=salary') || (now.day() === 1 && now.hour() === 2);
+        let financeSnapshotReady = runFinance;
+        let revenueNoData = null;
 
 
         let revCur = 0, revPrev = 0, revToday = 0, growth = 0;
         let avgCycle = 0, cycleCount = 0, totalCohortRet = 0, totalCohortBase = 0, eligiblePhones = [];
         let rrVal = 0, percentage = 0, checksCount = 0, recordsCount = 0;
+        let appointmentsReady = false;
         let cycleDrilldown = [], rrDrilldown = [], rrLocDrilldown = [], apptMasters = [], masterOccupancy = [], masters = [];
         let networkAvg = 0;
+        let cycleResult = { value: 0, sampleSize: 0, eligibleCustomers: 0, byMaster: new Map() };
 
         const startMonth = now.startOf('month').format('DD.MM.YYYY');
 
@@ -243,6 +318,13 @@ async function run() {
         let oldData = {};
         if (fs.existsSync(CONFIG.dataPath)) {
             try { oldData = JSON.parse(fs.readFileSync(CONFIG.dataPath)); } catch(e){}
+        }
+
+        if (runFinance && !revenuePeriod.hasCompletedDays) {
+            // On day 1 there is no completed day in the new quarter yet.  Do
+            // not query an inverted range and do not retain a prior Q as QTD.
+            revenueNoData = noComparableRevenue(revenuePeriod, 'В новом квартале ещё нет завершённого дня.');
+            runFinance = false;
         }
 
         if (runFinance) {
@@ -266,6 +348,9 @@ async function run() {
                     .filter(m => m && m.name && !m.name.includes('Итого') && !m.name.includes('Филиал') && !m.name.includes('Сотрудник') && parseFloat(m.v.replace(/[^0-9]/g, '')) > 0)
                     .slice(0, 12);
             });
+            masters = masters
+                .map(row => ({ ...row, name: ADAPTER.getDashNameByElkassa(row.name) }))
+                .filter(row => row.name);
         }
 
         
@@ -336,10 +421,10 @@ async function run() {
             const turnoverMap = {};
             const workDaysMap = {};
             masterData.forEach(m => {
-                if (m.name) {
-                    turnoverMap[m.name] = m.turnover;
-                    workDaysMap[m.name] = m.workDays;
-                }
+                const canonical = ADAPTER.getDashNameByElkassa(m.name);
+                if (!canonical) return;
+                turnoverMap[canonical] = (turnoverMap[canonical] || 0) + m.turnover;
+                workDaysMap[canonical] = Math.max(workDaysMap[canonical] || 0, m.workDays);
             });
 
             salaryWeekly = {
@@ -353,15 +438,30 @@ async function run() {
         }
 
         // ============ EXCEL DOWNLOADS ============
-        let curExcel = []; 
+        let rrExcel = [];
+        let cycleOrders = [];
         let curMonthOrders = [];
+        let curMonthOccupancyOrders = [];
         const fetchEnd = yesterdayStr; // Strictly up to yesterday end of day
 
         if (runClients) {
-            curExcel = await getExcelData(ninetyDaysAgo, yesterdayStr, 'CUR_90D');
+            // Use the paginated primary API for the cycle only. The browser
+            // Excel export silently omits part of long intervals, whereas the
+            // API exposes the full order count and is shared with history.
+            cycleOrders = await ekGetAll('/api2/order/list', {
+                date: `${cyclePeriod.start.format('DD.MM.YYYY')} 00:00 - ${yesterdayStr} 23:59`
+            });
+            rrExcel = await getExcelData(rrStart.format('DD.MM.YYYY'), yesterdayStr, 'CUR_90D');
         }
         if (runOnline) {
-            curMonthOrders = await getExcelData(startMonth, fetchEnd, 'MTD_ORDERS');
+            // The appointment denominator must use the same paginated source
+            // as monthly history. Excel can silently truncate a long export.
+            curMonthOrders = await ekGetAll('/api2/order/list', {
+                date: `${startMonth} 00:00 - ${fetchEnd} 23:59`
+            });
+            // Occupancy intentionally keeps its established Excel source and
+            // calculation; this API migration is limited to appointments.
+            curMonthOccupancyOrders = await getExcelData(startMonth, fetchEnd, 'MTD_OCCUPANCY');
         }
 
         if (runClients) {
@@ -382,10 +482,6 @@ async function run() {
         });
         console.log(`Total New Clients in Cohort: ${Object.keys(cohorts).length}`);
         
-        // Find active masters in last 14 days
-        const fourteenDaysAgoMoment = now.subtract(14, 'day');
-        const activeMasters = new Set();
-
         const getLocFromRow = (r) => {
             if (r['Филиал']) return String(r['Филиал']).trim();
             if (r['Терминал (номер)']) {
@@ -397,25 +493,26 @@ async function run() {
             return null;
         };
 
-        curExcel.forEach(r => {
-            const masterRaw = typeof r['Сотрудник'] === 'string' ? r['Сотрудник'].trim() : '';
-            if (!masterRaw || masterRaw.toLowerCase() === 'логин') return;
-            const loc = getLocFromRow(r);
-            const master = ADAPTER.getDashNameByElkassa(masterRaw, loc) || masterRaw;
-            const dStr = typeof r['Дата'] === 'string' ? r['Дата'].trim() : null;
-            if (!dStr) return;
-            const d = dayjs(dStr, 'DD.MM.YYYY');
-            if (d.isValid() && d.unix() >= fourteenDaysAgoMoment.unix()) {
-                activeMasters.add(master);
-            }
-        });
+        const cycleEvents = cycleOrders
+            .filter(order => order.status_pay_show === 'Оплачено')
+            .map(order => {
+            const phone = normPhone(order.customerPhone);
+            const d = dayjs(order.date, 'DD.MM.YYYY HH:mm');
+            if (!phone || !d.isValid()) return null;
+            const loc = getLocFromRow({ 'Терминал (номер)': order.terminal_number });
+            const rawMaster = typeof order.employeeName === 'string' ? order.employeeName.trim() : '';
+            return { phone, date: d, branch: loc, master: rawMaster && loc ? ADAPTER.getDashNameByElkassa(rawMaster, loc) : null };
+        }).filter(Boolean);
+        cycleResult = calculateVisitCycle(cycleEvents);
+        avgCycle = cycleResult.value;
+        cycleDrilldown = [...cycleResult.byMaster.entries()]
+            .map(([name, values]) => ({ name, v: `${median(values).toFixed(1)} д.` }))
+            .sort((a, b) => parseFloat(a.v) - parseFloat(b.v));
 
-        // 1 Client + 1 Day = 1 Visit
+        // Return Rate retains its original 91-day source window.
         const visitsMap = {}; 
-        let totalCycleSum = 0, cycleCount = 0;
-        const masterCycles = {};
 
-        curExcel.forEach(r => {
+        rrExcel.forEach(r => {
             const phoneStr = r['Клиент'];
             const phone = normPhone(phoneStr);
             const masterRaw = typeof r['Сотрудник'] === 'string' ? r['Сотрудник'].trim() : '';
@@ -423,7 +520,8 @@ async function run() {
             if (!phone) return;
             
             const loc = getLocFromRow(r);
-            const master = ADAPTER.getDashNameByElkassa(masterRaw, loc) || masterRaw;
+            const master = ADAPTER.getDashNameByElkassa(masterRaw, loc);
+            if (!master) return;
 
             
             const dateStr = typeof r['Дата'] === 'string' ? r['Дата'].trim() : null;
@@ -439,33 +537,7 @@ async function run() {
             }
         });
         
-        // ============ CYCLE ============
-        Object.keys(visitsMap).forEach(phone => {
-            const visits = Object.values(visitsMap[phone]).sort((a, b) => a.date.unix() - b.date.unix());
-            if (visits.length >= 2) {
-                let diffSum = 0, validDiffs = 0;
-                for (let i = 1; i < visits.length; i++) {
-                    const diff = visits[i].date.diff(visits[i - 1].date, 'day');
-                    if (diff > 0) { diffSum += diff; validDiffs++; }
-                }
-                if (validDiffs > 0) {
-                    const avg = diffSum / validDiffs;
-                    totalCycleSum += avg;
-                    cycleCount++;
-                    const lastMaster = visits[visits.length - 1].master;
-                    if (!masterCycles[lastMaster]) masterCycles[lastMaster] = { sum: 0, count: 0 };
-                    masterCycles[lastMaster].sum += avg;
-                    masterCycles[lastMaster].count++;
-                }
-            }
-        });
-
-        avgCycle = cycleCount > 0 ? (totalCycleSum / cycleCount).toFixed(1) : 0;
-        console.log(`CYCLE: ${avgCycle}d (${cycleCount} returning)`);
-
-        cycleDrilldown = Object.keys(masterCycles)
-            .map(m => ({ name: m, v: (masterCycles[m].sum / masterCycles[m].count).toFixed(1) + ' д.' }))
-            .sort((a, b) => parseFloat(a.v) - parseFloat(b.v));
+        console.log(`CYCLE: ${avgCycle}d (${cycleResult.sampleSize} pairs, ${cycleResult.eligibleCustomers} customers)`);
 
         // ============ NEW COHORT RETURN RATE ============
         totalCohortRet = 0;
@@ -526,6 +598,22 @@ async function run() {
         if (runOnline) {
         // ============ YCLIENTS percentage (Month to Date) ============
         let rawYc = [];
+        const toAdapterOrder = row => {
+            const rawName = typeof (row.employeeName || row['Сотрудник']) === 'string'
+                ? String(row.employeeName || row['Сотрудник']).trim()
+                : '';
+            const terminal = row.terminal_number || row['Терминал (номер)'];
+            const location = row['Филиал']
+                ? String(row['Филиал']).trim()
+                : Object.entries(ADAPTER.ADAPTER || ADAPTER)
+                    .find(([, config]) => String(config.el_kassa_terminal) === String(terminal))?.[0] || null;
+            const canonical = ADAPTER.getDashNameByElkassa(rawName, location);
+            const completed = row.status_pay_show === 'Оплачено'
+                || (row['Статус'] === 'Выполнено' && row['Статус оплаты'] === 'Оплачено');
+            return canonical ? { ...row, __adapterMaster: canonical, __completed: completed } : null;
+        };
+        const adapterMonthOrders = curMonthOrders.map(toAdapterOrder).filter(Boolean);
+        const adapterOccupancyOrders = curMonthOccupancyOrders.map(toAdapterOrder).filter(Boolean);
         
         try {
             console.log('Fetching YClients records via API...');
@@ -536,13 +624,10 @@ async function run() {
                 headers: { 'Content-Type': 'application/json', 'Authorization': bearer, 'Accept': 'application/vnd.yclients.v2+json' },
                 body: JSON.stringify({ login: CONFIG.yLogin, password: CONFIG.yPass })
             });
-            let userToken = '';
-            if (authRes.ok) {
-                const authData = await authRes.json();
-                userToken = authData.data.user_token;
-            } else {
-                console.warn('Failed to get YClients User Token, proceeding with only Bearer.');
-            }
+            if (!authRes.ok) throw new Error(`YClients auth HTTP ${authRes.status}`);
+            const authData = await authRes.json();
+            const userToken = authData?.data?.user_token;
+            if (!userToken) throw new Error('YClients auth returned no user token');
 
             const ycSDate = now.startOf('month').format('YYYY-MM-DD');
             const ycEDate = now.subtract(1, 'day').format('YYYY-MM-DD'); // Strictly up to yesterday end of day
@@ -568,64 +653,43 @@ async function run() {
                             if (r.deleted) return;
                             const dashName = typeof ADAPTER.getDashNameByYclientsId === 'function' ? ADAPTER.getDashNameByYclientsId(r.staff_id) : undefined;
                             if (dashName) {
-                                rawYc.push({ 'Сотрудник': dashName, 'Филиал': loc });
+                                rawYc.push({ id: r.id, master: dashName, branch: loc, deleted: false });
                             }
                         });
                         if (data.length < 300) break;
                         pageNum++;
                     } else {
-                        console.error(`[YClients API] Error fetching ${loc}:`, await res.text());
-                        break;
+                        throw new Error(`[YClients API] ${loc} HTTP ${res.status}`);
                     }
                 }
             }
-            recordsCount = rawYc.length;
-            console.log(`[YClients API] Fetched ${recordsCount} active records MTD.`);
+            const appointmentResult = calculateAppointmentShare({
+                orders: adapterMonthOrders.map(row => ({ master: row.__adapterMaster, completed: row.__completed })),
+                records: rawYc
+            });
+            recordsCount = appointmentResult.totalRecords;
+            checksCount = appointmentResult.totalServices;
+            percentage = appointmentResult.percentage;
+            apptMasters = appointmentResult.masters.map(row => ({ name: row.name, v: `${row.percentage}%` }));
+            appointmentsReady = true;
+            console.log(`[YClients API] Fetched ${recordsCount} active adapter records MTD.`);
         } catch(err) {
             console.log('YClients API parsing failed:', err.message);
             loadErrors.yclients = true;
         }
 
-
-            
-            checksCount = curMonthOrders.length;
-            percentage = checksCount > 0 ? ((recordsCount / checksCount) * 100).toFixed(1) : 0;
-            console.log(`MTD Orders (${startMonth} to ${fetchEnd || 'none'}): ${checksCount} | Online: ${recordsCount} | Ratio: ${percentage}%`);
-
-            // Break down online percentage by master
-            const yclientsMap = {};
-            rawYc.forEach(r => {
-                const master = r['Сотрудник'];
-                if (!master) return;
-                yclientsMap[master] = (yclientsMap[master] || 0) + 1;
-            });
-            const elkassaMap = {};
-            curMonthOrders.forEach(r => {
-                const eName = r['Сотрудник'] || '';
-                if (!eName || eName.toLowerCase() === 'логин') return;
-                const loc = r['Филиал'] ? String(r['Филиал']).trim() : null;
-                const master = typeof ADAPTER !== 'undefined' ? ADAPTER.getDashNameByElkassa(String(eName).trim(), loc) : eName;
-                elkassaMap[master] = (elkassaMap[master] || 0) + 1;
-            });
-            Object.keys(elkassaMap).forEach(m => {
-                if (!m || m === 'Неизвестный' || m === 'логин') return;
-                const eCount = elkassaMap[m];
-                const yCount = yclientsMap[m] || 0;
-                let perc = 0;
-                if (eCount > 0) perc = Math.round((yCount / eCount) * 100);
-                apptMasters.push({ name: m, v: perc + '%' });
-            });
+            if (appointmentsReady) {
+                console.log(`MTD Appointments (${startMonth} to ${fetchEnd || 'none'}): ${recordsCount} / ${checksCount} = ${percentage}%`);
+            }
 
             // ============ OCCUPANCY (Master Workload) ============
             // Average sales per day per master for current month. 
             // Exclude days with <= 2 sales or no work.
             const occupancyMap = {}; // { Master: { "DD.MM.YYYY": count } }
-            curMonthOrders.forEach(r => {
-                const masterRaw = typeof r['Сотрудник'] === 'string' ? r['Сотрудник'].trim() : '';
+            adapterOccupancyOrders.forEach(r => {
                 const dateStr = typeof r['Дата'] === 'string' ? r['Дата'].trim() : '';
-                if (!masterRaw || !dateStr || masterRaw.toLowerCase() === 'логин') return;
-                const loc = r['Филиал'] ? String(r['Филиал']).trim() : null;
-                const master = typeof ADAPTER !== 'undefined' ? ADAPTER.getDashNameByElkassa(masterRaw, loc) : masterRaw;
+                if (!dateStr) return;
+                const master = r.__adapterMaster;
 
                 if (!occupancyMap[master]) occupancyMap[master] = {};
                 occupancyMap[master][dateStr] = (occupancyMap[master][dateStr] || 0) + 1;
@@ -663,28 +727,33 @@ async function run() {
             // ============ ANTI-WIPE VALIDATION ============
             if (runFinance && revCur <= 0) {
                 console.error("Protecting Dashboard: revCur is 0. ElKassa DOM parsing likely failed.");
-                runFinance = false; loadErrors.elkassa = true;
+                runFinance = false; financeSnapshotReady = false; loadErrors.elkassa = true;
+            }
+            if (runFinance && revPrev <= 0) {
+                // A percentage relative to zero is undefined, not 0%.
+                revenueNoData = noComparableRevenue(revenuePeriod, 'Нет сопоставимой выручки за аналогичный период прошлого года.');
+                runFinance = false;
             }
             if (runClients && totalCohortBase <= 0) {
                 console.error("Protecting Dashboard: cohort base is 0. ElKassa clients Excel likely failed.");
                 runClients = false; loadErrors.elkassa = true;
             }
             if (runOnline && checksCount <= 0) {
-                console.error("Protecting Dashboard: checksCount is 0. ElKassa orders Excel likely failed.");
+                console.error("Protecting Dashboard: checksCount is 0. ElKassa orders source likely failed.");
                 runOnline = false; loadErrors.elkassa = true;
             }
 
             // ============ SAVE ============
             const result = {
                 errors: { elkassa: loadErrors.elkassa, yclients: loadErrors.yclients },
-                lastUpdate: runFinance && runClients && runOnline ? dayjs().format('HH:mm DD.MM.YYYY') : (oldData.lastUpdate || dayjs().format('HH:mm DD.MM.YYYY')),
-                nextUpdate: runFinance && runClients && runOnline ? dayjs().add(60, 'minute').format('HH:mm:ss') : (oldData.nextUpdate || ""),
-                revenue: runFinance ? {
+                lastUpdate: financeSnapshotReady && runClients && runOnline ? now.format('HH:mm DD.MM.YYYY') : (oldData.lastUpdate || now.format('HH:mm DD.MM.YYYY')),
+                nextUpdate: financeSnapshotReady && runClients && runOnline ? now.add(60, 'minute').format('HH:mm:ss') : (oldData.nextUpdate || ""),
+                revenue: revenueNoData || (runFinance ? {
                     current: revCur, previous: revPrev, today: revToday,
-                    period: `${startQMoment.format('DD.MM')}-${now.subtract(1,'day').format('DD.MM')}`,
+                    period: revenuePeriod.label,
                     growth: parseFloat(growth),
                     drilldown: [{ name: "Общая сеть (без бонусов)", value: revCur.toLocaleString() + " ₽", trend: growth >= 0 ? "up" : "down", masters }]
-                } : oldData.revenue,
+                } : oldData.revenue),
                 returnRate: runClients ? {
                     value: parseFloat(rrVal),
                     period: `${now.subtract(91, 'day').format('DD.MM')}-${now.subtract(61, 'day').format('DD.MM')}`, // 91 to 61 days ago cohort
@@ -696,13 +765,21 @@ async function run() {
                 salaryWeekly: runSalary ? salaryWeekly : oldData.salaryWeekly,
                 cycle: runClients ? {
                     value: parseFloat(avgCycle), change: -3.0,
-                    period: `${now.subtract(91, 'day').format('DD.MM')}-${now.subtract(1, 'day').format('DD.MM')}`,
+                    period: cyclePeriod.label,
+                    windowDays: 120,
+                    minVisitsPerClient: 3,
+                    aggregation: 'median',
+                    sampleSize: cycleResult.sampleSize,
+                    eligibleCustomers: cycleResult.eligibleCustomers,
                     drilldown: [{ name: "По мастерам", value: avgCycle + " д.", trend: "down", masters: cycleDrilldown }]
                 } : oldData.cycle,
-                appointments: runOnline ? {
+                appointments: runOnline && appointmentsReady ? {
                     percentage: parseFloat(percentage),
                     period: `${now.startOf('month').format('DD.MM')}-${now.subtract(1, 'day').format('DD.MM')}`,
-                    drilldown: [{ name: `MTD (${startMonth}-${fetchEnd})`, value: `${recordsCount} / ${checksCount} онлайн`, trend: parseFloat(percentage) >= 30 ? "up" : "down", masters: apptMasters }]
+                    onlineRecords: recordsCount,
+                    totalServices: checksCount,
+                    source: 'active-adapter-yclients-records / paid-adapter-elkassa-services',
+                    drilldown: [{ name: `MTD (${startMonth}-${fetchEnd})`, value: `${recordsCount} / ${checksCount} записей / услуг`, trend: parseFloat(percentage) >= 30 ? "up" : "down", masters: apptMasters }]
                 } : oldData.appointments,
                 occupancy: runOnline ? {
                     value: parseFloat(networkAvg),
@@ -710,7 +787,7 @@ async function run() {
                     drilldown: [{ name: `Ср. чеков в рабочий день MTD`, value: `${networkAvg} ч/д`, trend: parseFloat(networkAvg) >= 8 ? "up" : "down", masters: masterOccupancy }]
                 } : oldData.occupancy
             };
-        fs.writeFileSync(CONFIG.dataPath, JSON.stringify(result, null, 2));
+        writeJsonAtomically(CONFIG.dataPath, result);
         console.log(`\n=== [${dayjs().format('HH:mm:ss')}] DONE | Rev:${revCur} Gro:${growth}% Ret:${rrVal}% Cyc:${avgCycle}d Appts:${percentage}% ===`);
 
     } catch (err) {
@@ -724,7 +801,7 @@ async function run() {
         } else {
             safeData.errors.general = true;
         }
-        fs.writeFileSync(CONFIG.dataPath, JSON.stringify(safeData, null, 2));
+        writeJsonAtomically(CONFIG.dataPath, safeData);
     } finally {
         if (browser) await browser.close().catch(() => {});
         releaseScrapingLock();
@@ -745,4 +822,4 @@ if (require.main === module) {
     }
 }
 
-module.exports = { acquireScrapingLock, releaseScrapingLock, run };
+module.exports = { acquireScrapingLock, releaseScrapingLock, run, getAnalyticsNow, getRevenueComparisonPeriod, writeJsonAtomically };

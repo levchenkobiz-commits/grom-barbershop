@@ -32,6 +32,36 @@ function isOvnLateRecord(report) {
     );
 }
 
+// Единый порядок очередей ОВН: сначала нарушения без реакции, затем
+// проработанные нарушения, затем проверки без замечаний. Одинаков для
+// основной вкладки ОВН и для очереди в кабинете менеджера.
+function getOvnPriorityGroups(reports) {
+    const isClean = report => {
+        if (window.GromeOvnTop3 && typeof window.GromeOvnTop3.clean === 'function') {
+            return window.GromeOvnTop3.clean(report, window.VIOLATION_RULES);
+        }
+        const value = String(report?.violation || '').toLowerCase();
+        return value.includes('нет') || value.includes('✅');
+    };
+    const hasReaction = report => String(report?.reaction || '').trim().length > 0;
+    const newestFirst = rows => [...rows].sort((a, b) =>
+        dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()
+    );
+
+    return [
+        { title: 'Не проработано:', color: '#FF453A', rows: newestFirst(reports.filter(r => !isClean(r) && !hasReaction(r))) },
+        { title: 'Проработано:', color: '#FF9F0A', rows: newestFirst(reports.filter(r => !isClean(r) && hasReaction(r))) },
+        { title: 'Без нарушений:', color: '#34C759', rows: newestFirst(reports.filter(isClean)) }
+    ];
+}
+
+function renderOvnPriorityGroups(groups, renderRow) {
+    return groups.filter(group => group.rows.length > 0).map(group => `
+        <tr class="ovn-priority-group-row" style="--group-color:${group.color}"><td colspan="7">
+            <div class="ovn-priority-group-heading"><span class="ovn-priority-group-title">${group.title}</span><span class="ovn-priority-group-count">${group.rows.length}</span></div>
+        </td></tr>${group.rows.map(renderRow).join('')}`).join('');
+}
+
 // ==== FORM: open / close ====
 window.openOVNModal = function(loc = '') {
     const modal = document.getElementById('ovn-modal');
@@ -65,6 +95,9 @@ window.closeOVNModal = function() {
             container.removeChild(container.lastChild);
         }
     }
+    const unpaidInput = document.getElementById('ovn-unpaid-sum');
+    if (unpaidInput) unpaidInput.value = '';
+    if (typeof handleOvnViolationChange === 'function') handleOvnViolationChange();
 };
 
 // ==== MASTERS DROPDOWN ====
@@ -134,13 +167,19 @@ window.addViolationRow = function() {
     newDiv.style.cssText = 'display:flex; gap:10px; align-items:center;';
 
     const newSelect   = firstSelect.cloneNode(true);
+    newSelect.removeAttribute('id');
     newSelect.required = false;
+    newSelect.value = '';
+    newSelect.addEventListener('change', handleOvnViolationChange);
 
     const removeBtn   = document.createElement('button');
     removeBtn.type    = 'button';
     removeBtn.innerHTML = '&times;';
     removeBtn.style.cssText = 'background:none;border:none;color:#ff4d4d;font-size:20px;cursor:pointer;padding:0 5px;';
-    removeBtn.onclick = () => newDiv.remove();
+    removeBtn.onclick = () => {
+        newDiv.remove();
+        handleOvnViolationChange();
+    };
 
     newDiv.appendChild(newSelect);
     newDiv.appendChild(removeBtn);
@@ -149,18 +188,13 @@ window.addViolationRow = function() {
 
 // ==== UNPAID-SUM TOGGLE ====
 window.handleOvnViolationChange = function() {
-    const selectEl     = document.getElementById('ovn-violation');
+    const selectEls    = Array.from(document.querySelectorAll('.ovn-violation-select'));
     const sumContainer = document.getElementById('unpaid-sum-container');
     const sumInput     = document.getElementById('ovn-unpaid-sum');
-    if (!selectEl || !sumContainer) return;
+    if (!selectEls.length || !sumContainer || !sumInput) return;
 
     const tgt = 'Пробиты не все услуги';
-    let hasUnpaid = false;
-    if (selectEl.multiple) {
-        hasUnpaid = Array.from(selectEl.selectedOptions).some(o => o.value === tgt);
-    } else {
-        hasUnpaid = selectEl.value === tgt;
-    }
+    const hasUnpaid = selectEls.some(select => select.value === tgt);
 
     sumContainer.style.display = hasUnpaid ? 'block' : 'none';
     sumInput.required  = hasUnpaid;
@@ -187,8 +221,11 @@ window.submitOVN = async function(e) {
                            .map(s => s.value)
                            .filter(v => v !== '')
                            .join(', '),
+            unpaidAmount: parseFloat((document.getElementById('ovn-unpaid-sum') || {}).value) || 0,
             notes: (function() {
-                let text = (document.getElementById('ovn-notes') || {}).value || '';
+                let text = ((document.getElementById('ovn-notes') || {}).value || '')
+                    .replace(/\s*\(Сумма непробитых услуг:\s*\d+\)/gi, '')
+                    .trim();
                 const unpaidInput = document.getElementById('ovn-unpaid-sum');
                 const selects = Array.from(document.querySelectorAll('.ovn-violation-select')).map(s => s.value);
                 if (unpaidInput && unpaidInput.value && selects.some(v => v && v.includes('Пробиты не все услуги'))) {
@@ -212,7 +249,10 @@ window.submitOVN = async function(e) {
             body: JSON.stringify(report)
         });
 
-        if (!res.ok) throw new Error('Ошибка сервера ' + res.status);
+        if (!res.ok) {
+            const payload = await res.json().catch(() => ({}));
+            throw new Error(payload.error || 'Ошибка сервера ' + res.status);
+        }
 
         showToast('Успешно сохранено!', 'success');
         closeOVNModal();
@@ -254,7 +294,7 @@ window.triggerEditOVN = async function(id) {
         }
         document.getElementById('ovn-date').value = dateVal;
         document.getElementById('ovn-time').value = report.time || '';
-        document.getElementById('ovn-cost').value = report.price !== undefined ? report.price : '';
+        document.getElementById('ovn-cost').value = report.cost !== undefined ? report.cost : (report.price !== undefined ? report.price : '');
 
         const receiptMatch = (report.receipt || '').toLowerCase().includes('да') ? 'да' : 'нет';
         const ovnMatch = document.getElementById('ovn-match');
@@ -267,7 +307,9 @@ window.triggerEditOVN = async function(id) {
         container.innerHTML = '';
         container.appendChild(firstSelect);
 
-        const violationsList = (report.violation || '').split(',').map(s => s.trim()).filter(Boolean);
+        const violationsList = window.VIOLATION_RULES
+            ? window.VIOLATION_RULES.splitViolations(report.violation)
+            : (report.violation || '').split(',').map(s => s.trim()).filter(Boolean);
         firstSelect.value = violationsList[0] && Array.from(firstSelect.options).some(o => o.value === violationsList[0])
             ? violationsList[0]
             : 'Замечаний нет';
@@ -278,13 +320,18 @@ window.triggerEditOVN = async function(id) {
                 const newDiv    = document.createElement('div');
                 newDiv.style.cssText = 'display:flex;gap:10px;align-items:center;';
                 const newSelect = firstSelect.cloneNode(true);
+                newSelect.removeAttribute('id');
                 newSelect.required = false;
                 newSelect.value    = nextV;
+                newSelect.addEventListener('change', handleOvnViolationChange);
                 const removeBtn    = document.createElement('button');
                 removeBtn.type     = 'button';
                 removeBtn.innerHTML = '×';
                 removeBtn.style.cssText = 'background:rgba(255,59,48,0.2);color:#FF3B30;border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;';
-                removeBtn.onclick  = () => newDiv.remove();
+                removeBtn.onclick  = () => {
+                    newDiv.remove();
+                    handleOvnViolationChange();
+                };
                 newDiv.appendChild(newSelect);
                 newDiv.appendChild(removeBtn);
                 container.appendChild(newDiv);
@@ -293,6 +340,10 @@ window.triggerEditOVN = async function(id) {
 
         let cleanNotes = report.notes ? report.notes.replace(/ \(отредактировано.*\)/, '') : '';
         document.getElementById('ovn-notes').value = cleanNotes;
+        const unpaidInput = document.getElementById('ovn-unpaid-sum');
+        const amountMatch = String(report.notes || '').match(/сумма непробитых услуг:\s*(\d+)/i);
+        if (unpaidInput) unpaidInput.value = Number(report.unpaidAmount) || (amountMatch ? Number(amountMatch[1]) : '');
+        handleOvnViolationChange();
 
         const titleEl = document.getElementById('ovn-modal-title');
         if (titleEl) titleEl.innerText = 'Редактирование проверки ОВН';
@@ -318,7 +369,10 @@ async function loadOVNHistory() {
         // --- Daily Metrics ---
         let totalMtd = 0, passed = 0;
         const branchData = {};
-        ['Алексеевская','Варшавская','Партизанская','Рязанка','Сокол','Текстильщики'].forEach(loc => {
+        const adapterLocations = Array.isArray(window.LOCATIONS)
+            ? window.LOCATIONS
+            : Object.keys(window.BARBER_ROSTER || {});
+        adapterLocations.forEach(loc => {
             branchData[loc] = { total: 0, ok: 0, masters: {} };
         });
 
@@ -349,7 +403,6 @@ async function loadOVNHistory() {
             const rate = bD.total > 0 ? ((bD.ok / bD.total) * 100).toFixed(0) : 0;
             let eLoc   = loc;
             if (eLoc === 'Алексеевская') eLoc = 'Алексеевская Ⓜ️';
-            if (eLoc === 'Варшавская')   eLoc = 'Варшавская Ⓜ️';
             if (eLoc === 'Партизанская') eLoc = 'Партизанская Ⓜ️';
             return {
                 name: eLoc,
@@ -423,12 +476,40 @@ async function loadOVNHistory() {
             </tr>`;
         };
 
+        const prioritizedToday = todayReports.filter(r => !(r.violation || '').toLowerCase().includes('мастер опоздал'));
+        const priorityGroups = getOvnPriorityGroups(prioritizedToday);
         const tblToday = document.getElementById('ovn-today-history');
+        const managerQueue = document.getElementById('manager-ovn-today-history');
+
+        if ((tblToday || managerQueue) && !document.getElementById('ovn-priority-group-styles')) {
+                const style = document.createElement('style');
+                style.id = 'ovn-priority-group-styles';
+                style.textContent = `
+                    #ovn-today-history .ovn-priority-group-row, #manager-ovn-today-history .ovn-priority-group-row, #ovn-history-list .ovn-priority-group-row { background: transparent; }
+                    #ovn-today-history .ovn-priority-group-row td, #manager-ovn-today-history .ovn-priority-group-row td, #ovn-history-list .ovn-priority-group-row td { padding: 18px 20px 10px; border: 0; background: transparent; }
+                    #ovn-today-history .ovn-priority-group-heading, #manager-ovn-today-history .ovn-priority-group-heading, #ovn-history-list .ovn-priority-group-heading { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:12px;border-left:4px solid var(--group-color);background:rgba(255,255,255,.035); }
+                    #ovn-today-history .ovn-priority-group-title, #manager-ovn-today-history .ovn-priority-group-title, #ovn-history-list .ovn-priority-group-title { color:var(--group-color);font-size:14px;font-weight:900;letter-spacing:.04em;text-transform:uppercase; }
+                    #ovn-today-history .ovn-priority-group-count, #manager-ovn-today-history .ovn-priority-group-count, #ovn-history-list .ovn-priority-group-count { min-width:28px;padding:3px 9px;border-radius:999px;color:var(--group-color);background:rgba(0,0,0,.35);font-size:12px;font-weight:800;text-align:center; }
+                    @media (max-width:768px) {
+                        #ovn-today-history .ovn-priority-group-row, #manager-ovn-today-history .ovn-priority-group-row, #ovn-history-list .ovn-priority-group-row { padding:0;margin:22px 0 10px;border:0;box-shadow:none;background:transparent; }
+                        #ovn-today-history .ovn-priority-group-row td, #manager-ovn-today-history .ovn-priority-group-row td, #ovn-history-list .ovn-priority-group-row td { display:block;padding:0;border:0; }
+                        #ovn-today-history .ovn-priority-group-row td::before, #manager-ovn-today-history .ovn-priority-group-row td::before, #ovn-history-list .ovn-priority-group-row td::before { display:none; }
+                    }
+                `;
+                document.head.appendChild(style);
+        }
+
         if (tblToday) {
-            const nonLateToday = todayReports.filter(r => !(r.violation || '').toLowerCase().includes('мастер опоздал'));
-            tblToday.innerHTML = nonLateToday.length
-                ? nonLateToday.map(renderRow).join('')
-                : '<tr><td colspan="6" style="text-align:center;padding:40px;opacity:0.5">Сегодня проверок еще не было</td></tr>';
+            tblToday.innerHTML = prioritizedToday.length
+                ? renderOvnPriorityGroups(priorityGroups, renderRow)
+                : '<tr><td colspan="7" style="text-align:center;padding:40px;opacity:0.5">Сегодня проверок еще не было</td></tr>';
+        }
+
+        // Action-first OVN queue lives only in the manager cabinet.
+        if (managerQueue && PERM.can('viewOvnManagerQueue')) {
+            managerQueue.innerHTML = prioritizedToday.length
+                ? renderOvnPriorityGroups(priorityGroups, renderRow)
+                : '<tr><td colspan="7" style="text-align:center;padding:40px;opacity:.5">Сегодня проверок еще не было</td></tr>';
         }
 
         // --- Populate master dropdown for journal ---
@@ -599,14 +680,14 @@ window.renderOvnJournal = function() {
         if (locFilter    && r.location !== locFilter && locFilter !== '')    return false;
         if (masterFilter && masterFilter !== '' && r.barber !== masterFilter) return false;
         return true;
-    }).sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf());
+    });
 
     if (list.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;opacity:0.5">В этом периоде нет записей</td></tr>';
         return;
     }
 
-    tbody.innerHTML = list.map(r => {
+    const renderJournalRow = r => {
         const lowV       = (r.violation || '').toLowerCase();
         const badgeClass = (lowV.includes('нет') || lowV.includes('✅')) ? 'badge-yes' : 'badge-no';
         const canEdit = PERM.can('editOvnCheck');
@@ -626,7 +707,9 @@ window.renderOvnJournal = function() {
             <td data-label="РАБОТА" style="font-size:12px;opacity:0.7">${r.notes || '-'} ${editHtml}</td>
             <td data-label="РЕАКЦИЯ">${renderReactionBlock(r)}</td>
         </tr>`;
-    }).join('');
+    };
+
+    tbody.innerHTML = renderOvnPriorityGroups(getOvnPriorityGroups(list), renderJournalRow);
 };
 
 // ==== REACTION BLOCK ====
@@ -652,8 +735,6 @@ function renderReactionBlock(r) {
         timerHtml = `<div style="font-size:10px;color:#888;margin-top:3px">⏱ Время реакции: ${formatDuration(diff)}</div>`;
     }
 
-    const manualFineHtml = getOvnManualFineButton(r);
-
     if (r.reaction) {
         // Определить можно ли ещё редактировать
         const todayMsk = (() => {
@@ -677,7 +758,6 @@ function renderReactionBlock(r) {
         return `<div style="font-size:12px;color:#ddd;max-width:200px">
             ${r.reaction}${editBtn}
             ${editedMark}
-            ${manualFineHtml}
             ${timerHtml}
         </div>`;
     }
@@ -693,49 +773,9 @@ function renderReactionBlock(r) {
                    padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap">
             + Добавить реакцию
         </button>
-        ${manualFineHtml}
         ${timerHtml}
     </div>`;
 }
-
-function getOvnManualFineButton(r) {
-    if (!r || !PERM.can('reactToOvn')) return '';
-    const lowV = String(r.violation || '').toLowerCase();
-    const needsManual = lowV.includes('другое') || lowV.includes('пробиты не все услуги');
-    if (!needsManual) return '';
-    return `<div style="margin-top:6px">
-        <button type="button" onclick="openManualFineFromOvn('${r.id}')"
-            style="background:rgba(255,59,48,0.12);border:1px solid rgba(255,59,48,0.35);color:#FF3B30;
-                   padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap">
-            Создать ручной штраф
-        </button>
-    </div>`;
-}
-
-window.openManualFineFromOvn = function(id) {
-    const report = (window.lastOvnVideoRes || []).find(r => String(r.id) === String(id));
-    if (!report || typeof openManualFineModal !== 'function') return;
-    openManualFineModal();
-    const loc = document.getElementById('mf-location');
-    const barber = document.getElementById('mf-barber');
-    const date = document.getElementById('mf-date');
-    const violation = document.getElementById('mf-violation');
-    const notes = document.getElementById('mf-notes');
-    if (loc) loc.value = report.location || '';
-    if (typeof updateMFMastersDropdown === 'function') updateMFMastersDropdown();
-    if (barber) {
-        if (report.barber && !Array.from(barber.options).some(o => o.value === report.barber)) {
-            const opt = document.createElement('option');
-            opt.value = report.barber;
-            opt.textContent = report.barber;
-            barber.appendChild(opt);
-        }
-        barber.value = report.barber || '';
-    }
-    if (date) date.value = report.date || dayjs().format('YYYY-MM-DD');
-    if (violation) violation.value = report.violation || '';
-    if (notes) notes.value = report.notes || '';
-};
 
 // Открыть инлайн-редактор реакции
 window.openReactionEdit = function(id, btn) {

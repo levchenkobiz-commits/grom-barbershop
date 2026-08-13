@@ -18,21 +18,35 @@ const MGR_NAMES = ['Кирилл', 'Игорь', 'Ксения'];
 
 // Локальное хранилище данных графика: { 'YYYY-MM-DD|name': 'work'|'off' }
 window.mgrSchedData = window.mgrSchedData || {};
+window.mgrSchedDirty = window.mgrSchedDirty || new Set();
+
+function canEditManagerScheduleName(name) {
+    if (!window.PERM) return false;
+    if (PERM.can('editManagerScheduleAll')) return true;
+    return PERM.can('editManagerScheduleOwn') && window.USER && managerNamesMatch(name, window.USER.name);
+}
 
 // ==== INIT TABLE ====
 window.renderManagerScheduleTable = function() {
     const thead = document.getElementById('mgr-sched-thead');
     const tbody = document.getElementById('mgr-sched-tbody');
     if (!thead || !tbody) return;
+    const section = document.getElementById('manager-schedule-section');
+    const saveButton = section && section.querySelector('button[onclick="saveManagerSchedule()"]');
+    if (saveButton) {
+        saveButton.style.display = (PERM.can('editManagerScheduleAll') || PERM.can('editManagerScheduleOwn')) ? 'block' : 'none';
+    }
 
     const today = dayjs();
     const rusDays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
     const DAYS = 31;
 
     // Find start date from master sched input if exists, else start of current week
-    const startInput = document.getElementById('sched-start-date');
+    const managerStartInput = document.getElementById('mgr-sched-start-date');
+    const startInput = managerStartInput || document.getElementById('sched-start-date');
     const startDateStr = (startInput && startInput.value) ? startInput.value : today.startOf('isoWeek').format('YYYY-MM-DD');
     const startDate = dayjs(startDateStr);
+    if (managerStartInput && !managerStartInput.value) managerStartInput.value = startDateStr;
 
     // ---- Header ----
     let headHtml = '<tr><th class="sched-master-name">Управляющий / Дата</th>';
@@ -63,6 +77,7 @@ window.renderManagerScheduleTable = function() {
             const isToday = dateStr === today.format('YYYY-MM-DD');
             const isSun = d.day() === 0;
             const isSat = d.day() === 6;
+            const editable = canEditManagerScheduleName(name);
 
             // Default weekends to off
             const defaultOff = isSun || isSat;
@@ -78,7 +93,9 @@ window.renderManagerScheduleTable = function() {
                 <div class="mgr-sched-cell"
                     onclick="toggleMgrCell(this,'${dateStr}','${name}')"
                     data-date="${dateStr}" data-name="${name}"
-                    style="cursor:pointer;text-align:center;padding:6px 2px;font-size:11px;border-radius:6px;transition:all 0.15s;min-height:32px;display:flex;align-items:center;justify-content:center;${cellStyle}">
+                    data-editable="${editable ? '1' : '0'}"
+                    title="${editable ? 'Изменить день' : 'Только просмотр'}"
+                    style="cursor:${editable ? 'pointer' : 'default'};opacity:${editable ? '1' : '.62'};text-align:center;padding:6px 2px;font-size:11px;border-radius:6px;transition:all 0.15s;min-height:32px;display:flex;align-items:center;justify-content:center;${cellStyle}">
                     ${effectiveWork ? 'Рабочий' : 'Выходной'}
                 </div>
             </td>`;
@@ -91,6 +108,10 @@ window.renderManagerScheduleTable = function() {
 
 // ==== TOGGLE CELL ====
 window.toggleMgrCell = function(el, date, name) {
+    if (!canEditManagerScheduleName(name)) {
+        if (typeof showToast === 'function') showToast('Можно редактировать только свои дни', 'error');
+        return;
+    }
     const key = date + '|' + name;
     const isNowWork = window.mgrSchedData[key] === 'work';
 
@@ -111,6 +132,7 @@ window.toggleMgrCell = function(el, date, name) {
         el.style.border = '1px solid rgba(232,255,56,0.3)';
         el.style.fontWeight = '700';
     }
+    window.mgrSchedDirty.add(key);
 };
 
 // ==== SAVE ====
@@ -121,18 +143,35 @@ window.saveManagerSchedule = async function() {
     });
 
     try {
-        const res = await fetch('/api/manager-schedule', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-            showToast('График сохранён', 'success');
+        if (PERM.can('editManagerScheduleAll')) {
+            const res = await fetch('/api/manager-schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Не удалось сохранить график');
+        } else if (PERM.can('editManagerScheduleOwn')) {
+            const changes = [...window.mgrSchedDirty].map(key => {
+                const [date, name] = key.split('|');
+                return { date, name, status: window.mgrSchedData[key] === 'work' ? 'work' : 'off' };
+            }).filter(item => canEditManagerScheduleName(item.name));
+            if (!changes.length) {
+                showToast('Изменений нет', 'info');
+                return;
+            }
+            for (const change of changes) {
+                const res = await fetch('/api/manager-schedule', {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(change)
+                });
+                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Не удалось сохранить день');
+            }
         } else {
-            showToast('Сохранено локально', 'success');
+            throw new Error('Недостаточно прав для изменения графика');
         }
+        window.mgrSchedDirty.clear();
+        showToast('График сохранён', 'success');
     } catch(e) {
-        showToast('Сохранено локально', 'success');
+        showToast(e.message || 'Не удалось сохранить график', 'error');
     }
 };
 
@@ -149,6 +188,7 @@ async function loadManagerScheduleData() {
                         window.mgrSchedData[item.date + '|' + item.name] = 'work';
                     }
                 });
+                window.mgrSchedDirty.clear();
             }
         }
     } catch(e) {
@@ -451,12 +491,13 @@ window.updateIgorReactionTime = function(reports) {
 // ==== INIT on schedule tab switch ====
 // Hook into sched-start-date changes to re-render
 document.addEventListener('DOMContentLoaded', () => {
-    const dateInput = document.getElementById('sched-start-date');
-    if (dateInput) {
+    ['sched-start-date', 'mgr-sched-start-date'].forEach(id => {
+        const dateInput = document.getElementById(id);
+        if (!dateInput) return;
         dateInput.addEventListener('change', () => {
             window.renderManagerScheduleTable();
         });
-    }
+    });
 });
 
 // ==== LOAD on app startup ====

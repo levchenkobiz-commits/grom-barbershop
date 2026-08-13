@@ -1,40 +1,74 @@
 /**
  * Grome Adapter (Registry)
- * Единый источник правки для всех идентификаторов:
- * Дашборд (Короткие имена) <==> El.Kassa (Терминалы, Имена) <==> YClients (Company ID, Staff ID)
+ * Единый источник правды для всех идентификаторов:
+ * Дашборд (Короткие имена) <=> El.Kassa (Терминалы, Имена) <=> YClients (Company ID, Staff ID)
  */
 
 const ADAPTER = {
+    "Сокол": {
+        "el_kassa_terminal": "25307",
+        "yclients_company_id": "1158043",
+        "masters": [
+            {
+                "dash": "Авазбек М.",
+                "el_kassa": [
+                    "Авазбек М."
+                ],
+                "aliases": ["Авазбек"],
+                "yclients_id": "4332696",
+                "payBase": 5000,
+                "payPercent": 50,
+                "topMaster": false
+            },
+            {
+                "dash": "Мухамаджон С.",
+                "el_kassa": [
+                    "Мухамаджон С."
+                ],
+                "aliases": ["Мухамаджон", "Мухаммаджон"],
+                "yclients_id": "4906984",
+                "payBase": 5000,
+                "payPercent": 50,
+                "topMaster": false
+            }
+        ]
+    },
     "Алексеевская": {
         "el_kassa_terminal": "64963",
         "yclients_company_id": "1113666",
         "masters": [
             {
-                "dash": "Шавкат",
+                "dash": "Шавкатбек М.",
                 "el_kassa": [
-                    "Шавкат"
+                    "Шавкатбек М."
                 ],
+                "aliases": ["Шавкатбек", "Шавкат"],
                 "yclients_id": "4991729",
                 "payBase": 5000,
-                "payPercent": 40
+                "payPercent": 40,
+                "topMaster": true
             },
             {
-                "dash": "Шурик",
+                "dash": "Сухробжон Д.",
                 "el_kassa": [
-                    "Шурик"
+                    "Сухробжон Д."
                 ],
-                "yclients_id": "",
+                "aliases": ["Сухробжон", "Сухроб"],
+                "yclients_id": "5282325",
                 "payBase": 5000,
-                "payPercent": 40
+                "payPercent": 40,
+                "topMaster": false
             },
             {
-                "dash": "Шохназар Д.",
+                "dash": "Азимжон Ш.",
                 "el_kassa": [
-                    "Шохназар"
+                    "Азимжон Ш."
                 ],
-                "yclients_id": "3973848",
+                "aliases": ["Азимжон", "Азим"],
+                "yclients_id": "5808624",
                 "payBase": 5000,
-                "payPercent": 40
+                "payPercent": 40,
+                "topMaster": false
             }
         ]
     },
@@ -43,46 +77,25 @@ const ADAPTER = {
         "yclients_company_id": "1158048",
         "masters": [
             {
-                "dash": "Элёрбек М.",
+                "dash": "Тологон А.",
                 "el_kassa": [
-                    "Элёрбек"
+                    "Тологон А."
                 ],
-                "yclients_id": "4739073",
+                "aliases": ["Тологон"],
+                "yclients_id": "5527905",
                 "payBase": 5000,
-                "payPercent": 40
+                "payPercent": 40,
+                "topMaster": false
             },
             {
-                "dash": "Азамджон Т.",
+                "dash": "Азамат",
                 "el_kassa": [
-                    "Азамджон"
+                    "Азамат"
                 ],
-                "yclients_id": "4938947",
+                "yclients_id": "5726382",
                 "payBase": 5000,
-                "payPercent": 40
-            }
-        ]
-    },
-    "Варшавская": {
-        "el_kassa_terminal": "62837",
-        "yclients_company_id": "1158051",
-        "masters": [
-            {
-                "dash": "Тима Ж.",
-                "el_kassa": [
-                    "Тима"
-                ],
-                "yclients_id": "4308882",
-                "payBase": 5000,
-                "payPercent": 50
-            },
-            {
-                "dash": "Азим",
-                "el_kassa": [
-                    "Азим"
-                ],
-                "yclients_id": "5057982",
-                "payBase": 5000,
-                "payPercent": 50
+                "payPercent": 40,
+                "topMaster": false
             }
         ]
     },
@@ -91,65 +104,35 @@ const ADAPTER = {
         "yclients_company_id": "1254232",
         "masters": [
             {
-                "dash": "Рахмон Д.",
+                "dash": "Олимжон Х.",
                 "el_kassa": [
-                    "Рахмон"
+                    "Олимжон Х."
                 ],
-                "yclients_id": "4846941",
+                "aliases": ["Олимжон"],
+                "yclients_id": "5598078",
                 "payBase": 5000,
-                "payPercent": 40
+                "payPercent": 40,
+                "topMaster": false
             },
             {
-                "dash": "Новы мастер рп",
+                "dash": "Фархад",
                 "el_kassa": [
-                    "Новы мастер рп"
+                    "Фархад"
                 ],
-                "yclients_id": "5123262",
+                "yclients_id": "5701596",
                 "payBase": 5000,
-                "payPercent": 40
+                "payPercent": 40,
+                "topMaster": false
             },
             {
-                "dash": "Олим",
+                "dash": "Мухамад",
                 "el_kassa": [
-                    "Олим"
+                    "Мухамад"
                 ],
-                "yclients_id": "",
+                "yclients_id": "5751696",
                 "payBase": 5000,
-                "payPercent": 40
-            },
-            {
-                "dash": "Мухаммад",
-                "el_kassa": [
-                    "Мухаммад"
-                ],
-                "yclients_id": "",
-                "payBase": 5000,
-                "payPercent": 40
-            }
-        ]
-    },
-    "Сокол": {
-        "el_kassa_terminal": "25307",
-        "yclients_company_id": "1158043",
-        "masters": [
-            {
-                "dash": "Авазбек М.",
-                "el_kassa": [
-                    "Авазбек",
-                    "Али"
-                ],
-                "yclients_id": "4332696",
-                "payBase": 5000,
-                "payPercent": 50
-            },
-            {
-                "dash": "Мухамаджон С.",
-                "el_kassa": [
-                    "Мухамаджон"
-                ],
-                "yclients_id": "4906984",
-                "payBase": 5000,
-                "payPercent": 50
+                "payPercent": 40,
+                "topMaster": false
             }
         ]
     },
@@ -158,22 +141,25 @@ const ADAPTER = {
         "yclients_company_id": "1158050",
         "masters": [
             {
-                "dash": "Санжар Б.",
-                "el_kassa": [
-                    "Санжар"
-                ],
-                "yclients_id": "3523679",
-                "payBase": 5000,
-                "payPercent": 40
-            },
-            {
                 "dash": "Эрболот С.",
                 "el_kassa": [
-                    "Эрболот"
+                    "Эрболот С."
                 ],
                 "yclients_id": "4900471",
                 "payBase": 5000,
-                "payPercent": 40
+                "payPercent": 40,
+                "topMaster": true
+            },
+            {
+                "dash": "Самаган С.",
+                "el_kassa": [
+                    "Самаган С."
+                ],
+                "aliases": ["Самаган"],
+                "yclients_id": "5743830",
+                "payBase": 5000,
+                "payPercent": 40,
+                "topMaster": false
             }
         ]
     }
@@ -181,30 +167,41 @@ const ADAPTER = {
 
 /** API АДАПТЕРА ДЛЯ ПРИЛОЖЕНИЯ */
 
-// 1. Получить короткое имя мастера для дашборда из грязного имени элкассы
-function getDashNameByElkassa(elkassaName, branchName = null) {
-    if (!elkassaName) return "Неизвестный";
-    
-    // Ищем точное совпадение в филиале
-    if (branchName && ADAPTER[branchName]) {
-        for (const master of ADAPTER[branchName].masters) {
-            if (master.el_kassa.some(name => elkassaName.toLowerCase().includes(name.toLowerCase()))) {
-                return master.dash;
-            }
-        }
-    }
-    
-    // Ищем точное совпадение по всей сети (подмены / переводы)
-    for (const [loc, config] of Object.entries(ADAPTER)) {
-        for (const master of config.masters) {
-            if (master.el_kassa.some(name => elkassaName.toLowerCase().includes(name.toLowerCase()))) {
-                return master.dash;
-            }
-        }
+function normalizeMasterIdentity(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/ё/g, 'е')
+        .replace(/\([^)]*\)/g, ' ')
+        .replace(/[^a-zа-я0-9]+/gi, ' ')
+        .trim()
+        .replace(/\s+/g, ' ');
+}
+
+function getMasterIdentityAliases(master) {
+    return [master.dash, ...(master.el_kassa || []), ...(master.aliases || [])]
+        .map(normalizeMasterIdentity)
+        .filter(Boolean);
+}
+
+// Единственный resolver идентичности. Возвращает только мастера из ADAPTER.
+// Неоднозначное или неизвестное имя всегда даёт null — новый профиль не создаётся.
+function findAdapterMaster(name, branchName = null) {
+    const requested = normalizeMasterIdentity(name);
+    if (!requested) return null;
+    const records = [];
+    for (const [location, branch] of Object.entries(ADAPTER)) {
+        if (branchName && location !== branchName) continue;
+        for (const master of (branch.masters || [])) records.push({ location, master, aliases: getMasterIdentityAliases(master) });
     }
 
-    // Если не найдено, возвращаем как есть, но обрезаем
-    return elkassaName.split(' ')[0];
+    const exact = records.filter(record => record.aliases.includes(requested));
+    if (exact.length === 1) return { ...exact[0].master, location: exact[0].location };
+    return null;
+}
+
+// 1. Получить каноническое имя. Неизвестные сотрудники исключаются.
+function getDashNameByElkassa(elkassaName, branchName = null) {
+    return findAdapterMaster(elkassaName, branchName)?.dash || null;
 }
 
 // 2. Получить YClients ID мастера по имени из дашборда
@@ -214,66 +211,42 @@ function getYclientsId(dashName, branchName) {
     return master ? master.yclients_id : null;
 }
 
-// Получить имя дашборда по имени YClients
+// 3. Получить имя дашборда по имени YClients
 function getDashNameByYclients(ycName, branchName = null) {
-    if (!ycName) return "Неизвестный";
-    
-    if (branchName && ADAPTER[branchName]) {
-        for (const master of ADAPTER[branchName].masters) {
-            const namesToCheck = [master.dash, ...(master.el_kassa || [])];
-            if (namesToCheck.some(n => ycName.toLowerCase().includes(n.toLowerCase()))) {
-                return master.dash;
-            }
-        }
-    }
-
-    for (const [loc, config] of Object.entries(ADAPTER)) {
-        for (const master of config.masters) {
-            const namesToCheck = [master.dash, ...(master.el_kassa || [])];
-            if (namesToCheck.some(n => ycName.toLowerCase().includes(n.toLowerCase()))) {
-                return master.dash;
-            }
-        }
-    }
-    return ycName.split(' ')[0];
+    return findAdapterMaster(ycName, branchName)?.dash || null;
 }
 
-// 3. Получить Терминал Эл.Кассы
+// 4. Получить Терминал Эл.Кассы
 function getTerminalId(branchName) {
     if (!ADAPTER[branchName]) return null;
     return ADAPTER[branchName].el_kassa_terminal;
 }
 
-// 4. Получить Company ID YClients
+// 5. Получить Company ID YClients
 function getYclientsCompanyId(branchName) {
     if (!ADAPTER[branchName]) return null;
     return ADAPTER[branchName].yclients_company_id;
 }
 
-// Для использования в Node.js (agent.js, сервер)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        ADAPTER,
-        getDashNameByElkassa,
-        getYclientsId,
-        getTerminalId,
-        getYclientsCompanyId,
-        getDashNameByYclients
-    };
-}
-
+// 6. Получить имя мастера для дашборда по YClients staff_id
 function getDashNameByYclientsId(staffId) {
-    if (!staffId) return null;
-    const strId = String(staffId).trim();
-    for (const [loc, config] of Object.entries(ADAPTER)) {
+    if (!staffId) return undefined;
+    const sid = String(staffId);
+    for (const [, config] of Object.entries(ADAPTER)) {
         for (const master of config.masters) {
-            if (master.yclients_id === strId) {
-                return master.dash;
-            }
+            if (master.yclients_id === sid) return master.dash;
         }
     }
-    return null;
+    return undefined;
 }
+
+if (typeof window !== 'undefined') {
+    window.ADAPTER = ADAPTER;
+    window.normalizeMasterIdentity = normalizeMasterIdentity;
+    window.getMasterIdentityAliases = getMasterIdentityAliases;
+    window.findAdapterMaster = findAdapterMaster;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports.getDashNameByYclientsId = getDashNameByYclientsId;
+    module.exports = { ADAPTER, normalizeMasterIdentity, getMasterIdentityAliases, findAdapterMaster, getDashNameByElkassa, getYclientsId, getTerminalId, getYclientsCompanyId, getDashNameByYclients, getDashNameByYclientsId };
 }

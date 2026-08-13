@@ -1,4 +1,5 @@
 /**
+ * FINANCIAL ACCESS — salary permissions are protected by /root/grom-dashboard/AGENTS.md.
  * routes/auth.js
  * =====================================================
  * Серверная проверка ролей — зеркало клиентского permissions.js.
@@ -17,6 +18,7 @@
 
 const fs    = require('fs');
 const PATHS = require('./paths');
+const { canonicalMasterName } = require('./master_scope');
 
 /**
  * Таблица: маршрут → какие роли разрешены.
@@ -25,7 +27,9 @@ const PATHS = require('./paths');
  * Если маршрута нет в таблице — доступ без ограничений.
  */
 const ROUTE_PERMS = {
+    'GET /api/retention':           ['owner', 'manager'],
     'GET /api/ovn':                 ['owner', 'manager', 'ovn', 'master'],
+    'GET /api/ovn/analytics':       ['owner', 'manager', 'ovn', 'master'],
     // ── Расписание ──
     'POST /api/schedule':           ['owner', 'manager', 'ovn'],
 
@@ -37,9 +41,16 @@ const ROUTE_PERMS = {
     // ── Менеджерские проверки ──
     'POST /api/manager_checks':     ['owner', 'manager'],
     'PUT /api/manager_checks':      ['owner', 'manager'],
+    'GET /api/technical_tasks':     ['owner', 'manager', 'maintenance'],
+    'PATCH /api/technical_tasks':   ['owner', 'manager', 'maintenance'],
+    'POST /api/technical_tasks/defer': ['owner', 'manager', 'maintenance'],
+    'GET /api/master-onboarding':   ['owner', 'manager', 'maintenance'],
+    'PATCH /api/master-onboarding': ['owner', 'manager', 'maintenance'],
 
     // ── Настройки адаптер ──
     'POST /api/adapter':            ['owner', 'manager'],
+    'GET /api/master-accounts':     ['owner', 'manager'],
+    'GET /api/master-preview/masters': ['owner', 'manager'],
     'GET /api/video-audit':          ['owner', 'manager', 'ovn'],
     'POST /api/video-audit':         ['owner', 'manager', 'ovn'],
     'PATCH /api/video-audit':        ['owner', 'manager', 'ovn'],
@@ -51,14 +62,19 @@ const ROUTE_PERMS = {
     'POST /api/video-audit/training/import': ['owner'],
 
     // ── График управляющих ──
+    'GET /api/manager-schedule':    ['owner', 'manager', 'maintenance', 'ovn'],
     'POST /api/manager-schedule':   ['owner', 'manager'],
-    'PATCH /api/manager-schedule':  ['owner', 'manager'],
+    'PATCH /api/manager-schedule':  ['owner', 'manager', 'maintenance'],
 
     // ── Справочник ──
     'POST /api/handbook':           ['owner', 'manager'],
 
     // ── Зарплата ──
-    'POST /api/fetch_salary':       ['owner', 'manager'],
+    'POST /api/fetch_salary':       ['owner', 'maintenance'],
+    'POST /api/elkassa/salary':     ['owner', 'maintenance', 'master'],
+
+    // ── Возврат клиентов ──
+    'GET /api/comeback':            ['owner'],
 };
 
 /**
@@ -77,7 +93,14 @@ function identify(req) {
             : '{}';
         const roles = JSON.parse(rolesRaw);
         const user  = roles[userKey];
-        if (user) return { key: userKey, role: user.role, name: user.name };
+        if (user) {
+            if (user.role === 'master') {
+                const canonical = canonicalMasterName(user.name);
+                if (!canonical) return null;
+                return { key: userKey, role: user.role, name: canonical };
+            }
+            return { key: userKey, role: user.role, name: user.name };
+        }
     } catch (e) {
         console.error('[Auth] Error reading roles:', e.message);
     }
@@ -107,10 +130,10 @@ function authorize(req, res, pathname) {
         return false;
     }
 
-    const isKseniaManagerSchedule = user.key === 'ksenia' && (
-        routeKey === 'POST /api/manager-schedule' ||
-        routeKey === 'PATCH /api/manager-schedule'
-    );
+    // Ksenia edits only her own manager-schedule days via PATCH. Bulk replacement
+    // remains restricted to owner/manager in ROUTE_PERMS.
+    const isKseniaManagerSchedule = user.key === 'ksenia' &&
+        routeKey === 'PATCH /api/manager-schedule';
 
     if (!allowedRoles.includes(user.role) && !isKseniaManagerSchedule) {
         res.writeHead(403, { 'Content-Type': 'application/json' });

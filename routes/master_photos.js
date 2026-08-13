@@ -27,6 +27,20 @@ function safeName(name) {
   return (name || '').replace(/[^a-zа-яёА-ЯЁA-Z0-9\-_ ]/gi, '').trim().replace(/\s+/g, '_');
 }
 
+function findValidatedAdapterMaster(masterName, location) {
+  try {
+    const adapterPath = path.join(__dirname, '..', 'adapter.js');
+    delete require.cache[require.resolve(adapterPath)];
+    const { ADAPTER } = require(adapterPath);
+    const branch = ADAPTER[String(location || '').trim()];
+    if (!branch) return null;
+    return (branch.masters || []).find(master =>
+      String(master.dash || '').trim() === String(masterName || '').trim() &&
+      /^\d+$/.test(String(master.yclients_id || '').trim())
+    ) || null;
+  } catch (_) { return null; }
+}
+
 // ===== POST /api/master_photos — загрузить фото =====
 function handleUploadPhoto(req, res) {
   let body = '';
@@ -98,6 +112,11 @@ function handleAddPending(req, res) {
       const { masterName, addedBy, location } = JSON.parse(body);
       if (!masterName) throw new Error('masterName обязателен');
 
+      if (!findValidatedAdapterMaster(masterName, location)) {
+        res.writeHead(422, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify({ error: 'Напоминание не создано: мастер отсутствует в сохранённом адаптере или не заполнен YClients ID' }));
+      }
+
       const list = readPending();
       // Избегаем дублей
       const exists = list.find(p => p.masterName === masterName);
@@ -118,16 +137,8 @@ function handleAddPending(req, res) {
       }
       writePending(list);
 
-      const item = exists || list.find(p => p.masterName === masterName);
-      sendOwnerMessage(
-        `⏰ <b>Менеджер выбрал «отправить позже»</b>\n\n` +
-        `Мастер: <b>${masterName}</b>${location ? `\nФилиал: ${location}` : ''}\n` +
-        `Менеджер: ${addedBy || 'Менеджер'}\n` +
-        `Отсрочка: ${(item && item.deferCount) || 1}`
-      ).catch(error => console.error('[MasterPhoto] defer notification failed:', error.message));
-
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok' }));
+      res.end(JSON.stringify({ status: 'ok', queued: true }));
     } catch (e) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: e.message }));

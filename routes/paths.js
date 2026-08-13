@@ -7,14 +7,23 @@
 const path = require('path');
 const fs   = require('fs');
 
-const ROOT = path.join(__dirname, '..');
+// Allows isolated regression fixtures without affecting the production default.
+const ROOT = process.env.GROME_DATA_ROOT
+  ? path.resolve(process.env.GROME_DATA_ROOT)
+  : path.join(__dirname, '..');
 
 const PATHS = {
+  data:           path.join(ROOT, 'data.json'),
+  analyticsHistory: path.join(ROOT, 'analytics_history.json'),
   ovn:            path.join(ROOT, 'ovn_reports.json'),
+  // WARNING: protected master-schedule database. See SCHEDULE_LOCK.md and AGENTS.md.
   schedule:       path.join(ROOT, 'schedule.json'),
   mockDb:         path.join(ROOT, 'mock_db.json'),
   masterLates:    path.join(ROOT, 'master_lates.json'),
   managerChecks:  path.join(ROOT, 'manager_checks.json'),
+  technicalTasks: path.join(ROOT, 'technical_tasks.json'),
+  autosendNotifications: path.join(ROOT, 'autosend_notifications.json'),
+  masterOnboarding: path.join(ROOT, 'master_onboarding.json'),
   handbook:       path.join(ROOT, 'handbook.json'),
   roles:          path.join(ROOT, 'roles.json'),
   syncStatus:     path.join(ROOT, 'sync_status.json'),

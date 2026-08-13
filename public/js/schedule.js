@@ -1,4 +1,9 @@
 /**
+ * WARNING: MASTER SCHEDULE — DO NOT TOUCH as a side effect of another task.
+ * This UI writes schedule.json, which is evidence for attendance and salary.
+ * Change it only when the user explicitly requests master-schedule behavior.
+ * See /root/grom-dashboard/SCHEDULE_LOCK.md and AGENTS.md.
+ *
  * public/js/schedule.js
  * =====================================================
  * Модуль Расписание (Schedule).
@@ -30,6 +35,14 @@ function setupScheduleFloatingHeader() {
     const table = wrapper ? wrapper.querySelector('.sched-table') : null;
     const thead = table ? table.querySelector('thead') : null;
     if (!wrapper || !table || !thead || !thead.firstElementChild) return;
+
+    // На touch-экранах заголовок остаётся в самой таблице: отдельный fixed-клон
+    // обновлялся на каждом пикселе горизонтального скролла и вызывал подёргивания.
+    if (window.matchMedia && window.matchMedia('(max-width: 600px), (pointer: coarse)').matches) {
+        const existing = document.getElementById('sched-floating-header');
+        if (existing) existing.style.display = 'none';
+        return;
+    }
 
     let floating = document.getElementById('sched-floating-header');
     if (!floating) {
@@ -295,6 +308,9 @@ async function loadSchedule() {
     }
 
     tbody.innerHTML = bodyHtml;
+    tbody.querySelectorAll('.sched-cell').forEach(cell => {
+        cell.dataset.originalText = cell.innerText.trim();
+    });
 
     // Sync top scrollbar
     setTimeout(() => {
@@ -302,10 +318,13 @@ async function loadSchedule() {
         const tDummy   = document.querySelector('.sched-top-dummy');
         const wrapper  = document.querySelector('.sched-table-wrapper');
         const table    = document.querySelector('.sched-table');
+        const isTouchSchedule = window.matchMedia && window.matchMedia('(max-width: 600px), (pointer: coarse)').matches;
         if (tDummy && table) tDummy.style.width = table.scrollWidth + 'px';
+        if (tScroll) tScroll.style.display = isTouchSchedule ? 'none' : '';
         if (tScroll && wrapper && !tScroll.dataset.synced) {
-            tScroll.addEventListener('scroll', () => { wrapper.scrollLeft = tScroll.scrollLeft; });
-            wrapper.addEventListener('scroll', () => { tScroll.scrollLeft = wrapper.scrollLeft; });
+            const isTouchSchedule = () => window.matchMedia && window.matchMedia('(max-width: 600px), (pointer: coarse)').matches;
+            tScroll.addEventListener('scroll', () => { if (!isTouchSchedule()) wrapper.scrollLeft = tScroll.scrollLeft; });
+            wrapper.addEventListener('scroll', () => { if (!isTouchSchedule()) tScroll.scrollLeft = wrapper.scrollLeft; });
             tScroll.dataset.synced = 'true';
         }
         setupScheduleFloatingHeader();
@@ -318,13 +337,25 @@ async function saveScheduleAll() {
     const originalText = btn.innerText;
     btn.innerText = '⌛ Сохранение...'; btn.disabled = true;
 
+    const cells = Array.from(document.querySelectorAll('#schedule-section .sched-cell'));
+    const changedKeys = new Set(cells
+        .filter(cell => cell.innerText.trim() !== String(cell.dataset.originalText || ''))
+        .map(cell => `${cell.dataset.date}|${cell.dataset.loc}`));
+    if (!changedKeys.size) {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        if (typeof showToast === 'function') showToast('В графике нет изменений', 'info');
+        return;
+    }
+
     const gridData = {};
-    document.querySelectorAll('.sched-cell').forEach(cell => {
+    cells.forEach(cell => {
         const date   = cell.dataset.date;
         const loc    = cell.dataset.loc;
         const master = cell.dataset.master;
         const text   = cell.innerText.trim();
         const key    = `${date}|${loc}`;
+        if (!changedKeys.has(key)) return;
         if (!gridData[key]) gridData[key] = [];
         if (!text || isScheduleOffDay(text)) return;
 
@@ -360,13 +391,17 @@ async function saveScheduleAll() {
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(payload)
         });
-        if (!resp.ok) throw new Error('Bad server response');
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(result.error || 'Ошибка сохранения графика');
+        cells.filter(cell => changedKeys.has(`${cell.dataset.date}|${cell.dataset.loc}`)).forEach(cell => {
+            cell.dataset.originalText = cell.innerText.trim();
+        });
         btn.innerText = '✅ Сохранено';
         setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2000);
         // Обновляем вкладку опозданий чтобы подтянулся новый график
         if (typeof loadLatesHistory === 'function') setTimeout(loadLatesHistory, 500);
     } catch (e) {
-        showToast('Ошибка сохранения', 'error');
+        showToast(e.message || 'Ошибка сохранения', 'error');
         btn.innerText = originalText; btn.disabled = false;
     }
 }

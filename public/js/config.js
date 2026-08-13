@@ -1,5 +1,7 @@
 /**
  * public/js/config.js
+ * FINANCIAL DEFAULTS — DO NOT TOUCH the handbook block without explicit user authorization.
+ * Mandatory instructions: /root/grom-dashboard/AGENTS.md
  * =====================================================
  * ЕДИНСТВЕННЫЙ ИСТОЧНИК ПРАВДЫ для общего состояния.
  * Все остальные модули ЧИТАЮТ отсюда — никто не перезаписывает чужое.
@@ -24,10 +26,18 @@ window.CURRENT_MASTER = "";
 
 // ---- Справочник штрафов (будет загружен с сервера) ----
 window.GLOBAL_HANDBOOK = {
+    "Опоздание 1-3 мин":                0,
+    "Опоздание 4-10 мин":               200,
     "Опоздание 11-20 мин":              300,
     "Опоздание 21-30 мин":              500,
     "Опоздание 31-60 мин":              1000,
     "Опоздание 61+ мин (Невыход)":      5000,
+    "Опоздание второй мастер 1-3 мин":   0,
+    "Опоздание второй мастер 4-10 мин":  200,
+    "Опоздание второй мастер 11-20 мин": 300,
+    "Опоздание второй мастер 21-30 мин": 500,
+    "Опоздание второй мастер 31-60 мин": 1000,
+    "Опоздание второй мастер 61+ мин (Невыход)": 5000,
     "Невыход":                          5000,
     "Услуга не проведена через терминал": 5000,
     "Грязное рабочее место":            500,
@@ -36,9 +46,9 @@ window.GLOBAL_HANDBOOK = {
     "Разговор на нац. языке":           500,
     "Отказ клиенту":                    1000,
     "Не показал зеркало заднего вида":  300,
-    "Не обработан инструмент":          300,
+    "Не обработал инструмент":          300,
     "Поломка":                          0,
-    "Про акцию не сказал":              0,
+    "Про акцию не сказал":              200,
     "Телефон при клиенте":              0,
     "Другое":                           0
 };
@@ -51,7 +61,10 @@ async function loadHandbook() {
     try {
         const res = await fetch('/api/handbook');
         if (res.ok) {
-            window.GLOBAL_HANDBOOK = await res.json();
+            const handbook = await res.json();
+            window.GLOBAL_HANDBOOK = window.VIOLATION_RULES
+                ? window.VIOLATION_RULES.canonicalizeHandbook(handbook)
+                : handbook;
             console.log("[Config] Handbook loaded:", window.GLOBAL_HANDBOOK);
         }
     } catch (e) {
@@ -59,13 +72,15 @@ async function loadHandbook() {
     }
 }
 
+window.HANDBOOK_READY = loadHandbook();
+
 /**
  * DOMContentLoaded — ранняя инициализация:
  * 1) Загружаем справочник
  * 2) Заполняем дропдауны локаций
  */
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadHandbook();
+    await window.HANDBOOK_READY;
 
     const ovnLocSelect   = document.getElementById('ovn-location');
     const latesLocSelect = document.getElementById('lates-audit-loc');
@@ -89,20 +104,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// ---- Проверка: есть ли мастер в адаптере ----
+// ---- Единый resolver мастеров из ADAPTER ----
+window.getAdapterMasterRecord = function(name, location = null) {
+    if (!name || typeof window.findAdapterMaster !== 'function') return null;
+    return window.findAdapterMaster(name, location) || null;
+};
+
+window.getAdapterMasterCanonical = function(name, location = null) {
+    return window.getAdapterMasterRecord(name, location)?.dash || null;
+};
+
+window.getAdapterMasterLocation = function(name) {
+    return window.getAdapterMasterRecord(name)?.location || '';
+};
+
+window.isSameAdapterMaster = function(left, right) {
+    const a = window.getAdapterMasterCanonical(left);
+    const b = window.getAdapterMasterCanonical(right);
+    return Boolean(a && b && a === b);
+};
+
 window.isAdapterMaster = function(name) {
-    if (!name || typeof ADAPTER === 'undefined') return false;
-    const n = name.toLowerCase().trim();
-    for (const loc in ADAPTER) {
-        if (!ADAPTER[loc] || !Array.isArray(ADAPTER[loc].masters)) continue;
-        for (const m of ADAPTER[loc].masters) {
-            if (m.dash.toLowerCase() === n) return true;
-            if (m.el_kassa && m.el_kassa.some(ek =>
-                n.includes(ek.toLowerCase()) || ek.toLowerCase().includes(n)
-            )) return true;
-        }
-    }
-    return false;
+    return Boolean(window.getAdapterMasterCanonical(name));
 };
 
 // ---- Получить все имена мастеров из адаптера (Set) ----

@@ -41,6 +41,14 @@
             tabManager:         true,
             tabMasterCabinet:   false,
 
+            tabComeback:        true,
+            tabRetention:       true,
+            mobileBottomNav:    true,
+            salaryCalculation:  true,
+            viewMasterSchedule: true,
+            viewManagerSchedule:true,
+            editManagerScheduleAll: true,
+            editManagerScheduleOwn: false,
             // ── Расписание ──
             editScheduleCell:   true,    // клик по ячейке расписания
             saveSchedule:       true,    // кнопка «Сохранить»
@@ -50,6 +58,7 @@
             createOvnCheck:     true,    // кнопка «+ Проверка»
             editOvnCheck:       true,    // редактировать чужую проверку
             reactToOvn:         true,    // менеджерская реакция
+            viewOvnManagerQueue:true,    // группировка ОВН в кабинете менеджера
 
             // ── Опоздания ──
             markArrival:        true,    // отмечать приход мастера
@@ -57,6 +66,7 @@
 
             // ── Настройки ──
             showAdapterBtn:     true,    // кнопка YC адаптер
+            manageMasterOnboarding: true,
             showSettingsMenu:   true,    // меню настроек
         },
 
@@ -68,6 +78,13 @@
             tabManager:         true,
             tabMasterCabinet:   false,
 
+            tabComeback:        false,
+            tabRetention:       false,
+            mobileBottomNav:    true,
+            viewMasterSchedule: true,
+            viewManagerSchedule:true,
+            editManagerScheduleAll: true,
+            editManagerScheduleOwn: false,
             editScheduleCell:   true,
             saveSchedule:       true,
             contextMenuSchedule:true,
@@ -75,11 +92,41 @@
             createOvnCheck:     false,   // только ОВН-операторы создают
             editOvnCheck:       true,
             reactToOvn:         true,
+            viewOvnManagerQueue:true,
 
             markArrival:        true,
             markNoShow:         true,
 
             showAdapterBtn:     true,
+            manageMasterOnboarding: true,
+            showSettingsMenu:   true,
+        },
+
+        maintenance: {
+            tabAnalytics:       true,
+            tabOvn:             false,
+            tabLates:           false,
+            tabSchedule:        true,
+            tabManager:         true,
+            tabMasterCabinet:   false,
+            tabComeback:        false,
+            tabRetention:       false,
+            mobileBottomNav:    true,
+            salaryCalculation:  true,
+            viewMasterSchedule: false,
+            viewManagerSchedule:true,
+            editManagerScheduleAll: false,
+            editManagerScheduleOwn: true,
+            editScheduleCell:   false,
+            saveSchedule:       false,
+            contextMenuSchedule:false,
+            createOvnCheck:     false,
+            editOvnCheck:       false,
+            reactToOvn:         false,
+            markArrival:        false,
+            markNoShow:         false,
+            showAdapterBtn:     false,
+            manageMasterOnboarding: true,
             showSettingsMenu:   true,
         },
 
@@ -90,6 +137,12 @@
             tabSchedule:        true,
             tabManager:         false,
             tabMasterCabinet:   false,
+            mobileBottomNav:    false,
+
+            viewMasterSchedule: true,
+            viewManagerSchedule:true,
+            editManagerScheduleAll: false,
+            editManagerScheduleOwn: false,
 
             editScheduleCell:   true,
             saveSchedule:       true,
@@ -103,6 +156,7 @@
             markNoShow:         true,
 
             showAdapterBtn:     false,
+            manageMasterOnboarding: false,
             showSettingsMenu:   true,
         },
 
@@ -113,6 +167,12 @@
             tabSchedule:        false,
             tabManager:         false,
             tabMasterCabinet:   true,
+            mobileBottomNav:    false,
+
+            viewMasterSchedule: false,
+            viewManagerSchedule:false,
+            editManagerScheduleAll: false,
+            editManagerScheduleOwn: false,
 
             editScheduleCell:   false,
             saveSchedule:       false,
@@ -126,6 +186,7 @@
             markNoShow:         false,
 
             showAdapterBtn:     false,
+            manageMasterOnboarding: false,
             showSettingsMenu:   false,
         },
     };

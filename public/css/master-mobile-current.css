@@ -1,0 +1,369 @@
+:root {
+  --radius-card: 16px;
+}
+
+body {
+  padding-bottom: 0 !important;
+}
+
+.brand-wordmark {
+  font-family: "Akony", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: .035em;
+}
+
+.brand-lockup {
+  min-width: 0;
+}
+
+.brand-lockup > div:last-child {
+  min-width: 0;
+}
+
+.header-meta {
+  margin: 4px 0 0;
+  color: var(--faint);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.header-actions {
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.top-master-celebration {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(190, 255, 54, .34);
+  border-radius: 14px;
+  background: rgba(190, 255, 54, .09);
+  color: var(--ink);
+}
+
+.top-master-celebration[hidden] {
+  display: none;
+}
+
+.top-master-celebration::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 32%, rgba(221, 255, 146, .22) 48%, transparent 64%);
+  content: "";
+  transform: translateX(-120%);
+}
+
+.top-master-medal {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.top-master-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.top-master-copy small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.top-master-copy strong {
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.top-master-celebration.is-celebrating {
+  animation: topMasterReveal 500ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.top-master-celebration.is-celebrating::after {
+  animation: topMasterSweep 760ms cubic-bezier(.22, 1, .36, 1) 120ms both;
+}
+
+.top-master-celebration.is-celebrating .top-master-medal {
+  animation: topMasterMedal 500ms cubic-bezier(.16, 1, .3, 1) 60ms both;
+}
+
+@keyframes topMasterReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes topMasterSweep {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes topMasterMedal {
+  from {
+    opacity: 0;
+    transform: scale(.76) rotate(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+.exit-btn {
+  color: var(--muted);
+}
+
+.logout-glyph {
+  display: block;
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  -webkit-mask: url("../img/logout-dashboard.png") center / contain no-repeat;
+  mask: url("../img/logout-dashboard.png") center / contain no-repeat;
+}
+
+.exit-btn:hover,
+.exit-btn:focus-visible {
+  color: var(--accent);
+}
+
+.language-slot {
+  margin-top: 24px;
+  padding-top: 16px;
+  min-height: 42px;
+  border-top: 1px solid var(--line);
+}
+
+.language-slot:empty {
+  display: none;
+}
+
+.language-slot .grome-language-switcher {
+  position: static !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  padding: 4px !important;
+  border-color: var(--line) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, .045) !important;
+  box-shadow: none !important;
+}
+
+.language-slot .grome-language-switcher button {
+  width: 100%;
+  min-width: 0 !important;
+  height: 34px !important;
+  font-family: inherit !important;
+}
+
+.password-setup-card {
+  max-width: 390px;
+}
+
+.password-requirement {
+  margin: -2px 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.password-setup-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.password-setup-secondary {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.password-setup-secondary:hover,
+.password-setup-secondary:focus-visible {
+  color: var(--ink);
+}
+
+.password-setup-secondary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.zone-orbit-inner {
+  font-size: 0;
+}
+
+.metric-card,
+.schedule-panel,
+.journal-panel {
+  animation: none;
+}
+
+.occupancy-card {
+  display: block;
+}
+
+.occupancy-card > strong {
+  white-space: nowrap;
+}
+
+.compact-metric-card {
+  display: flex;
+  min-height: 166px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.compact-metric-card strong {
+  margin-top: 14px;
+  font-size: clamp(36px, 10vw, 48px);
+  line-height: .95;
+}
+
+.compact-metric-card .muted {
+  margin-top: 18px;
+}
+
+.online-card > strong {
+  color: var(--accent);
+}
+
+.online-progress {
+  --threshold: 30;
+}
+
+.schedule-controls {
+  margin: 0 0 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.schedule-controls label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.schedule-control-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.schedule-control-row input,
+.schedule-control-row button {
+  min-height: 42px;
+  border-radius: 10px;
+  font: inherit;
+}
+
+.schedule-control-row input {
+  min-width: 0;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  background: rgba(7, 8, 8, .72);
+  color: var(--ink);
+  color-scheme: dark;
+}
+
+.schedule-control-row button {
+  padding: 0 14px;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 180ms var(--ease), filter 180ms var(--ease);
+}
+
+.schedule-control-row button:active {
+  transform: scale(.97);
+}
+
+.schedule-control-row button:focus-visible,
+.schedule-control-row input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.bottom-item small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottom-center span {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 350px) {
+  .compact-metric-card {
+    min-height: 142px;
+  }
+}
+
+@media (max-width: 350px) {
+  .brand-row {
+    align-items: flex-start;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .schedule-control-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-item small {
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-master-celebration.is-celebrating,
+  .top-master-celebration.is-celebrating::after,
+  .top-master-celebration.is-celebrating .top-master-medal {
+    animation: none;
+  }
+
+  .schedule-control-row button {
+    transition: none;
+  }
+}

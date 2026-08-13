@@ -25,6 +25,24 @@ function isLatesModuleRecord(r) {
     );
 }
 
+function timeToMinutes(value) {
+    const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    return hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : null;
+}
+
+// The journal must never invent a delay: use the two saved times first, then
+// the legacy note only when it contains an explicit number of minutes.
+function journalLatenessMinutes(record) {
+    const scheduled = timeToMinutes(record && record.schedTime);
+    const actual = timeToMinutes(record && record.time);
+    if (scheduled !== null && actual !== null) return Math.max(0, actual - scheduled);
+    const explicit = String(record && record.notes || '').match(/опоздани[ея]\s+на\s+(\d+)\s*мин/i);
+    return explicit ? Number(explicit[1]) : null;
+}
+
 async function loadLatesHistory() {
     try {
         console.log('[Lates] Loading...');
@@ -339,6 +357,8 @@ function getLatenessFine(minutes) {
     if (minutes >= 31) return Number(handbook['Опоздание 31-60 мин']) || 1000;
     if (minutes >= 21) return Number(handbook['Опоздание 21-30 мин']) || 500;
     if (minutes >= 11) return Number(handbook['Опоздание 11-20 мин']) || 300;
+    if (minutes >= 4) return Number(handbook['Опоздание 4-10 мин']) || 200;
+    if (minutes >= 1) return 0;
     return 0;
 }
 
@@ -532,12 +552,10 @@ window.renderLatesJournal = function() {
         } else {
             legacyTbody.innerHTML = list.map(r => {
                 const recDay = dayjs(r.date || r.createdAt);
-                const delay = r.schedTime && r.time
-                    ? Math.max(0, dayjs(`2000-01-01 ${r.time}`).diff(dayjs(`2000-01-01 ${r.schedTime}`), 'minute'))
-                    : 0;
+                const delay = journalLatenessMinutes(r);
                 const late = isLate(r);
                 const violation = r.violation || (late ? 'Мастер опоздал' : 'Замечаний нет');
-                const delayText = r.schedTime ? (delay > 0 ? `+${delay} мин` : '0 мин') : '';
+                const delayText = delay > 0 ? `+${delay}` : '—';
                 const fm = isLatesForceMajeure(r);
                 return `
                     <tr>
@@ -547,7 +565,7 @@ window.renderLatesJournal = function() {
                         <td data-label="ЛОКАЦИЯ">${escapeHtml(r.location || '')}</td>
                         <td data-label="ГРАФИК">${escapeHtml(r.schedTime || '-')}</td>
                         <td data-label="ПРИХОД">${escapeHtml(r.time || '-')}</td>
-                        <td data-label="ЗАДЕРЖКА" style="color:${fm ? '#64D2FF' : (late ? '#FF3B30' : '#34C759')};font-weight:700">${escapeHtml(fm ? 'Без штрафа' : delayText)}</td>
+                        <td data-label="ОПОЗДАНИЕ, МИН" style="color:${fm ? '#64D2FF' : (late ? '#FF3B30' : '#34C759')};font-weight:700;font-variant-numeric:tabular-nums">${escapeHtml(fm ? 'Без штрафа' : delayText)}</td>
                     </tr>`;
             }).join('');
         }
@@ -581,7 +599,7 @@ window.renderLatesJournal = function() {
         </div>`;
     }
 
-    const LOC_ORDER = ['Алексеевская','Партизанская','Варшавская','Рязанка','Сокол','Текстильщики'];
+    const LOC_ORDER = ['Алексеевская','Партизанская','Рязанка','Сокол','Текстильщики'];
     const sortedLocs = Object.keys(byLoc).sort((a, b) => {
         const ai = LOC_ORDER.indexOf(a), bi = LOC_ORDER.indexOf(b);
         return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
