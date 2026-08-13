@@ -12,6 +12,7 @@
     "test:schedule-integrity": "node tests/schedule_integrity_regression.js",
     "test:analytics-top3": "node tests/analytics_top3_regression.js && node tests/ovn_analytics_endpoint_regression.js",
     "test:autosend-tech": "node tests/autosend_technical_tasks_regression.js",
+    "test:ovn-filter-layout": "node tests/ovn_filter_layout_regression.js",
     "video-audit:capture": "node ivideon_screenshot_worker.js",
     "video-audit:capture-once": "node ivideon_screenshot_worker.js --once"
   },

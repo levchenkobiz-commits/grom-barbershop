@@ -80,3 +80,97 @@
         margin-bottom: 12px;
     }
 }
+
+/* OVN journal filters: one semantic toolbar; the date range stays first on touch screens. */
+#ovn-section .ovn-history-head {
+    border-top: 1px solid #333;
+    padding-top: 40px;
+}
+
+#ovn-section .ovn-history-title {
+    margin: 0 0 18px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+#ovn-section .ovn-filter-toolbar {
+    display: grid;
+    grid-template-columns: minmax(320px, 2fr) repeat(3, minmax(140px, 1fr));
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+#ovn-section .ovn-filter-toolbar > select,
+#ovn-section .ovn-filter-toolbar input,
+#ovn-section .ovn-filter-toolbar button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px;
+    color: #fff;
+    background: #000;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+}
+
+#ovn-section .ovn-date-controls {
+    display: grid;
+    grid-template-columns: 44px minmax(120px, 1fr) 14px minmax(120px, 1fr) 44px;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+}
+
+#ovn-section .ovn-date-controls button {
+    padding: 0;
+    cursor: pointer;
+}
+
+#ovn-section .ovn-date-separator {
+    color: #666;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    #ovn-section .ovn-history-head {
+        padding-top: 24px;
+    }
+
+    #ovn-section .ovn-filter-toolbar {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    #ovn-section .ovn-date-controls {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        grid-template-columns: 40px minmax(0, 1fr) 10px minmax(0, 1fr) 40px;
+        gap: 6px;
+    }
+
+    #ovn-section #ovn-history-preset {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    #ovn-section #ovn-history-loc-filter {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    #ovn-section #ovn-history-master-filter {
+        grid-column: 1 / -1;
+        grid-row: 3;
+    }
+
+    #ovn-section .ovn-filter-toolbar > select,
+    #ovn-section .ovn-filter-toolbar input,
+    #ovn-section .ovn-filter-toolbar button {
+        min-height: 42px;
+        padding: 8px;
+        font-size: 12px;
+    }
+}
