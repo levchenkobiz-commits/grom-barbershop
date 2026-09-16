@@ -19,4 +19,5 @@ for (const [service, price] of [
 }
 
 assert.ok(!/>от\s*\d+\s*₽</.test(pricing[0]), 'в прайсе не осталось стартовых цен');
+assert.ok(!/Стрижка \+ Борода<\/h3>\s*<span class="tag">Выгода<\/span>/.test(pricing[0]), 'у пары стрижка и борода нет ложной скидки');
 console.log('public_haircut_price_regression: OK');
