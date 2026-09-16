@@ -1,0 +1,78 @@
+name: Deploy public site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: grome-public-site-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify public haircut prices
+        run: node tests/public_haircut_price_prefix_regression.js
+
+      - name: Deploy guarded price copy to grome.pro
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/grome_site_key
+          chmod 600 ~/.ssh/grome_site_key
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/grome_site_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "RELEASE_SHA='$RELEASE_SHA' bash -s" <<'REMOTE'
+          set -euo pipefail
+          APP_FILE=/var/www/grome/index.html
+          BACKUP_DIR=/root/grome-site-releases
+          LOCK_FILE=/tmp/grome-public-site-release.lock
+          exec 9>"$LOCK_FILE"
+          flock -n 9 || { echo 'Another public-site release is running.' >&2; exit 1; }
+          test -f "$APP_FILE"
+          mkdir -p "$BACKUP_DIR/$RELEASE_SHA"
+          cp --preserve=mode,timestamps "$APP_FILE" "$BACKUP_DIR/$RELEASE_SHA/index.html.before"
+          TEMP_FILE="$(mktemp /var/www/grome/.index.html.release.XXXXXX)"
+          trap 'rm -f "$TEMP_FILE"' EXIT
+          APP_FILE="$APP_FILE" TEMP_FILE="$TEMP_FILE" node <<'NODE'
+          const fs = require('fs');
+          const source = fs.readFileSync(process.env.APP_FILE, 'utf8');
+          const rules = [
+            ['Мужская стрижка', '900 ₽', 'от 900 ₽'],
+            ['Стрижка + Борода', '1600 ₽', 'от 1600 ₽'],
+            ['Стрижка машинкой', '600 ₽', 'от 600 ₽'],
+          ];
+          let next = source;
+          for (const [service, before, after] of rules) {
+            const escaped = service.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const beforePattern = new RegExp(`(<h3>${escaped}<\\/h3>[\\s\\S]*?<div class="price-amount">)${before.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(</div>)`);
+            const afterPattern = new RegExp(`(<h3>${escaped}<\\/h3>[\\s\\S]*?<div class="price-amount">)${after.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(</div>)`);
+            const oldMatches = next.match(new RegExp(beforePattern.source, 'g')) || [];
+            const newMatches = next.match(new RegExp(afterPattern.source, 'g')) || [];
+            if (oldMatches.length === 1 && newMatches.length === 0) next = next.replace(beforePattern, `$1${after}$2`);
+            else if (!(oldMatches.length === 0 && newMatches.length === 1)) throw new Error(`unexpected live price state for ${service}`);
+          }
+          if (!/Моделирование бороды[\s\S]*?<div class="price-amount">800 ₽<\/div>/.test(next)) throw new Error('unrelated beard price changed');
+          fs.writeFileSync(process.env.TEMP_FILE, next, 'utf8');
+          NODE
+          install -m 0644 "$TEMP_FILE" "$APP_FILE"
+          grep -Fq 'price-amount">от 900 ₽' "$APP_FILE"
+          grep -Fq 'price-amount">от 1600 ₽' "$APP_FILE"
+          grep -Fq 'price-amount">от 600 ₽' "$APP_FILE"
+          printf '%s\n' "$RELEASE_SHA" > /root/grome-site-release-version
+          curl -fsS --resolve grome.pro:443:127.0.0.1 https://grome.pro/ | grep -Fq 'price-amount">от 900 ₽'
+          REMOTE
