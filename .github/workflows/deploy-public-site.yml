@@ -81,5 +81,8 @@ jobs:
           grep -Fq 'data-price-pro="2000"' "$APP_FILE"
           ! grep -Fq 'price-amount">от ' "$APP_FILE"
           printf '%s\n' "$RELEASE_SHA" > /root/grome-site-release-version
-          curl -fsS --resolve grome.pro:443:127.0.0.1 https://grome.pro/ | grep -Fq 'price-tier-switch'
+          RESPONSE_FILE="$(mktemp)"
+          trap 'rm -f "$TEMP_FILE" "$SOURCE_FILE" "$RESPONSE_FILE"' EXIT
+          curl -fsS --resolve grome.pro:443:127.0.0.1 https://grome.pro/ -o "$RESPONSE_FILE"
+          grep -Fq 'price-tier-switch' "$RESPONSE_FILE"
           REMOTE
