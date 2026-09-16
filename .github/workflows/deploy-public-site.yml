@@ -20,10 +20,12 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
-      - name: Verify public haircut prices
-        run: node tests/public_haircut_price_prefix_regression.js
+      - name: Verify public price tier switch
+        run: |
+          node tests/public_haircut_price_prefix_regression.js
+          node tests/public_price_tier_switch_regression.js
 
-      - name: Deploy guarded price copy to grome.pro
+      - name: Deploy guarded pricing section to grome.pro
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
@@ -36,7 +38,9 @@ jobs:
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/grome_site_key
           chmod 600 ~/.ssh/grome_site_key
           ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/grome_site_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "RELEASE_SHA='$RELEASE_SHA' bash -s" <<'REMOTE'
+          SOURCE_FILE="/tmp/grome-price-source-${RELEASE_SHA}.html"
+          scp -i ~/.ssh/grome_site_key -P "$VPS_PORT" index.html "$VPS_USER@$VPS_HOST:$SOURCE_FILE"
+          ssh -i ~/.ssh/grome_site_key -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "RELEASE_SHA='$RELEASE_SHA' SOURCE_FILE='$SOURCE_FILE' bash -s" <<'REMOTE'
           set -euo pipefail
           APP_FILE=/var/www/grome/index.html
           BACKUP_DIR=/root/grome-site-releases
@@ -44,35 +48,38 @@ jobs:
           exec 9>"$LOCK_FILE"
           flock -n 9 || { echo 'Another public-site release is running.' >&2; exit 1; }
           test -f "$APP_FILE"
+          test -f "$SOURCE_FILE"
           mkdir -p "$BACKUP_DIR/$RELEASE_SHA"
           cp --preserve=mode,timestamps "$APP_FILE" "$BACKUP_DIR/$RELEASE_SHA/index.html.before"
           TEMP_FILE="$(mktemp /var/www/grome/.index.html.release.XXXXXX)"
-          trap 'rm -f "$TEMP_FILE"' EXIT
-          APP_FILE="$APP_FILE" TEMP_FILE="$TEMP_FILE" node <<'NODE'
+          trap 'rm -f "$TEMP_FILE" "$SOURCE_FILE"' EXIT
+          APP_FILE="$APP_FILE" SOURCE_FILE="$SOURCE_FILE" TEMP_FILE="$TEMP_FILE" node <<'NODE'
           const fs = require('fs');
-          const source = fs.readFileSync(process.env.APP_FILE, 'utf8');
-          const rules = [
-            ['Мужская стрижка', '900 ₽', 'от 900 ₽'],
-            ['Стрижка + Борода', '1600 ₽', 'от 1600 ₽'],
-            ['Стрижка машинкой', '600 ₽', 'от 600 ₽'],
-          ];
-          let next = source;
-          for (const [service, before, after] of rules) {
-            const escaped = service.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const beforePattern = new RegExp(`(<h3>${escaped}<\\/h3>[\\s\\S]*?<div class="price-amount">)${before.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(</div>)`);
-            const afterPattern = new RegExp(`(<h3>${escaped}<\\/h3>[\\s\\S]*?<div class="price-amount">)${after.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(</div>)`);
-            const oldMatches = next.match(new RegExp(beforePattern.source, 'g')) || [];
-            const newMatches = next.match(new RegExp(afterPattern.source, 'g')) || [];
-            if (oldMatches.length === 1 && newMatches.length === 0) next = next.replace(beforePattern, `$1${after}$2`);
-            else if (!(oldMatches.length === 0 && newMatches.length === 1)) throw new Error(`unexpected live price state for ${service}`);
+          const live = fs.readFileSync(process.env.APP_FILE, 'utf8');
+          const source = fs.readFileSync(process.env.SOURCE_FILE, 'utf8');
+          const start = '<!-- PRICING -->';
+          const end = '<!-- RESPONSIVE GALLERY SECTION -->';
+          function pricingSection(document, name) {
+            const from = document.indexOf(start);
+            const to = document.indexOf(end, from);
+            if (from < 0 || to < 0 || to <= from) throw new Error(`pricing section markers missing in ${name}`);
+            return { from, to, value: document.slice(from, to) };
           }
-          if (!/Моделирование бороды[\s\S]*?<div class="price-amount">800 ₽<\/div>/.test(next)) throw new Error('unrelated beard price changed');
+          const liveSection = pricingSection(live, 'live page');
+          const sourceSection = pricingSection(source, 'release source');
+          if (!sourceSection.value.includes('price-tier-switch') || !sourceSection.value.includes('data-price-pro="2000"')) {
+            throw new Error('release source does not contain the verified tier switch');
+          }
+          if (!liveSection.value.includes('price-tier-switch') && !liveSection.value.includes('от 900 ₽')) {
+            throw new Error('unexpected live pricing state');
+          }
+          const next = live.slice(0, liveSection.from) + sourceSection.value + live.slice(liveSection.to);
           fs.writeFileSync(process.env.TEMP_FILE, next, 'utf8');
           NODE
           install -m 0644 "$TEMP_FILE" "$APP_FILE"
-          grep -Fq 'price-amount">от 900 ₽' "$APP_FILE"
-          grep -Fq 'price-amount">от 1600 ₽' "$APP_FILE"
-          grep -Fq 'price-amount">от 600 ₽' "$APP_FILE"
+          grep -Fq 'price-tier-switch' "$APP_FILE"
+          grep -Fq 'data-price-pro="2000"' "$APP_FILE"
+          ! grep -Fq 'price-amount">от ' "$APP_FILE"
           printf '%s\n' "$RELEASE_SHA" > /root/grome-site-release-version
-          curl -fsS --resolve grome.pro:443:127.0.0.1 https://grome.pro/ | grep -Fq 'price-amount">от 900 ₽'
+          curl -fsS --resolve grome.pro:443:127.0.0.1 https://grome.pro/ | grep -Fq 'price-tier-switch'
           REMOTE

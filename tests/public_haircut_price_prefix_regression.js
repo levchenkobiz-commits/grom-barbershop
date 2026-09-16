@@ -8,14 +8,15 @@ assert.ok(pricing, 'публичный прайс найден');
 
 for (const [service, price] of [
   ['Мужская стрижка', '900'],
-  ['Стрижка + Борода', '1600'],
+  ['Стрижка + Борода', '1700'],
+  ['Моделирование бороды', '800'],
   ['Стрижка машинкой', '600'],
 ]) {
   const escapedService = service.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const row = pricing[0].match(new RegExp(`<h3>${escapedService}<\\/h3>[\\s\\S]*?<div class="price-amount">([\\s\\S]*?)<\\/div>`));
+  const row = pricing[0].match(new RegExp(`<div class="price-row[^\"]*" data-price-barber="${price}" data-price-pro="\\d+">[\\s\\S]*?<h3>${escapedService}<\\/h3>[\\s\\S]*?<div class="price-amount"[^>]*>([\\s\\S]*?)<\\/div>`));
   assert.ok(row, `${service}: строка прайса найдена`);
-  assert.strictEqual(row[1].trim(), `от ${price} ₽`, `${service}: цена показана как стартовая`);
+  assert.strictEqual(row[1].trim(), `${price} ₽`, `${service}: показана точная цена барбера`);
 }
 
-assert.match(pricing[0], /<h3>Моделирование бороды<\/h3>[\s\S]*?<div class="price-amount">800 ₽<\/div>/, 'не связанная со стрижкой услуга не меняется');
-console.log('public_haircut_price_prefix_regression: OK');
+assert.ok(!/>от\s*\d+\s*₽</.test(pricing[0]), 'в прайсе не осталось стартовых цен');
+console.log('public_haircut_price_regression: OK');
